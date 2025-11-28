@@ -123,13 +123,13 @@ const HomeScreen = () => {
         try {
             if (!user) return;
             
-            const appLink = 'https://wish-me-not.vercel.app';
-            const shareMessage = `Hey! Join me on Wish Me Not to see my wishlist.\n\n1. Go to ${appLink}\n2. Sign up and add me as a friend using my email: ${user.email}`;
+            const deepLink = `https://wish-me-not.vercel.app/wishlist/${encodeURIComponent(user.email)}`;
+            const shareMessage = `Hey! Check out my wishlist on Wish Me Not.\n\nIf you have the app, click here: ${deepLink}\n\nNew to the app? Download it and add me as a friend: ${user.email}`;
 
             await Share.share({
                 message: shareMessage,
-                title: 'Join me on Wish Me Not',
-                url: appLink, // iOS supports url param
+                title: 'My Wish List',
+                url: deepLink, // iOS supports url param
             });
         } catch (error) {
             Alert.alert('Error', error.message);

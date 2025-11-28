@@ -9,14 +9,27 @@ import { useTheme } from '../theme/ThemeContext';
 import AppHeader from '../components/AppHeader';
 
 const FriendWishlistScreen = ({ route, navigation }) => {
-    const { friend } = route.params;
+    const { friend, userId } = route.params || {};
     const { theme } = useTheme();
+    
+    // Construct a friend object if we only have userId (from deep link)
+    const friendData = friend || { 
+        email: userId, 
+        name: userId ? userId.split('@')[0] : 'Friend', // Fallback name
+        id: userId 
+    };
+
     const [items, setItems] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
+        if (!friendData.email) {
+            Alert.alert("Error", "Invalid link. No user email found.");
+            navigation.goBack();
+            return;
+        }
         loadCurrentUser();
         loadFriendWishlist();
     }, []);
@@ -28,11 +41,9 @@ const FriendWishlistScreen = ({ route, navigation }) => {
 
     const loadFriendWishlist = async () => {
         try {
-            // Only show full loading screen if not refreshing (pull-to-refresh has its own spinner)
             if (!refreshing) setLoading(true);
             
-            // Fetch the friend's wishlist using their email
-            const wishlist = await getUserWishlist(friend.email);
+            const wishlist = await getUserWishlist(friendData.email);
             setItems(wishlist);
         } catch (error) {
             Alert.alert('Error', 'Failed to load wishlist. Please try again.');
@@ -58,7 +69,7 @@ const FriendWishlistScreen = ({ route, navigation }) => {
 
         Alert.alert(
             "Wish Item",
-            `You have marked ${item.name} as wished for ${friend.name}. This claims the gift!`,
+            `You have marked ${item.name} as wished for ${friendData.name}. This claims the gift!`,
             [
                 { text: "Cancel", style: "cancel" },
                 {
@@ -81,7 +92,7 @@ const FriendWishlistScreen = ({ route, navigation }) => {
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <AppHeader 
-                title={`${friend.name}'s Wish List`}
+                title={`${friendData.name}'s Wish List`}
                 subTitle="Swipe right to claim a gift"
                 showBack
             />
