@@ -25,7 +25,21 @@ export default {
       edgeToEdgeEnabled: true
     },
     web: {
-      favicon: "./assets/favicon.png"
+      favicon: "./assets/favicon.png",
+      name: "Wish Me Not",
+      shortName: "WishMeNot",
+      description: "The wishlist app you actually want.",
+      backgroundColor: "#1a2332",
+      themeColor: "#E2B93B",
+      display: "standalone",
+      startUrl: "/",
+      orientation: "portrait",
+      meta: {
+        apple: {
+          mobileWebAppCapable: "yes",
+          mobileWebAppStatusBarStyle: "black-translucent"
+        }
+      }
     },
     experiments: {
       baseUrl: process.env.GH_PAGES ? "/wish_me_not/" : "/"
