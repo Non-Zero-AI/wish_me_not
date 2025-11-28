@@ -38,25 +38,41 @@ export const getUserFriends = async (userEmail) => {
         // Handle potential n8n output wrapper
         const data = response.data.output || response.data; 
         let friendEmails = [];
+        let rawValues = [];
 
-        // Case 1: 'friends' property contains string or array
-        if (data.friends) {
-             if (typeof data.friends === 'string') {
-                 friendEmails = data.friends.split(',').map(e => e.trim()).filter(e => e);
-             } else if (Array.isArray(data.friends)) {
-                 friendEmails = data.friends;
-             }
-        } 
-        // Case 2: The data itself is the string (unlikely but possible if raw)
-        else if (typeof data === 'string' && data.includes('@')) {
-             friendEmails = data.split(',').map(e => e.trim()).filter(e => e);
+        // Step 1: Extract potential values regardless of structure
+        if (Array.isArray(data)) {
+             // If array of rows, extract relevant columns
+             rawValues = data.map(row => row.friends || row.friend_email || row.email).filter(v => v);
+        } else if (typeof data === 'object' && data !== null) {
+             // If single object
+             if (data.friends) rawValues.push(data.friends);
+        } else if (typeof data === 'string') {
+             rawValues.push(data);
         }
-        // Case 3: Array of objects (rows)
-        else if (Array.isArray(data)) {
-             friendEmails = data.map(f => f.friend_email || f.email || f.friends).filter(e => e);
-        }
+
+        // Step 2: Normalize and Split (handle comma-separated strings mixed with arrays)
+        rawValues.forEach(val => {
+            if (typeof val === 'string') {
+                // Split by comma and add
+                const parts = val.split(',').map(e => e.trim());
+                friendEmails.push(...parts);
+            } else if (Array.isArray(val)) {
+                // Nested array
+                friendEmails.push(...val);
+            }
+        });
+
+        // Step 3: Clean and Deduplicate
+        friendEmails = [...new Set(friendEmails)]; // Remove duplicates
+        friendEmails = friendEmails.filter(e => e && typeof e === 'string' && e.includes('@'));
         
         console.log('Parsed Friend Emails:', friendEmails);
+
+        if (friendEmails.length === 0) {
+             console.warn('No friends found in response data');
+             return [];
+        }
 
         // Enrich with details from wishlist (parallel)
         const friendsWithDetails = await Promise.all(friendEmails.map(async (email) => {
