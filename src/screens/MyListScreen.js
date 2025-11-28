@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, SafeAreaView, RefreshControl } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ProductCard from '../components/ProductCard';
 import { getItems, addItem, getUser, deleteItem, saveItems } from '../services/storage';
 import { addProduct, deleteProduct, getUserWishlist } from '../services/api';
