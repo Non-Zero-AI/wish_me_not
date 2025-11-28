@@ -182,6 +182,10 @@ const FriendsScreen = ({ navigation }) => {
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
                         <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No friends yet.</Text>
+                        {user && <Text style={{color: theme.colors.textSecondary, fontSize: 12, marginTop: 4}}>Logged in as: {user.email}</Text>}
+                        <TouchableOpacity onPress={onRefresh} style={{marginTop: 20, padding: 10, backgroundColor: theme.colors.surface, borderRadius: 8}}>
+                            <Text style={{color: theme.colors.primary}}>Tap to Retry</Text>
+                        </TouchableOpacity>
                     </View>
                 }
             />

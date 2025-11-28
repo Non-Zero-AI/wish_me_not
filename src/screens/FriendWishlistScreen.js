@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     },
     listContent: {
         padding: 16,
-        paddingBottom: 80,
+        paddingBottom: 150,
     },
     wishAction: {
         justifyContent: 'center',
