@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, SafeAreaView, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { useTheme } from '../theme/ThemeContext';
 import { getUserWishlist } from '../services/api';
 import { getFriends, saveFriends } from '../services/storage';
@@ -18,7 +19,12 @@ const FriendsScreen = ({ navigation }) => {
     const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
-        loadFriends();
+        const init = async () => {
+            setLoading(true);
+            await loadFriends();
+            setLoading(false);
+        };
+        init();
     }, []);
 
     const loadFriends = async () => {
@@ -72,20 +78,50 @@ const FriendsScreen = ({ navigation }) => {
         }
     };
 
+    const handleDeleteFriend = (friendId) => {
+        Alert.alert(
+            "Remove Friend",
+            "Are you sure you want to remove this friend?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Remove",
+                    style: "destructive",
+                    onPress: async () => {
+                        const updatedFriends = friends.filter(f => f.id !== friendId);
+                        setFriends(updatedFriends);
+                        await saveFriends(updatedFriends);
+                    }
+                }
+            ]
+        );
+    };
+
     const renderFriend = ({ item }) => (
-        <TouchableOpacity
-            style={[styles.friendCard, { backgroundColor: theme.colors.surface }]}
-            onPress={() => navigation.navigate('FriendWishlist', { friend: item })}
+        <Swipeable
+            renderRightActions={() => (
+                <TouchableOpacity
+                    style={[styles.deleteAction, { backgroundColor: theme.colors.error }]}
+                    onPress={() => handleDeleteFriend(item.id)}
+                >
+                    <Text style={styles.actionText}>Remove</Text>
+                </TouchableOpacity>
+            )}
         >
-            <View style={[styles.avatar, { backgroundColor: theme.colors.secondary }]}>
-                <Text style={[styles.avatarText, { color: theme.colors.textInverse }]}>{item.name.charAt(0).toUpperCase()}</Text>
-            </View>
-            <View style={styles.friendInfo}>
-                <Text style={[styles.friendName, { color: theme.colors.text }]}>{item.name}</Text>
-                <Text style={[styles.friendEmail, { color: theme.colors.textSecondary }]}>{item.email}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
-        </TouchableOpacity>
+            <TouchableOpacity
+                style={[styles.friendCard, { backgroundColor: theme.colors.surface }]}
+                onPress={() => navigation.navigate('FriendWishlist', { friend: item })}
+            >
+                <View style={[styles.avatar, { backgroundColor: theme.colors.secondary }]}>
+                    <Text style={[styles.avatarText, { color: theme.colors.textInverse }]}>{item.name.charAt(0).toUpperCase()}</Text>
+                </View>
+                <View style={styles.friendInfo}>
+                    <Text style={[styles.friendName, { color: theme.colors.text }]}>{item.name}</Text>
+                    <Text style={[styles.friendEmail, { color: theme.colors.textSecondary }]}>{item.email}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
+            </TouchableOpacity>
+        </Swipeable>
     );
 
     return (
@@ -220,6 +256,19 @@ const styles = StyleSheet.create({
     },
     friendEmail: {
         fontSize: 14,
+    },
+    deleteAction: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 100,
+        height: '100%',
+        borderRadius: 12,
+        marginBottom: 12, // Match friendCard margin
+    },
+    actionText: {
+        color: '#fff',
+        fontWeight: '600',
+        padding: 20,
     },
     emptyContainer: {
         alignItems: 'center',
