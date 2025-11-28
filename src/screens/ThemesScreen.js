@@ -69,7 +69,10 @@ const ThemesScreen = () => {
         />
       </View>
 
-      <ScrollView contentContainerStyle={styles.grid}>
+      <ScrollView 
+        style={{ flex: 1 }} 
+        contentContainerStyle={[styles.grid, { paddingBottom: 40 }]}
+      >
         {themes.map(t => (
           <ThemePreview 
             key={t.id} 
