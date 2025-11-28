@@ -8,6 +8,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "build": "expo export --platform web",
     "export": "GH_PAGES=true expo export --platform web && touch dist/.nojekyll",
     "deploy": "gh-pages -d dist"
   },
