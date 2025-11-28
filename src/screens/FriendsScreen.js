@@ -118,8 +118,14 @@ const FriendsScreen = ({ navigation }) => {
 
     const onRefresh = async () => {
         setRefreshing(true);
-        if (user) {
-            await loadFriends(user.email);
+        let currentUser = user;
+        if (!currentUser) {
+            currentUser = await getUser();
+            setUser(currentUser);
+        }
+        
+        if (currentUser) {
+            await loadFriends(currentUser.email);
         }
         setRefreshing(false);
     };
@@ -144,7 +150,10 @@ const FriendsScreen = ({ navigation }) => {
                 </View>
                 <View style={styles.friendInfo}>
                     <Text style={[styles.friendName, { color: theme.colors.text }]}>{item.name}</Text>
-                    <Text style={[styles.friendEmail, { color: theme.colors.textSecondary }]}>{item.email}</Text>
+                    <Text style={[styles.friendEmail, { color: theme.colors.textSecondary }]}>
+                        {item.email}
+                        {item.itemCount !== undefined && ` • ${item.itemCount} Items`}
+                    </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
             </TouchableOpacity>
