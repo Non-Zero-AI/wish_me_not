@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { ActivityIndicator, View, StyleSheet, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { getUser } from './src/services/storage';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
@@ -27,8 +28,9 @@ const linking = {
   prefixes: [prefix],
   config: {
     screens: {
-      Onboarding: 'onboarding',
+      Onboarding: '',
       Main: {
+        path: 'app',
         screens: {
           MyList: 'mylist',
           Friends: 'friends',
@@ -108,39 +110,41 @@ function AppNavigator() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
-      <NavigationContainer linking={linking} theme={theme}>
-        <Stack.Navigator 
-          initialRouteName={initialRoute} 
-          screenOptions={{ 
-            headerShown: false,
-            headerStyle: {
-              backgroundColor: theme.colors.surface,
-            },
-            headerTintColor: theme.colors.text,
-          }}
-        >
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-          <Stack.Screen name="Main" component={MainTabs} />
-          <Stack.Screen 
-            name="FriendWishlist" 
-            component={FriendWishlistScreen} 
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen 
-            name="PrivacyPolicy" 
-            component={PrivacyPolicyScreen} 
-            options={{ headerShown: true, title: 'Privacy Policy' }}
-          />
-          <Stack.Screen 
-            name="UserAgreement" 
-            component={UserAgreementScreen} 
-            options={{ headerShown: true, title: 'User Agreement' }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
+        <NavigationContainer linking={linking} theme={theme}>
+          <Stack.Navigator 
+            initialRouteName={initialRoute} 
+            screenOptions={{ 
+              headerShown: false,
+              headerStyle: {
+                backgroundColor: theme.colors.surface,
+              },
+              headerTintColor: theme.colors.text,
+            }}
+          >
+            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+            <Stack.Screen name="Main" component={MainTabs} />
+            <Stack.Screen 
+              name="FriendWishlist" 
+              component={FriendWishlistScreen} 
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="PrivacyPolicy" 
+              component={PrivacyPolicyScreen} 
+              options={{ headerShown: true, title: 'Privacy Policy' }}
+            />
+            <Stack.Screen 
+              name="UserAgreement" 
+              component={UserAgreementScreen} 
+              options={{ headerShown: true, title: 'User Agreement' }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 }
 

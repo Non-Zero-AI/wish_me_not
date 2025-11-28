@@ -28,6 +28,38 @@ const FriendWishlistScreen = ({ route, navigation }) => {
     const loadFriendWishlist = async () => {
         try {
             setLoading(true);
+            
+            // Mock data for testing UI
+            if (friend.email === 'test@wishmenot.app') {
+                await new Promise(resolve => setTimeout(resolve, 500)); // Fake delay
+                setItems([
+                    {
+                        id: '101',
+                        name: 'Sony WH-1000XM5 Wireless Noise Canceling Headphones',
+                        price: '$348.00',
+                        image: 'https://m.media-amazon.com/images/I/51SKmu2G9FL._AC_SL1000_.jpg',
+                        isClaimed: true,
+                        claimedBy: 'Alice Smith'
+                    },
+                    {
+                        id: '102',
+                        name: 'Kindle Paperwhite (16 GB)',
+                        price: '$139.99',
+                        image: 'https://m.media-amazon.com/images/I/51p4T6F5kL._AC_SL1000_.jpg',
+                        isClaimed: false
+                    },
+                    {
+                        id: '103',
+                        name: 'Nintendo Switch OLED Model',
+                        price: '$349.99',
+                        image: 'https://m.media-amazon.com/images/I/51yJ+OqktXL._AC_SL1000_.jpg',
+                        isClaimed: true,
+                        claimedBy: 'Bob Jones'
+                    }
+                ]);
+                return;
+            }
+
             // Fetch the friend's wishlist using their email
             const wishlist = await getUserWishlist(friend.email);
             setItems(wishlist);

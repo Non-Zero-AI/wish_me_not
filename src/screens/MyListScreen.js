@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, SafeAreaView, RefreshControl } from 'react-native';
 import ProductCard from '../components/ProductCard';
 import { getItems, addItem, getUser, deleteItem } from '../services/storage';
-import { addProduct } from '../services/api';
+import { addProduct, deleteProduct } from '../services/api';
 import * as Linking from 'expo-linking';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { useTheme } from '../theme/ThemeContext';
@@ -78,6 +78,16 @@ const HomeScreen = () => {
                     text: "Delete",
                     style: "destructive",
                     onPress: async () => {
+                        try {
+                            const itemToDelete = items.find(i => i.id === itemId);
+                            if (itemToDelete && itemToDelete.link && user) {
+                                await deleteProduct(itemToDelete.link, user.email);
+                            }
+                        } catch (e) {
+                            console.error('Failed to delete from server:', e);
+                            // Continue to delete locally even if server fails
+                        }
+
                         const newItems = await deleteItem(itemId);
                         setItems(newItems);
                     }

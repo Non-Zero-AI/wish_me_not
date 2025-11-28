@@ -3,6 +3,7 @@ import axios from 'axios';
 // Production webhooks
 const WEBHOOK_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Wish_Me_Not';
 const GET_WISHLIST_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Get_Product_Info';
+const DELETE_ITEM_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Delete-Item';
 
 export const addProduct = async (url, user) => {
     try {
@@ -24,6 +25,20 @@ export const addProduct = async (url, user) => {
     }
 };
 
+export const deleteProduct = async (productUrl, userEmail) => {
+    try {
+        await axios.post(DELETE_ITEM_URL, {
+            product_url: productUrl,
+            user_email: userEmail
+        });
+        return true;
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        // We might want to throw, or just log, depending on if we want to block UI removal
+        throw error;
+    }
+};
+
 export const getUserWishlist = async (userEmail) => {
     try {
         const response = await axios.post(GET_WISHLIST_URL, {
@@ -39,6 +54,9 @@ export const getUserWishlist = async (userEmail) => {
                 image: item['Product Image'] || item.product_image,
                 link: item['Product URL'] || item.product_url,
                 wishedBy: item.wished_by || item.wishedBy || null,
+                userName: item.user_name || item['User Name'] || null,
+                isClaimed: item['Is Claimed'] === true || item['Is Claimed'] === 'true' || item.is_claimed === true || item.is_claimed === 'true',
+                claimedBy: item['Claimed By'] || item.claimed_by || null,
             }));
         }
 

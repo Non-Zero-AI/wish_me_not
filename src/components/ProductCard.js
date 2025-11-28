@@ -28,14 +28,21 @@ const ProductCard = ({ item, shouldShowWished = false }) => {
             ) : (
                 <View style={[styles.image, styles.placeholder, { backgroundColor: theme.colors.background }]} />
             )}
-            {shouldShowWished && item.wishedBy && (
-                <View style={[styles.wishedBadge, { backgroundColor: theme.colors.success }]}>
-                    <Ionicons name="gift" size={16} color={theme.colors.textInverse} />
-                    <Text style={[styles.wishedText, { color: theme.colors.textInverse }]}>Wished by {item.wishedBy}</Text>
+            {shouldShowWished && (item.isClaimed || item.wishedBy) && (
+                <View style={[styles.wishedBadge, { backgroundColor: theme.colors.secondary }]}>
+                    <Ionicons name="checkmark-circle" size={16} color={theme.colors.textInverse} />
+                    <Text style={[styles.wishedText, { color: theme.colors.textInverse }]}>Claimed</Text>
                 </View>
             )}
             <View style={styles.content}>
                 <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={2}>{item.name || 'Unknown Product'}</Text>
+                
+                {shouldShowWished && (item.isClaimed || item.wishedBy) && (
+                    <Text style={[styles.claimedByText, { color: theme.colors.primary }]}>
+                        Claimed by {item.claimedBy || item.wishedBy || 'Someone'}
+                    </Text>
+                )}
+
                 <Text style={[styles.price, { color: theme.colors.secondary }]}>{item.price || 'Price not available'}</Text>
                 <TouchableOpacity style={[styles.button, { backgroundColor: theme.colors.primary }]} onPress={handlePress}>
                     <Text style={[styles.buttonText, { color: theme.colors.textInverse }]}>View Product</Text>
@@ -66,6 +73,11 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 18,
+        fontWeight: '600',
+        marginBottom: 8,
+    },
+    claimedByText: {
+        fontSize: 14,
         fontWeight: '600',
         marginBottom: 8,
     },

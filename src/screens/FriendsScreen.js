@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, SafeAreaView } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
+import { getUserWishlist } from '../services/api';
 
 // Mock storage for friends (in a real app, this would be in storage.js)
 const MOCK_FRIENDS = [
     { id: '1', name: 'Alice Smith', email: 'alice@example.com' },
     { id: '2', name: 'Bob Jones', email: 'bob@example.com' },
+    { id: '3', name: 'Test User', email: 'test@wishmenot.app' },
 ];
 import AppHeader from '../components/AppHeader';
 
@@ -14,20 +16,45 @@ const FriendsScreen = ({ navigation }) => {
     const { theme } = useTheme();
     const [friends, setFriends] = useState(MOCK_FRIENDS);
     const [modalVisible, setModalVisible] = useState(false);
-    const [newFriendName, setNewFriendName] = useState('');
+    const [newFriendEmail, setNewFriendEmail] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleAddFriend = () => {
-        if (!newFriendName.trim()) return;
+    const handleAddFriend = async () => {
+        if (!newFriendEmail.trim()) {
+            Alert.alert('Error', 'Please enter an email address');
+            return;
+        }
 
-        const newFriend = {
-            id: Date.now().toString(),
-            name: newFriendName,
-            email: 'pending@example.com' // Placeholder
-        };
+        setLoading(true);
+        try {
+            const wishlist = await getUserWishlist(newFriendEmail.trim());
+            
+            if (wishlist && wishlist.length > 0) {
+                // Try to find a name from the items
+                const friendName = wishlist[0].userName || 'Unknown Friend';
+                
+                const newFriend = {
+                    id: Date.now().toString(),
+                    name: friendName,
+                    email: newFriendEmail.trim()
+                };
 
-        setFriends([...friends, newFriend]);
-        setNewFriendName('');
-        setModalVisible(false);
+                // Check if already exists
+                if (friends.some(f => f.email.toLowerCase() === newFriend.email.toLowerCase())) {
+                    Alert.alert('Info', 'Friend already in your list');
+                } else {
+                    setFriends([...friends, newFriend]);
+                    setNewFriendEmail('');
+                    setModalVisible(false);
+                }
+            } else {
+                Alert.alert('Not Found', 'No wishlist found for this email. They might not have added any items yet.');
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Failed to look up friend. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const renderFriend = ({ item }) => (
@@ -84,23 +111,32 @@ const FriendsScreen = ({ navigation }) => {
                                 color: theme.colors.text,
                                 borderColor: theme.colors.border 
                             }]}
-                            placeholder="Friend's Name"
+                            placeholder="Friend's Email"
                             placeholderTextColor={theme.colors.textSecondary}
-                            value={newFriendName}
-                            onChangeText={setNewFriendName}
+                            value={newFriendEmail}
+                            onChangeText={setNewFriendEmail}
+                            autoCapitalize="none"
+                            keyboardType="email-address"
+                            editable={!loading}
                         />
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
                                 style={[styles.modalButton, styles.cancelButton, { backgroundColor: theme.colors.background }]}
                                 onPress={() => setModalVisible(false)}
+                                disabled={loading}
                             >
                                 <Text style={[styles.cancelButtonText, { color: theme.colors.text }]}>Cancel</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.modalButton, styles.saveButton, { backgroundColor: theme.colors.primary }]}
                                 onPress={handleAddFriend}
+                                disabled={loading}
                             >
-                                <Text style={[styles.saveButtonText, { color: theme.colors.textInverse }]}>Add</Text>
+                                {loading ? (
+                                    <ActivityIndicator color={theme.colors.textInverse} size="small" />
+                                ) : (
+                                    <Text style={[styles.saveButtonText, { color: theme.colors.textInverse }]}>Find & Add</Text>
+                                )}
                             </TouchableOpacity>
                         </View>
                     </View>
