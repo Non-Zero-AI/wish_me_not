@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import { themes } from '../theme/themes';
 import AppHeader from '../components/AppHeader';
@@ -50,14 +50,22 @@ const ThemePreview = ({ themeDef, isDarkPreview, isActive, onSelect }) => {
 const ThemesScreen = () => {
   const { theme, currentThemeId, setThemeId, isDark } = useTheme();
   const [previewMode, setPreviewMode] = useState(isDark ? 'dark' : 'light');
+  const insets = useSafeAreaInsets();
 
   const togglePreviewMode = () => {
     setPreviewMode(prev => prev === 'light' ? 'dark' : 'light');
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <AppHeader title="Choose Theme" />
+    <View style={[
+      styles.container, 
+      { 
+        backgroundColor: theme.colors.background,
+        paddingTop: Platform.OS === 'web' ? 0 : insets.top,
+        paddingBottom: Platform.OS === 'web' ? 0 : insets.bottom,
+      }
+    ]}>
+      <AppHeader title="Choose Theme" showBack={true} />
       
       <View style={[styles.controls, { borderBottomColor: theme.colors.border }]}>
         <Text style={[styles.controlText, { color: theme.colors.text }]}>Preview Mode: {previewMode === 'dark' ? 'Dark' : 'Light'}</Text>
@@ -83,7 +91,7 @@ const ThemesScreen = () => {
           />
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
