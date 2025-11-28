@@ -98,17 +98,31 @@ const HomeScreen = () => {
                     text: "Delete",
                     style: "destructive",
                     onPress: async () => {
-                        // 1. Optimistic UI Update
+                        // 1. Find item before modifying state
                         const itemToDelete = items.find(i => i.id === itemId);
+                        
+                        if (!itemToDelete) {
+                            console.error('Item not found in list:', itemId);
+                            return;
+                        }
+
+                        // 2. Optimistic UI Update
                         setItems(prevItems => prevItems.filter(i => i.id !== itemId));
 
-                        // 2. Update Local Storage
+                        // 3. Update Local Storage
                         await deleteItem(itemId);
 
-                        // 3. Call Server (Background)
-                        if (itemToDelete && itemToDelete.link && user) {
-                            deleteProduct(itemToDelete.link, user.email)
-                                .catch(e => console.error('Background delete failed', e));
+                        // 4. Call Server (Background)
+                        if (itemToDelete.link && user) {
+                            console.log('Deleting from server:', itemToDelete.link, 'ID:', itemToDelete.id);
+                            deleteProduct(itemToDelete.link, user.email, itemToDelete.id)
+                                .catch(e => {
+                                    console.error('Background delete failed', e);
+                                    // Optional: Alert user that server delete failed? 
+                                    // For now, keep silent to avoid interrupting flow, unless it persists.
+                                });
+                        } else {
+                            console.warn('Skipping server delete: Missing link or user', { link: itemToDelete.link, user: !!user });
                         }
                     }
                 }
@@ -161,20 +175,12 @@ const HomeScreen = () => {
                                     <Text style={styles.actionText}>Delete</Text>
                                 </TouchableOpacity>
                             )}
-                            renderRightActions={() => (
-                                <TouchableOpacity
-                                    style={[styles.wishAction, { backgroundColor: theme.colors.success }]}
-                                    onPress={() => handleWishItem(item)}
-                                >
-                                    <Text style={styles.actionText}>Wish</Text>
-                                </TouchableOpacity>
-                            )}
                         >
                             <ProductCard item={item} shouldShowWished={false} />
                         </Swipeable>
                     </View>
                 )}
-                keyExtractor={(item, index) => index.toString()}
+                keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.listContent}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />

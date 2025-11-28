@@ -25,11 +25,12 @@ export const addProduct = async (url, user) => {
     }
 };
 
-export const deleteProduct = async (productUrl, userEmail) => {
+export const deleteProduct = async (productUrl, userEmail, productId) => {
     try {
         await axios.post(DELETE_ITEM_URL, {
             product_url: productUrl,
-            user_email: userEmail
+            user_email: userEmail,
+            product_id: productId
         });
         return true;
     } catch (error) {
