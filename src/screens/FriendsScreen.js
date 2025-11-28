@@ -5,16 +5,12 @@ import { useTheme } from '../theme/ThemeContext';
 import { getUserWishlist } from '../services/api';
 
 // Mock storage for friends (in a real app, this would be in storage.js)
-const MOCK_FRIENDS = [
-    { id: '1', name: 'Alice Smith', email: 'alice@example.com' },
-    { id: '2', name: 'Bob Jones', email: 'bob@example.com' },
-    { id: '3', name: 'Test User', email: 'test@wishmenot.app' },
-];
+// const MOCK_FRIENDS = []; // Removed for production
 import AppHeader from '../components/AppHeader';
 
 const FriendsScreen = ({ navigation }) => {
     const { theme } = useTheme();
-    const [friends, setFriends] = useState(MOCK_FRIENDS);
+    const [friends, setFriends] = useState([]);
     const [modalVisible, setModalVisible] = useState(false);
     const [newFriendEmail, setNewFriendEmail] = useState('');
     const [loading, setLoading] = useState(false);
