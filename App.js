@@ -81,7 +81,7 @@ function MainTabs() {
 
 function AppNavigator() {
   const [loading, setLoading] = useState(true);
-  const [initialRoute, setInitialRoute] = useState('Onboarding');
+  const [user, setUser] = useState(null);
   const { theme, isDark } = useTheme();
 
   useEffect(() => {
@@ -90,10 +90,8 @@ function AppNavigator() {
 
   const checkUser = async () => {
     try {
-      const user = await getUser();
-      if (user) {
-        setInitialRoute('Main');
-      }
+      const userData = await getUser();
+      setUser(userData);
     } catch (e) {
       console.error(e);
     } finally {
@@ -115,7 +113,7 @@ function AppNavigator() {
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
         <NavigationContainer linking={linking} theme={theme}>
           <Stack.Navigator 
-            initialRouteName={initialRoute} 
+            initialRouteName={user ? 'Main' : 'Onboarding'} 
             screenOptions={{ 
               headerShown: false,
               headerStyle: {
