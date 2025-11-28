@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert, SafeAreaView, ActivityIndicator, Switch, ScrollView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert, SafeAreaView, ActivityIndicator, Switch, ScrollView, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { getUser, saveUser } from '../services/storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -54,6 +54,14 @@ const ProfileScreen = ({ navigation }) => {
         await saveUser(user);
         setSaving(false);
         Alert.alert('Success', 'Profile updated!');
+    };
+
+    const handleAppRefresh = () => {
+        if (Platform.OS === 'web') {
+            window.location.reload();
+        } else {
+            Alert.alert('Info', 'This feature is only for the web version to clear cache.');
+        }
     };
 
     if (loading) {
@@ -149,6 +157,10 @@ const ProfileScreen = ({ navigation }) => {
 
                 <View style={[styles.section, { borderTopColor: theme.colors.border }]}>
                     <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>About</Text>
+                    <TouchableOpacity onPress={handleAppRefresh} style={styles.linkRow}>
+                        <Text style={[styles.linkText, { color: theme.colors.primary }]}>Force App Refresh</Text>
+                        <Ionicons name="refresh" size={20} color={theme.colors.primary} />
+                    </TouchableOpacity>
                     <TouchableOpacity onPress={() => navigation.navigate('PrivacyPolicy')} style={styles.linkRow}>
                         <Text style={[styles.linkText, { color: theme.colors.secondary }]}>Privacy Policy</Text>
                         <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
