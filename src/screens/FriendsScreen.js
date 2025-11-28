@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, SafeAreaView, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { getUserWishlist } from '../services/api';
+import { getFriends, saveFriends } from '../services/storage';
 
 // Mock storage for friends (in a real app, this would be in storage.js)
 // const MOCK_FRIENDS = []; // Removed for production
@@ -14,6 +15,22 @@ const FriendsScreen = ({ navigation }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [newFriendEmail, setNewFriendEmail] = useState('');
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+
+    useEffect(() => {
+        loadFriends();
+    }, []);
+
+    const loadFriends = async () => {
+        const storedFriends = await getFriends();
+        setFriends(storedFriends);
+    };
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await loadFriends();
+        setRefreshing(false);
+    };
 
     const handleAddFriend = async () => {
         if (!newFriendEmail.trim()) {
@@ -39,7 +56,9 @@ const FriendsScreen = ({ navigation }) => {
                 if (friends.some(f => f.email.toLowerCase() === newFriend.email.toLowerCase())) {
                     Alert.alert('Info', 'Friend already in your list');
                 } else {
-                    setFriends([...friends, newFriend]);
+                    const updatedFriends = [...friends, newFriend];
+                    setFriends(updatedFriends);
+                    await saveFriends(updatedFriends);
                     setNewFriendEmail('');
                     setModalVisible(false);
                 }
@@ -85,6 +104,9 @@ const FriendsScreen = ({ navigation }) => {
                 renderItem={renderFriend}
                 keyExtractor={item => item.id}
                 contentContainerStyle={styles.listContent}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
+                }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
                         <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No friends yet.</Text>

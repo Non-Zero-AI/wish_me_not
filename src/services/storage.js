@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const USER_KEY = '@user_profile';
 const ITEMS_KEY = '@wishlist_items';
+const FRIENDS_KEY = '@friends_list';
 
 export const saveUser = async (user) => {
   try {
@@ -18,6 +19,24 @@ export const getUser = async () => {
   } catch (e) {
     console.error('Failed to fetch user', e);
     return null;
+  }
+};
+
+export const saveFriends = async (friends) => {
+  try {
+    await AsyncStorage.setItem(FRIENDS_KEY, JSON.stringify(friends));
+  } catch (e) {
+    console.error('Failed to save friends', e);
+  }
+};
+
+export const getFriends = async () => {
+  try {
+    const jsonValue = await AsyncStorage.getItem(FRIENDS_KEY);
+    return jsonValue != null ? JSON.parse(jsonValue) : [];
+  } catch (e) {
+    console.error('Failed to fetch friends', e);
+    return [];
   }
 };
 
