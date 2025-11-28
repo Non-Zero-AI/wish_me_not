@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, SafeAreaView, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import ProductCard from '../components/ProductCard';
@@ -14,6 +14,7 @@ const FriendWishlistScreen = ({ route, navigation }) => {
     const [items, setItems] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
         loadCurrentUser();
@@ -27,7 +28,8 @@ const FriendWishlistScreen = ({ route, navigation }) => {
 
     const loadFriendWishlist = async () => {
         try {
-            setLoading(true);
+            // Only show full loading screen if not refreshing (pull-to-refresh has its own spinner)
+            if (!refreshing) setLoading(true);
             
             // Fetch the friend's wishlist using their email
             const wishlist = await getUserWishlist(friend.email);
@@ -38,6 +40,12 @@ const FriendWishlistScreen = ({ route, navigation }) => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await loadFriendWishlist();
+        setRefreshing(false);
     };
 
     const handleWishItem = (item) => {
@@ -107,6 +115,9 @@ const FriendWishlistScreen = ({ route, navigation }) => {
                     )}
                     keyExtractor={item => item.id}
                     contentContainerStyle={styles.listContent}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
+                    }
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
                             <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>This list is empty.</Text>
