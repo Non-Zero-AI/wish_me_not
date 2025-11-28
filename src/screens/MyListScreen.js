@@ -87,7 +87,7 @@ const HomeScreen = () => {
         }
     };
 
-    const handleDeleteItem = async (itemId) => {
+    const handleDeleteItem = (itemId) => {
         Alert.alert(
             "Delete Item",
             "Are you sure you want to delete this item?",
@@ -97,18 +97,18 @@ const HomeScreen = () => {
                     text: "Delete",
                     style: "destructive",
                     onPress: async () => {
-                        try {
-                            const itemToDelete = items.find(i => i.id === itemId);
-                            if (itemToDelete && itemToDelete.link && user) {
-                                await deleteProduct(itemToDelete.link, user.email);
-                            }
-                        } catch (e) {
-                            console.error('Failed to delete from server:', e);
-                            // Continue to delete locally even if server fails
-                        }
+                        // 1. Optimistic UI Update
+                        const itemToDelete = items.find(i => i.id === itemId);
+                        setItems(prevItems => prevItems.filter(i => i.id !== itemId));
 
-                        const newItems = await deleteItem(itemId);
-                        setItems(newItems);
+                        // 2. Update Local Storage
+                        await deleteItem(itemId);
+
+                        // 3. Call Server (Background)
+                        if (itemToDelete && itemToDelete.link && user) {
+                            deleteProduct(itemToDelete.link, user.email)
+                                .catch(e => console.error('Background delete failed', e));
+                        }
                     }
                 }
             ]
@@ -122,11 +122,14 @@ const HomeScreen = () => {
     const handleShare = async () => {
         try {
             if (!user) return;
-            const deepLink = Linking.createURL(`wishlist/${encodeURIComponent(user.email)}`);
-            const shareMessage = `Check out ${user.firstName}'s Wish List on Wish Me Not!\n\nOnce the app is available, you can view it here:\n${deepLink}\n\nFor now, download the app to see the list!`;
+            
+            const appLink = 'https://wish-me-not.vercel.app';
+            const shareMessage = `Hey! Join me on Wish Me Not to see my wishlist.\n\n1. Go to ${appLink}\n2. Sign up and add me as a friend using my email: ${user.email}`;
 
             await Share.share({
                 message: shareMessage,
+                title: 'Join me on Wish Me Not',
+                url: appLink, // iOS supports url param
             });
         } catch (error) {
             Alert.alert('Error', error.message);
