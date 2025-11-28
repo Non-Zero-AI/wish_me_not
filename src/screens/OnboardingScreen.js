@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, SafeAreaView, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
+import { createUser } from '../services/api';
 
 const OnboardingScreen = ({ navigation }) => {
     const { theme } = useTheme();
@@ -9,6 +10,7 @@ const OnboardingScreen = ({ navigation }) => {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const handleGetStarted = async () => {
         if (!firstName || !lastName || !email) {
@@ -16,10 +18,19 @@ const OnboardingScreen = ({ navigation }) => {
             return;
         }
 
-        const user = { firstName, lastName, email };
-        await login(user);
-        // No need to navigation.replace('Main') because conditional rendering in App.js 
-        // will automatically switch to Main when user is set.
+        setLoading(true);
+        try {
+            const user = { firstName, lastName, email };
+            // Send to automation webhook
+            await createUser(user);
+            // Login locally
+            await login(user);
+        } catch (error) {
+            console.error('Onboarding error:', error);
+            Alert.alert('Error', 'Something went wrong. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -73,11 +84,16 @@ const OnboardingScreen = ({ navigation }) => {
                     />
                 </View>
 
-                <TouchableOpacity 
-                    style={[styles.button, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]} 
+                <TouchableOpacity
+                    style={[styles.button, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]}
                     onPress={handleGetStarted}
+                    disabled={loading}
                 >
-                    <Text style={[styles.buttonText, { color: theme.colors.textInverse }]}>Get Started</Text>
+                    {loading ? (
+                        <ActivityIndicator color={theme.colors.textInverse} />
+                    ) : (
+                        <Text style={[styles.buttonText, { color: theme.colors.textInverse }]}>Get Started</Text>
+                    )}
                 </TouchableOpacity>
             </KeyboardAvoidingView>
         </SafeAreaView>

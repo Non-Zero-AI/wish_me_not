@@ -4,11 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { useTheme } from '../theme/ThemeContext';
-import { getUserWishlist } from '../services/api';
-import { getFriends, saveFriends } from '../services/storage';
-
-// Mock storage for friends (in a real app, this would be in storage.js)
-// const MOCK_FRIENDS = []; // Removed for production
+import { getUserWishlist, getUserFriends, deleteFriend } from '../services/api';
+import { getFriends, saveFriends, getUser } from '../services/storage';
 import AppHeader from '../components/AppHeader';
 
 const FriendsScreen = ({ navigation }) => {
@@ -18,25 +15,37 @@ const FriendsScreen = ({ navigation }) => {
     const [newFriendEmail, setNewFriendEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    const [user, setUser] = useState(null);
 
     useEffect(() => {
         const init = async () => {
             setLoading(true);
-            await loadFriends();
+            const userData = await getUser();
+            setUser(userData);
+            if (userData) {
+                await loadFriends(userData.email);
+            }
             setLoading(false);
         };
         init();
     }, []);
 
-    const loadFriends = async () => {
+    const loadFriends = async (email) => {
+        // 1. Try Server
+        try {
+            const serverFriends = await getUserFriends(email);
+            if (serverFriends && serverFriends.length > 0) {
+                setFriends(serverFriends);
+                await saveFriends(serverFriends); // Cache
+                return;
+            }
+        } catch (e) {
+            console.error('Server fetch failed, falling back to local', e);
+        }
+
+        // 2. Fallback to Local
         const storedFriends = await getFriends();
         setFriends(storedFriends);
-    };
-
-    const onRefresh = async () => {
-        setRefreshing(true);
-        await loadFriends();
-        setRefreshing(false);
     };
 
     const handleAddFriend = async () => {
@@ -68,6 +77,7 @@ const FriendsScreen = ({ navigation }) => {
                     await saveFriends(updatedFriends);
                     setNewFriendEmail('');
                     setModalVisible(false);
+                    // Note: We don't have an API to add friend to server yet, so this is local-only for now.
                 }
             } else {
                 Alert.alert('Not Found', 'No wishlist found for this email. They might not have added any items yet.');
@@ -89,13 +99,29 @@ const FriendsScreen = ({ navigation }) => {
                     text: "Remove",
                     style: "destructive",
                     onPress: async () => {
+                        // Optimistic update
                         const updatedFriends = friends.filter(f => f.id !== friendId);
                         setFriends(updatedFriends);
+                        
+                        // Call server
+                        const friendToDelete = friends.find(f => f.id === friendId);
+                        if (user && friendToDelete) {
+                             deleteFriend(user.email, friendToDelete.email).catch(e => console.error('Delete friend failed', e));
+                        }
+                        
                         await saveFriends(updatedFriends);
                     }
                 }
             ]
         );
+    };
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        if (user) {
+            await loadFriends(user.email);
+        }
+        setRefreshing(false);
     };
 
     const renderFriend = ({ item }) => (

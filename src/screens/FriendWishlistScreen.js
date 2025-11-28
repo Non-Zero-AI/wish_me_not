@@ -75,15 +75,22 @@ const FriendWishlistScreen = ({ route, navigation }) => {
                 { text: "Cancel", style: "cancel" },
                 {
                     text: "Confirm",
-                    onPress: () => {
-                        // Update the item with the current user's name
-                        setItems(prevItems =>
-                            prevItems.map(i =>
-                                i.id === item.id
-                                    ? { ...i, wishedBy: currentUser.firstName }
-                                    : i
-                            )
-                        );
+                    onPress: async () => {
+                        try {
+                            // Call API to claim gift
+                            await claimGift(item, currentUser, friendData);
+                            
+                            // Update UI on success
+                            setItems(prevItems =>
+                                prevItems.map(i =>
+                                    i.id === item.id
+                                        ? { ...i, wishedBy: currentUser.firstName }
+                                        : i
+                                )
+                            );
+                        } catch (error) {
+                            Alert.alert('Error', 'Failed to claim gift. Please try again.');
+                        }
                     }
                 }
             ]
