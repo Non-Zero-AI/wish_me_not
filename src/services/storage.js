@@ -56,3 +56,11 @@ export const deleteItem = async (itemId) => {
     return [];
   }
 };
+
+export const saveItems = async (items) => {
+  try {
+    await AsyncStorage.setItem(ITEMS_KEY, JSON.stringify(items));
+  } catch (e) {
+    console.error('Failed to save items', e);
+  }
+};

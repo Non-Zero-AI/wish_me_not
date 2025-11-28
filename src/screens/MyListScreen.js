@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, SafeAreaView, RefreshControl } from 'react-native';
 import ProductCard from '../components/ProductCard';
-import { getItems, addItem, getUser, deleteItem } from '../services/storage';
-import { addProduct, deleteProduct } from '../services/api';
+import { getItems, addItem, getUser, deleteItem, saveItems } from '../services/storage';
+import { addProduct, deleteProduct, getUserWishlist } from '../services/api';
 import * as Linking from 'expo-linking';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { useTheme } from '../theme/ThemeContext';
@@ -21,8 +21,13 @@ const HomeScreen = () => {
 
     useEffect(() => {
         loadUser();
-        loadItems();
     }, []);
+
+    useEffect(() => {
+        if (user) {
+            loadItems();
+        }
+    }, [user]);
 
     const loadUser = async () => {
         const userData = await getUser();
@@ -30,15 +35,29 @@ const HomeScreen = () => {
     };
 
     const loadItems = async () => {
+        if (!user) return;
+
+        // First load local to ensure quick render
         const storedItems = await getItems();
         setItems(storedItems);
+
+        // Then sync with server
+        try {
+            const serverItems = await getUserWishlist(user.email);
+            if (Array.isArray(serverItems)) {
+                setItems(serverItems);
+                await saveItems(serverItems);
+            }
+        } catch (error) {
+            console.error('Sync error:', error);
+        }
     };
 
-    const onRefresh = useCallback(async () => {
+    const onRefresh = async () => {
         setRefreshing(true);
         await loadItems();
         setRefreshing(false);
-    }, []);
+    };
 
     const handleAddItem = async () => {
         if (!url) return;
