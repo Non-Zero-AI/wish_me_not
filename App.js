@@ -96,7 +96,13 @@ function AppNavigator() {
     <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
-        <NavigationContainer linking={linking} theme={theme}>
+        <NavigationContainer 
+          linking={linking} 
+          theme={theme}
+          documentTitle={{
+            formatter: () => 'Wish Me Not',
+          }}
+        >
           <Stack.Navigator 
             screenOptions={{ 
               headerShown: false,
