@@ -153,6 +153,10 @@ const ProfileScreen = ({ navigation }) => {
                             value={isDark}
                         />
                     </View>
+                    <TouchableOpacity onPress={() => navigation.navigate('Themes')} style={styles.linkRow}>
+                        <Text style={[styles.linkText, { color: theme.colors.text }]}>Choose Theme</Text>
+                        <Ionicons name="color-palette" size={20} color={theme.colors.primary} />
+                    </TouchableOpacity>
                 </View>
 
                 <View style={[styles.section, { borderTopColor: theme.colors.border }]}>

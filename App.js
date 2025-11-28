@@ -19,6 +19,7 @@ import FriendWishlistScreen from './src/screens/FriendWishlistScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 import UserAgreementScreen from './src/screens/UserAgreementScreen';
+import ThemesScreen from './src/screens/ThemesScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -39,6 +40,7 @@ const linking = {
         },
       },
       FriendWishlist: 'wishlist/:userId',
+      Themes: 'themes',
       PrivacyPolicy: 'privacy',
       UserAgreement: 'terms',
     },
@@ -133,6 +135,11 @@ function AppNavigator() {
               name="UserAgreement" 
               component={UserAgreementScreen} 
               options={{ headerShown: true, title: 'User Agreement' }}
+            />
+            <Stack.Screen 
+              name="Themes" 
+              component={ThemesScreen} 
+              options={{ headerShown: false }}
             />
           </Stack.Navigator>
         </NavigationContainer>

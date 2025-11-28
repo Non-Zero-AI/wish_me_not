@@ -1,62 +1,93 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { lightTheme, darkTheme } from './colors';
+import { lightTheme as baseTheme } from './colors';
+import { themes } from './themes';
 
-const THEME_KEY = '@app_theme';
+const THEME_MODE_KEY = '@app_theme_mode';
+const THEME_ID_KEY = '@app_theme_id';
 
 const ThemeContext = createContext({
-  theme: lightTheme,
+  theme: baseTheme,
   isDark: false,
+  currentThemeId: 'default',
   toggleTheme: () => {},
+  setThemeId: () => {},
 });
 
 export const ThemeProvider = ({ children }) => {
   const systemScheme = useColorScheme();
   const [isDark, setIsDark] = useState(systemScheme === 'dark');
+  const [currentThemeId, setCurrentThemeId] = useState('default');
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load saved theme on mount
+  // Load saved preferences on mount
   useEffect(() => {
-    const loadTheme = async () => {
+    const loadPreferences = async () => {
       try {
-        const savedTheme = await AsyncStorage.getItem(THEME_KEY);
-        if (savedTheme !== null) {
-          setIsDark(savedTheme === 'dark');
+        // Load Mode (Light/Dark)
+        const savedMode = await AsyncStorage.getItem(THEME_MODE_KEY);
+        if (savedMode !== null) {
+          setIsDark(savedMode === 'dark');
         } else if (systemScheme) {
-           // If no preference, respect system
-           setIsDark(systemScheme === 'dark');
+          setIsDark(systemScheme === 'dark');
+        }
+
+        // Load Theme ID
+        const savedThemeId = await AsyncStorage.getItem(THEME_ID_KEY);
+        if (savedThemeId && themes.some(t => t.id === savedThemeId)) {
+          setCurrentThemeId(savedThemeId);
         }
       } catch (e) {
-        console.error('Failed to load theme preference', e);
+        console.error('Failed to load theme preferences', e);
       } finally {
         setIsLoaded(true);
       }
     };
-    loadTheme();
+    loadPreferences();
   }, []);
 
-  // Save theme when it changes, but only after initial load
   const toggleTheme = async () => {
     const newIsDark = !isDark;
     setIsDark(newIsDark);
     try {
-      await AsyncStorage.setItem(THEME_KEY, newIsDark ? 'dark' : 'light');
+      await AsyncStorage.setItem(THEME_MODE_KEY, newIsDark ? 'dark' : 'light');
     } catch (e) {
-      console.error('Failed to save theme preference', e);
+      console.error('Failed to save theme mode', e);
     }
   };
 
-  const theme = isDark ? darkTheme : lightTheme;
+  const setThemeId = async (id) => {
+    setCurrentThemeId(id);
+    try {
+      await AsyncStorage.setItem(THEME_ID_KEY, id);
+    } catch (e) {
+      console.error('Failed to save theme ID', e);
+    }
+  };
+
+  // Construct the active theme object
+  const activeThemeDef = themes.find(t => t.id === currentThemeId) || themes[0];
+  const activeColors = isDark ? activeThemeDef.colors.dark : activeThemeDef.colors.light;
+
+  const theme = {
+    ...baseTheme,
+    colors: {
+      ...baseTheme.colors,
+      ...activeColors,
+    },
+  };
 
   const value = {
     theme,
     isDark,
+    currentThemeId,
     toggleTheme,
+    setThemeId,
   };
 
   if (!isLoaded) {
-    return null; // Or a loading spinner if you prefer, to prevent flash
+    return null;
   }
 
   return (
