@@ -42,20 +42,21 @@ export const getUserFriends = async (userEmail) => {
 
         // Step 1: Extract potential values regardless of structure
         if (Array.isArray(data)) {
-             // If array of rows, extract relevant columns
-             rawValues = data.map(row => row.friends || row.friend_email || row.email).filter(v => v);
+             // If array of rows, extract relevant columns (Case insensitive check)
+             rawValues = data.map(row => row.friends || row.Friends || row.friend_email || row.email).filter(v => v);
         } else if (typeof data === 'object' && data !== null) {
              // If single object
              if (data.friends) rawValues.push(data.friends);
+             if (data.Friends) rawValues.push(data.Friends);
         } else if (typeof data === 'string') {
              rawValues.push(data);
         }
 
-        // Step 2: Normalize and Split (handle comma-separated strings mixed with arrays)
+        // Step 2: Normalize and Split (handle comma-separated strings mixed with arrays, and newlines)
         rawValues.forEach(val => {
             if (typeof val === 'string') {
-                // Split by comma and add
-                const parts = val.split(',').map(e => e.trim());
+                // Split by comma OR newline
+                const parts = val.split(/[,\n]+/).map(e => e.trim());
                 friendEmails.push(...parts);
             } else if (Array.isArray(val)) {
                 // Nested array
