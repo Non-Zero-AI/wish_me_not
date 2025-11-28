@@ -29,15 +29,16 @@ export default {
       name: "Wish Me Not",
       shortName: "WishMeNot",
       description: "The wishlist app you actually want.",
-      backgroundColor: "#1a2332",
-      themeColor: "#E2B93B",
+      backgroundColor: "#003049",
+      themeColor: "#003049",
       display: "standalone",
       startUrl: "/",
+      scope: "/",
       orientation: "portrait",
       meta: {
         apple: {
           mobileWebAppCapable: "yes",
-          mobileWebAppStatusBarStyle: "black-translucent"
+          mobileWebAppStatusBarStyle: "black"
         }
       }
     },
