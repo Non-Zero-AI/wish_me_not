@@ -27,36 +27,64 @@ export const createUser = async (user) => {
 
 export const getUserFriends = async (userEmail) => {
     try {
+        console.log('Fetching friends for:', userEmail);
         const response = await axios.post(GET_FRIENDS_URL, {
             user_email: userEmail
         });
 
+        console.log('Get Friends Raw Response:', JSON.stringify(response.data, null, 2));
+
         // Expecting response to contain a list of emails or a comma separated string
-        // Adjust parsing based on actual webhook response structure
-        const data = response.data;
+        // Handle potential n8n output wrapper
+        const data = response.data.output || response.data; 
         let friendEmails = [];
 
+        // Case 1: 'friends' property contains string or array
         if (data.friends) {
              if (typeof data.friends === 'string') {
                  friendEmails = data.friends.split(',').map(e => e.trim()).filter(e => e);
              } else if (Array.isArray(data.friends)) {
                  friendEmails = data.friends;
              }
-        } else if (Array.isArray(data)) {
-            // If it returns rows of friends
-             friendEmails = data.map(f => f.friend_email || f.email).filter(e => e);
+        } 
+        // Case 2: The data itself is the string (unlikely but possible if raw)
+        else if (typeof data === 'string' && data.includes('@')) {
+             friendEmails = data.split(',').map(e => e.trim()).filter(e => e);
         }
+        // Case 3: Array of objects (rows)
+        else if (Array.isArray(data)) {
+             friendEmails = data.map(f => f.friend_email || f.email || f.friends).filter(e => e);
+        }
+        
+        console.log('Parsed Friend Emails:', friendEmails);
 
-        // Now fetch details for these emails? 
-        // The prompt implies we just get the list.
-        // But the UI needs names. 
-        // We might need to iterate and fetch names or assume the Get_Friends returns names too.
-        // For now, map to objects with email as name fallback
-        return friendEmails.map(email => ({
-            id: email,
-            name: email.split('@')[0], // Placeholder name
-            email: email
+        // Enrich with details from wishlist (parallel)
+        const friendsWithDetails = await Promise.all(friendEmails.map(async (email) => {
+            try {
+                // We reuse the existing getUserWishlist function
+                const wishlist = await getUserWishlist(email);
+                
+                // Try to find a name from the items
+                // getUserWishlist returns items with 'userName' property
+                const friendName = wishlist.length > 0 ? wishlist[0].userName : null;
+                
+                return {
+                    id: email,
+                    name: friendName || email.split('@')[0], // Fallback to email prefix
+                    email: email,
+                    itemCount: wishlist.length
+                };
+            } catch (e) {
+                console.warn(`Failed to fetch details for ${email}`, e);
+                return {
+                    id: email,
+                    name: email.split('@')[0],
+                    email: email
+                };
+            }
         }));
+
+        return friendsWithDetails;
 
     } catch (error) {
         console.error('Error fetching friends:', error);
