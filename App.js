@@ -10,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { getUser } from './src/services/storage';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import MyListScreen from './src/screens/MyListScreen';
@@ -80,26 +81,10 @@ function MainTabs() {
 }
 
 function AppNavigator() {
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
+  const { user, isLoading } = useAuth();
   const { theme, isDark } = useTheme();
 
-  useEffect(() => {
-    checkUser();
-  }, []);
-
-  const checkUser = async () => {
-    try {
-      const userData = await getUser();
-      setUser(userData);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -113,7 +98,6 @@ function AppNavigator() {
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
         <NavigationContainer linking={linking} theme={theme}>
           <Stack.Navigator 
-            initialRouteName={user ? 'Main' : 'Onboarding'} 
             screenOptions={{ 
               headerShown: false,
               headerStyle: {
@@ -122,13 +106,18 @@ function AppNavigator() {
               headerTintColor: theme.colors.text,
             }}
           >
-            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-            <Stack.Screen name="Main" component={MainTabs} />
-            <Stack.Screen 
-              name="FriendWishlist" 
-              component={FriendWishlistScreen} 
-              options={{ headerShown: false }}
-            />
+            {user ? (
+              <>
+                <Stack.Screen name="Main" component={MainTabs} />
+                <Stack.Screen 
+                  name="FriendWishlist" 
+                  component={FriendWishlistScreen} 
+                  options={{ headerShown: false }}
+                />
+              </>
+            ) : (
+              <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+            )}
             <Stack.Screen 
               name="PrivacyPolicy" 
               component={PrivacyPolicyScreen} 
@@ -149,7 +138,9 @@ function AppNavigator() {
 export default function App() {
   return (
     <ThemeProvider>
-      <AppNavigator />
+      <AuthProvider>
+        <AppNavigator />
+      </AuthProvider>
     </ThemeProvider>
   );
 }

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
-import { saveUser } from '../services/storage';
+import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 
 const OnboardingScreen = ({ navigation }) => {
     const { theme } = useTheme();
+    const { login } = useAuth();
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
@@ -16,8 +17,9 @@ const OnboardingScreen = ({ navigation }) => {
         }
 
         const user = { firstName, lastName, email };
-        await saveUser(user);
-        navigation.replace('Main');
+        await login(user);
+        // No need to navigation.replace('Main') because conditional rendering in App.js 
+        // will automatically switch to Main when user is set.
     };
 
     return (
