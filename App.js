@@ -3,7 +3,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { ActivityIndicator, View, StyleSheet, StatusBar } from 'react-native';
+import { ActivityIndicator, View, StyleSheet, StatusBar, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -73,6 +73,7 @@ function MainTabs() {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.borderNav,
         },
+        tabBarButton: (props) => <TouchableOpacity {...props} />,
       })}
     >
       <Tab.Screen name="MyList" component={MyListScreen} options={{ title: 'My Wish List' }} />
