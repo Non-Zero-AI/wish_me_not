@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import ProductCard from '../components/ProductCard';
 import { getUser } from '../services/storage';
@@ -11,6 +11,7 @@ import AppHeader from '../components/AppHeader';
 const FriendWishlistScreen = ({ route, navigation }) => {
     const { friend, userId } = route.params || {};
     const { theme } = useTheme();
+    const insets = useSafeAreaInsets();
     
     // Construct a friend object if we only have userId (from deep link)
     const friendData = friend || { 
@@ -97,7 +98,14 @@ const FriendWishlistScreen = ({ route, navigation }) => {
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={[
+            styles.container, 
+            { 
+                backgroundColor: theme.colors.background,
+                paddingTop: insets.top,
+                paddingBottom: 0,
+            }
+        ]}>
             <AppHeader 
                 title={`${friendData.name}'s Wish List`}
                 subTitle="Swipe right to claim a gift"
@@ -122,7 +130,7 @@ const FriendWishlistScreen = ({ route, navigation }) => {
                         </View>
                     )}
                     keyExtractor={item => item.id}
-                    contentContainerStyle={styles.listContent}
+                    contentContainerStyle={[styles.listContent, { paddingBottom: 150 + insets.bottom }]}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
                     }
@@ -133,7 +141,7 @@ const FriendWishlistScreen = ({ route, navigation }) => {
                     }
                 />
             )}
-        </SafeAreaView>
+        </View>
     );
 };
 

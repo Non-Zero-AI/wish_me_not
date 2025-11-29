@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ProductCard from '../components/ProductCard';
 import { getItems, addItem, getUser, deleteItem, saveItems } from '../services/storage';
 import { addProduct, deleteProduct, getUserWishlist } from '../services/api';
@@ -11,6 +11,7 @@ import AppHeader from '../components/AppHeader';
 
 const HomeScreen = () => {
     const { theme, isDark } = useTheme();
+    const insets = useSafeAreaInsets();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
@@ -151,7 +152,14 @@ const HomeScreen = () => {
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={[
+            styles.container, 
+            { 
+                backgroundColor: theme.colors.background,
+                paddingTop: insets.top,
+                paddingBottom: 0,
+            }
+        ]}>
             <AppHeader 
                 title="My Wish List" 
                 rightAction={
@@ -173,7 +181,7 @@ const HomeScreen = () => {
                     </View>
                 )}
                 keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContent}
+                contentContainerStyle={[styles.listContent, { paddingBottom: 150 + insets.bottom }]}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
                 }
@@ -186,7 +194,7 @@ const HomeScreen = () => {
             />
 
             <TouchableOpacity 
-                style={[styles.fab, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]} 
+                style={[styles.fab, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary, marginBottom: insets.bottom }]} 
                 onPress={() => setModalVisible(true)}
             >
                 <Ionicons name="add" size={32} color={theme.colors.textInverse} />
@@ -241,7 +249,7 @@ const HomeScreen = () => {
                     </View>
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
     );
 };
 
