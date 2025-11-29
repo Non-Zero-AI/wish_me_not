@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, RefreshControl, Image, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as Haptics from 'expo-haptics';
@@ -22,18 +23,21 @@ const FriendsScreen = ({ navigation }) => {
     const [feedItems, setFeedItems] = useState([]);
     const [loadingFeed, setLoadingFeed] = useState(false);
 
-    useEffect(() => {
-        const init = async () => {
-            setLoading(true);
-            const userData = await getUser();
-            setUser(userData);
-            if (userData) {
-                await loadFriends(userData.email);
-            }
-            setLoading(false);
-        };
-        init();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            const init = async () => {
+                // Only show loading on first load or if explicitly needed
+                // setLoading(true); 
+                const userData = await getUser();
+                setUser(userData);
+                if (userData) {
+                    await loadFriends(userData.email);
+                }
+                // setLoading(false);
+            };
+            init();
+        }, [])
+    );
 
     // Trigger feed load when switching to feed mode or when friends update
     useEffect(() => {
@@ -347,9 +351,14 @@ const FriendsScreen = ({ navigation }) => {
             <AppHeader 
                 title="Friends" 
                 rightAction={
-                    <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.addButton}>
-                        <Ionicons name="person-add" size={24} color={theme.colors.primary} />
-                    </TouchableOpacity>
+                    <View style={{ flexDirection: 'row', gap: 12 }}>
+                        <TouchableOpacity onPress={onRefresh} style={styles.addButton}>
+                            <Ionicons name="refresh" size={24} color={theme.colors.primary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.addButton}>
+                            <Ionicons name="person-add" size={24} color={theme.colors.primary} />
+                        </TouchableOpacity>
+                    </View>
                 }
             />
             

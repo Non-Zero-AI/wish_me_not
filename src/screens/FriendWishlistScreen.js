@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Swipeable } from 'react-native-gesture-handler';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import ProductCard from '../components/ProductCard';
 import { getUser, addLocalFriend } from '../services/storage';
@@ -33,8 +34,15 @@ const FriendWishlistScreen = ({ route, navigation }) => {
             return;
         }
         loadCurrentUser();
-        loadFriendWishlist();
     }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            if (friendData.email) {
+                loadFriendWishlist();
+            }
+        }, [friendData.email])
+    );
 
     const loadCurrentUser = async () => {
         const user = await getUser();
@@ -162,6 +170,11 @@ const FriendWishlistScreen = ({ route, navigation }) => {
                 title={`${friendData.name}'s Wish List`}
                 subTitle="Swipe right to claim a gift"
                 showBack
+                rightAction={
+                    <TouchableOpacity onPress={onRefresh} style={{ padding: 8 }}>
+                        <Ionicons name="refresh" size={24} color={theme.colors.primary} />
+                    </TouchableOpacity>
+                }
             />
 
             {loading ? (

@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Swipeable } from 'react-native-gesture-handler';
 import * as ImagePicker from 'expo-image-picker';
 import ProductCard from '../components/ProductCard';
-import { getItems, addItem, getUser, deleteItem, saveItems } from '../services/storage';
+import { getItems, addItem, getUser, deleteItem, saveItems, saveUser } from '../services/storage';
 import { addProduct, deleteProduct, getUserWishlist, addManualProduct } from '../services/api';
 import * as Linking from 'expo-linking';
 import { useTheme } from '../theme/ThemeContext';
@@ -27,6 +27,7 @@ const HomeScreen = () => {
     const [manualName, setManualName] = useState('');
     const [manualPrice, setManualPrice] = useState('');
     const [manualImage, setManualImage] = useState(null);
+    const [showLocalSurprises, setShowLocalSurprises] = useState(false);
 
     useEffect(() => {
         console.log('MyListScreen mounted');
@@ -42,6 +43,19 @@ const HomeScreen = () => {
     const loadUser = async () => {
         const userData = await getUser();
         setUser(userData);
+        if (userData) {
+            setShowLocalSurprises(userData.showSurprises || false);
+        }
+    };
+
+    const toggleSurprises = async () => {
+        const newValue = !showLocalSurprises;
+        setShowLocalSurprises(newValue);
+        if (user) {
+            const updatedUser = { ...user, showSurprises: newValue };
+            setUser(updatedUser);
+            await saveUser(updatedUser);
+        }
     };
 
     const loadItems = async () => {
@@ -283,9 +297,17 @@ To view it:
             <AppHeader 
                 title="My Wish List" 
                 rightAction={
-                    <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
-                        <Ionicons name="share-outline" size={24} color={theme.colors.primary} />
-                    </TouchableOpacity>
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <TouchableOpacity onPress={toggleSurprises} style={styles.shareButton}>
+                            <Ionicons name={showLocalSurprises ? "eye-off" : "eye"} size={24} color={theme.colors.primary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={onRefresh} style={styles.shareButton}>
+                            <Ionicons name="refresh" size={24} color={theme.colors.primary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
+                            <Ionicons name="share-outline" size={24} color={theme.colors.primary} />
+                        </TouchableOpacity>
+                    </View>
                 }
             />
 
@@ -297,7 +319,7 @@ To view it:
                         <Swipeable renderRightActions={(p, d) => renderRightActions(p, d, item)}>
                             <ProductCard 
                                 item={item} 
-                                shouldShowWished={user?.showSurprises}
+                                shouldShowWished={showLocalSurprises}
                             />
                         </Swipeable>
                     </View>
