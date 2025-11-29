@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, RefreshControl, Platform } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, RefreshControl, Platform, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Swipeable } from 'react-native-gesture-handler';
+import * as ImagePicker from 'expo-image-picker';
 import ProductCard from '../components/ProductCard';
 import { getItems, addItem, getUser, deleteItem, saveItems } from '../services/storage';
-import { addProduct, deleteProduct, getUserWishlist } from '../services/api';
+import { addProduct, deleteProduct, getUserWishlist, addManualProduct } from '../services/api';
 import * as Linking from 'expo-linking';
 import { useTheme } from '../theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +21,12 @@ const HomeScreen = () => {
     const [url, setUrl] = useState('');
     const [adding, setAdding] = useState(false);
     const [user, setUser] = useState(null);
+
+    // Manual Entry State
+    const [entryMode, setEntryMode] = useState('link'); // 'link' | 'manual'
+    const [manualName, setManualName] = useState('');
+    const [manualPrice, setManualPrice] = useState('');
+    const [manualImage, setManualImage] = useState(null);
 
     useEffect(() => {
         loadUser();
@@ -61,7 +68,70 @@ const HomeScreen = () => {
         setRefreshing(false);
     };
 
+    const handlePickImage = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 0.5,
+            base64: true,
+        });
+
+        if (!result.canceled) {
+            const asset = result.assets[0];
+            const imageUri = asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : asset.uri;
+            setManualImage(imageUri);
+        }
+    };
+
+    const handleAddManual = async () => {
+        if (!manualName || !manualPrice) {
+             Alert.alert("Missing Info", "Please enter name and price.");
+             return;
+        }
+        setAdding(true);
+        const tempId = Date.now().toString();
+        
+        const tempItem = { 
+            id: tempId, 
+            name: manualName, 
+            price: manualPrice, 
+            image: manualImage, 
+            loading: true,
+            isManual: true
+        };
+        
+        setItems(prevItems => [tempItem, ...prevItems]);
+        setModalVisible(false);
+        
+        // Reset form
+        setManualName(''); 
+        setManualPrice(''); 
+        setManualImage(null);
+
+        try {
+             const product = await addManualProduct({
+                 name: manualName,
+                 price: manualPrice,
+                 image: manualImage
+             }, user);
+             
+             const newItems = await addItem(product);
+             setItems(newItems);
+        } catch (e) {
+             Alert.alert("Error", "Failed to add manual item.");
+             setItems(prev => prev.filter(i => i.id !== tempId));
+        } finally {
+             setAdding(false);
+        }
+    };
+
     const handleAddItem = async () => {
+        if (entryMode === 'manual') {
+            handleAddManual();
+            return;
+        }
+
         if (!url) return;
 
         const tempId = Date.now().toString();
@@ -267,21 +337,80 @@ To view it:
                 <View style={styles.modalOverlay}>
                     <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
                         <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Add Item</Text>
-                        <Text style={[styles.modalSubtitle, { color: theme.colors.textSecondary }]}>Paste a product URL below</Text>
+                        
+                        {/* Entry Mode Toggle */}
+                        <View style={styles.tabContainer}>
+                            <TouchableOpacity 
+                                style={[styles.tab, entryMode === 'link' && styles.activeTab]} 
+                                onPress={() => setEntryMode('link')}
+                            >
+                                <Text style={[styles.tabText, entryMode === 'link' && styles.activeTabText]}>Link</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={[styles.tab, entryMode === 'manual' && styles.activeTab]} 
+                                onPress={() => setEntryMode('manual')}
+                            >
+                                <Text style={[styles.tabText, entryMode === 'manual' && styles.activeTabText]}>Manual</Text>
+                            </TouchableOpacity>
+                        </View>
 
-                        <TextInput
-                            style={[styles.input, { 
-                                backgroundColor: theme.colors.background, 
-                                color: theme.colors.text, 
-                                borderColor: theme.colors.border 
-                            }]}
-                            placeholder="https://example.com/product"
-                            placeholderTextColor={theme.colors.textSecondary}
-                            value={url}
-                            onChangeText={setUrl}
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                        />
+                        {entryMode === 'link' ? (
+                            <>
+                                <Text style={[styles.modalSubtitle, { color: theme.colors.textSecondary }]}>Paste a product URL below</Text>
+                                <TextInput
+                                    style={[styles.input, { 
+                                        backgroundColor: theme.colors.background, 
+                                        color: theme.colors.text, 
+                                        borderColor: theme.colors.border 
+                                    }]}
+                                    placeholder="https://example.com/product"
+                                    placeholderTextColor={theme.colors.textSecondary}
+                                    value={url}
+                                    onChangeText={setUrl}
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
+                                />
+                            </>
+                        ) : (
+                            <>
+                                <TouchableOpacity onPress={handlePickImage} style={styles.imagePreview}>
+                                    {manualImage ? (
+                                        <Image source={{ uri: manualImage }} style={styles.previewImage} resizeMode="cover" />
+                                    ) : (
+                                        <View style={{ alignItems: 'center' }}>
+                                            <Ionicons name="camera-outline" size={32} color={theme.colors.textSecondary} />
+                                            <Text style={{ color: theme.colors.textSecondary, marginTop: 4 }}>Add Image</Text>
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+
+                                <TextInput
+                                    style={[styles.input, { 
+                                        backgroundColor: theme.colors.background, 
+                                        color: theme.colors.text, 
+                                        borderColor: theme.colors.border,
+                                        marginBottom: 12
+                                    }]}
+                                    placeholder="Item Name"
+                                    placeholderTextColor={theme.colors.textSecondary}
+                                    value={manualName}
+                                    onChangeText={setManualName}
+                                />
+                                
+                                <TextInput
+                                    style={[styles.input, { 
+                                        backgroundColor: theme.colors.background, 
+                                        color: theme.colors.text, 
+                                        borderColor: theme.colors.border 
+                                    }]}
+                                    placeholder="Price"
+                                    placeholderTextColor={theme.colors.textSecondary}
+                                    value={manualPrice}
+                                    onChangeText={setManualPrice}
+                                    keyboardType="numeric" // or decimal-pad
+                                />
+                            </>
+                        )}
 
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
@@ -387,6 +516,52 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginBottom: 20,
         textAlign: 'center',
+    },
+    tabContainer: {
+        flexDirection: 'row',
+        marginBottom: 20,
+        backgroundColor: '#f0f0f0',
+        borderRadius: 8,
+        padding: 4,
+    },
+    tab: {
+        flex: 1,
+        paddingVertical: 8,
+        alignItems: 'center',
+        borderRadius: 6,
+    },
+    activeTab: {
+        backgroundColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 1,
+        elevation: 2,
+    },
+    tabText: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#666',
+    },
+    activeTabText: {
+        color: '#000',
+        fontWeight: '600',
+    },
+    imagePreview: {
+        width: '100%',
+        height: 150,
+        borderRadius: 8,
+        marginBottom: 16,
+        backgroundColor: '#f5f5f5',
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#eee',
+    },
+    previewImage: {
+        width: '100%',
+        height: '100%',
     },
     input: {
         paddingHorizontal: 16,

@@ -226,18 +226,28 @@ export const addProduct = async (url, user) => {
     try {
         const response = await axios.post(WEBHOOK_URL, {
             url: url,
-            user_name: `${user.firstName} ${user.lastName}`,
-            user_email: user.email,
+            email: user.email
         });
-        const data = response.data.output;
-        return {
-            name: data.product_name,
-            price: data.product_price,
-            image: data.product_image,
-            link: data.product_url,
-        };
+        return response.data;
     } catch (error) {
         console.error('Error adding product:', error);
+        throw error;
+    }
+};
+
+export const addManualProduct = async (productData, user) => {
+    try {
+        const payload = {
+            email: user.email,
+            name: productData.name,
+            price: productData.price,
+            image: productData.image,
+        };
+        
+        const response = await axios.post('https://n8n.srv1023211.hstgr.cloud/webhook/manual-gift-entry', payload);
+        return response.data;
+    } catch (error) {
+        console.error('Error adding manual product:', error);
         throw error;
     }
 };
