@@ -60,6 +60,24 @@ const FriendWishlistScreen = ({ route, navigation }) => {
         setRefreshing(false);
     };
 
+    const executeClaim = async (item) => {
+        try {
+            // Call API to claim gift
+            await claimGift(item, currentUser, friendData);
+            
+            // Update UI on success
+            setItems(prevItems =>
+                prevItems.map(i =>
+                    i.id === item.id
+                        ? { ...i, wishedBy: currentUser.firstName }
+                        : i
+                )
+            );
+        } catch (error) {
+            Alert.alert('Error', 'Failed to claim gift. Please try again.');
+        }
+    };
+
     const handleWishItem = (item) => {
         if (!currentUser) return;
 
@@ -68,33 +86,25 @@ const FriendWishlistScreen = ({ route, navigation }) => {
             return;
         }
 
-        Alert.alert(
-            "Wish Item",
-            `You have marked ${item.name} as wished for ${friendData.name}. This claims the gift!`,
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Confirm",
-                    onPress: async () => {
-                        try {
-                            // Call API to claim gift
-                            await claimGift(item, currentUser, friendData);
-                            
-                            // Update UI on success
-                            setItems(prevItems =>
-                                prevItems.map(i =>
-                                    i.id === item.id
-                                        ? { ...i, wishedBy: currentUser.firstName }
-                                        : i
-                                )
-                            );
-                        } catch (error) {
-                            Alert.alert('Error', 'Failed to claim gift. Please try again.');
-                        }
+        const message = `You have marked ${item.name} as wished for ${friendData.name}. This claims the gift!`;
+
+        if (Platform.OS === 'web') {
+            if (window.confirm(message)) {
+                executeClaim(item);
+            }
+        } else {
+            Alert.alert(
+                "Wish Item",
+                message,
+                [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                        text: "Confirm",
+                        onPress: () => executeClaim(item)
                     }
-                }
-            ]
-        );
+                ]
+            );
+        }
     };
 
     return (

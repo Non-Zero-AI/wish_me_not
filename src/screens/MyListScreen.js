@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, RefreshControl } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, RefreshControl, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ProductCard from '../components/ProductCard';
 import { getItems, addItem, getUser, deleteItem, saveItems } from '../services/storage';
@@ -88,46 +88,52 @@ const HomeScreen = () => {
         }
     };
 
+    const executeDelete = async (itemId) => {
+        // 1. Find item before modifying state
+        const itemToDelete = items.find(i => i.id === itemId);
+        
+        if (!itemToDelete) {
+            console.error('Item not found in list:', itemId);
+            return;
+        }
+
+        // 2. Optimistic UI Update
+        setItems(prevItems => prevItems.filter(i => i.id !== itemId));
+
+        // 3. Update Local Storage
+        await deleteItem(itemId);
+
+        // 4. Call Server (Background)
+        if (itemToDelete.link && user) {
+            console.log('Deleting from server:', itemToDelete.link, 'ID:', itemToDelete.id);
+            deleteProduct(itemToDelete.link, user.email, itemToDelete.id)
+                .catch(e => {
+                    console.error('Background delete failed', e);
+                });
+        } else {
+            console.warn('Skipping server delete: Missing link or user', { link: itemToDelete.link, user: !!user });
+        }
+    };
+
     const handleDeleteItem = (itemId) => {
-        Alert.alert(
-            "Delete Item",
-            "Are you sure you want to delete this item?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                        // 1. Find item before modifying state
-                        const itemToDelete = items.find(i => i.id === itemId);
-                        
-                        if (!itemToDelete) {
-                            console.error('Item not found in list:', itemId);
-                            return;
-                        }
-
-                        // 2. Optimistic UI Update
-                        setItems(prevItems => prevItems.filter(i => i.id !== itemId));
-
-                        // 3. Update Local Storage
-                        await deleteItem(itemId);
-
-                        // 4. Call Server (Background)
-                        if (itemToDelete.link && user) {
-                            console.log('Deleting from server:', itemToDelete.link, 'ID:', itemToDelete.id);
-                            deleteProduct(itemToDelete.link, user.email, itemToDelete.id)
-                                .catch(e => {
-                                    console.error('Background delete failed', e);
-                                    // Optional: Alert user that server delete failed? 
-                                    // For now, keep silent to avoid interrupting flow, unless it persists.
-                                });
-                        } else {
-                            console.warn('Skipping server delete: Missing link or user', { link: itemToDelete.link, user: !!user });
-                        }
+        if (Platform.OS === 'web') {
+            if (window.confirm("Are you sure you want to delete this item?")) {
+                executeDelete(itemId);
+            }
+        } else {
+            Alert.alert(
+                "Delete Item",
+                "Are you sure you want to delete this item?",
+                [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                        text: "Delete",
+                        style: "destructive",
+                        onPress: () => executeDelete(itemId)
                     }
-                }
-            ]
-        );
+                ]
+            );
+        }
     };
 
     const handleWishItem = (item) => {
