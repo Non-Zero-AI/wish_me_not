@@ -138,6 +138,7 @@ function AppNavigator() {
   const { theme, isDark } = useTheme();
   const [showSplash, setShowSplash] = useState(false);
   const [splashShown, setSplashShown] = useState(false);
+  const [dataReady, setDataReady] = useState(false);
   
   const [fontsLoaded] = useFonts({
     'Inter-Regular': Inter_400Regular,
@@ -152,23 +153,37 @@ function AppNavigator() {
         setShowSplash(true);
         setSplashShown(true);
         
-        const preloadData = async () => {
-          try {
-            console.log('Preloading data...');
-            const [userInfo, wishlist, friends] = await Promise.all([
-              fetchUserInfo(user.email).catch(() => null),
-              getUserWishlist(user.email).catch(() => []),
-              getUserFriends(user.email).catch(() => [])
-            ]);
+        const runSequence = async () => {
+            // Minimum splash duration (e.g., 3 seconds) to allow reading text
+            const minDelay = new Promise(resolve => setTimeout(resolve, 3500));
+            
+            // Data loading
+            const loadData = async () => {
+                try {
+                    console.log('Preloading data...');
+                    const [userInfo, wishlist, friends] = await Promise.all([
+                        fetchUserInfo(user.email).catch(() => null),
+                        getUserWishlist(user.email).catch(() => []),
+                        getUserFriends(user.email).catch(() => [])
+                    ]);
 
-            if (userInfo) await saveUser({ ...userInfo, email: user.email });
-            if (wishlist) await saveItems(wishlist);
-            if (friends) await saveFriends(friends);
-          } catch (e) {
-            console.warn('Preload failed', e);
-          }
+                    if (userInfo) await saveUser({ ...userInfo, email: user.email });
+                    if (wishlist) await saveItems(wishlist);
+                    if (friends) await saveFriends(friends);
+                    console.log('Preloading complete');
+                } catch (e) {
+                    console.warn('Preload failed', e);
+                }
+            };
+
+            // Wait for both
+            await Promise.all([minDelay, loadData()]);
+            
+            // Signal splash to exit
+            setDataReady(true);
         };
-        preloadData();
+
+        runSequence();
     }
   }, [user, isLoading]);
 
@@ -182,7 +197,7 @@ function AppNavigator() {
 
   return (
     <SafeAreaProvider>
-      {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
+      {showSplash && <SplashScreen dataReady={dataReady} onFinish={() => setShowSplash(false)} />}
       <GestureHandlerRootView style={{ flex: 1 }}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
         <NavigationContainer 

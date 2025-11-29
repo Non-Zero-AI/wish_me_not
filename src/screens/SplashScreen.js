@@ -12,7 +12,7 @@ import { useTheme } from '../theme/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
-const SplashScreen = ({ onFinish }) => {
+const SplashScreen = ({ onFinish, dataReady }) => {
     const { theme } = useTheme();
     
     // Animation Values
@@ -21,6 +21,8 @@ const SplashScreen = ({ onFinish }) => {
     const subtitleOpacity = useSharedValue(0);
     const containerOpacity = useSharedValue(1);
     const containerScale = useSharedValue(1);
+    
+    const [introComplete, setIntroComplete] = React.useState(false);
 
     useEffect(() => {
         // 1. Circle Expand (Scope Out) - Start from black, reveal theme background
@@ -28,23 +30,25 @@ const SplashScreen = ({ onFinish }) => {
 
         // 2. Reveal Text Sequence
         titleOpacity.value = withDelay(1000, withTiming(1, { duration: 1000 }));
-        subtitleOpacity.value = withDelay(2000, withTiming(1, { duration: 1000 }));
-        
-        // 3. Exit Animation (Zoom Out/Fade)
-        // Total time roughly: 1200 (circle) + text reads (~3s) -> exit
-        const EXIT_DELAY = 5000;
-
-        containerOpacity.value = withDelay(EXIT_DELAY, withTiming(0, { duration: 800 }, (finished) => {
+        subtitleOpacity.value = withDelay(2000, withTiming(1, { duration: 1000 }, (finished) => {
             if (finished) {
-                runOnJS(onFinish)();
+                runOnJS(setIntroComplete)(true);
             }
         }));
-        
-        // "Zoom out" effect (scaling down creates a zoom out feel, or scaling up zoom in)
-        // Request says "zoom out (or in)". Scaling up the splash screen while fading out gives a "flying through" zoom in effect.
-        containerScale.value = withDelay(EXIT_DELAY, withTiming(1.5, { duration: 800 }));
-
     }, []);
+    
+    // 3. Exit Animation (Zoom Out/Fade)
+    // Trigger only when intro is done AND data is ready
+    useEffect(() => {
+        if (introComplete && dataReady) {
+             containerOpacity.value = withTiming(0, { duration: 800 }, (finished) => {
+                if (finished) {
+                    runOnJS(onFinish)();
+                }
+            });
+            containerScale.value = withTiming(1.5, { duration: 800 });
+        }
+    }, [introComplete, dataReady]);
 
     const circleStyle = useAnimatedStyle(() => ({
         transform: [{ scale: circleScale.value }],
