@@ -155,6 +155,7 @@ const ProfileScreen = ({ navigation }) => {
             <AppHeader title="Profile" />
             <ScrollView 
                 contentContainerStyle={styles.content}
+                alwaysBounceVertical={true}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
                 }

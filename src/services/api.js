@@ -10,7 +10,7 @@ const CLAIM_GIFT_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/claim_gift';
 const GET_FRIENDS_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Get_Friends';
 const DELETE_FRIEND_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Delete-Item'; 
 const UPLOAD_IMAGE_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/set_profile_image';
-const GET_USER_INFO_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/get_user_info';
+const GET_USER_INFO_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/get-user-data';
 
 export const fetchUserInfo = async (email) => {
     try {

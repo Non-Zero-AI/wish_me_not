@@ -176,6 +176,7 @@ const FriendWishlistScreen = ({ route, navigation }) => {
                     )}
                     keyExtractor={item => item.id}
                     contentContainerStyle={[styles.listContent, { paddingBottom: (Platform.OS === 'web' ? 200 : 150) + insets.bottom }]}
+                    alwaysBounceVertical={true}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
                     }

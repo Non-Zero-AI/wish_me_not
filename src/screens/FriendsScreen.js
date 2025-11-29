@@ -304,6 +304,7 @@ const FriendsScreen = ({ navigation }) => {
                     renderItem={renderFeedItem}
                     keyExtractor={(item, index) => item.id + index} // Unique key
                     contentContainerStyle={styles.listContent}
+                    alwaysBounceVertical={true}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
                     }
