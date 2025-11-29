@@ -72,6 +72,9 @@ function MainTabs() {
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.borderNav,
+          height: Platform.OS === 'ios' ? 90 : 60,
+          paddingBottom: Platform.OS === 'ios' ? 25 : 5,
+          paddingTop: 5,
         },
         tabBarButton: (props) => <TouchableOpacity {...props} />,
       })}
