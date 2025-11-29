@@ -41,6 +41,7 @@ const OnboardingScreen = ({ navigation }) => {
             >
                 <View style={styles.header}>
                     <Text style={[styles.title, { color: theme.colors.primary }]}>Welcome to Wish Me Not</Text>
+                    <Text style={[styles.tagline, { color: theme.colors.secondary }]}>Stop guessing. Start gifting.</Text>
                     <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>Create your wish list and share it with friends.</Text>
                 </View>
 
@@ -116,8 +117,15 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 28,
         fontWeight: 'bold',
-        marginBottom: 12,
+        marginBottom: 8,
         textAlign: 'center',
+    },
+    tagline: {
+        fontSize: 20,
+        fontWeight: '600',
+        marginBottom: 16,
+        textAlign: 'center',
+        fontStyle: 'italic',
     },
     subtitle: {
         fontSize: 16,

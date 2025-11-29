@@ -10,11 +10,13 @@ import * as Linking from 'expo-linking';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts, Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 
-import { getUser } from './src/services/storage';
+import { getUser, saveUser, saveItems, saveFriends } from './src/services/storage';
+import { fetchUserInfo, getUserWishlist, getUserFriends } from './src/services/api';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 
 import OnboardingScreen from './src/screens/OnboardingScreen';
+import SplashScreen from './src/screens/SplashScreen';
 import MyListScreen from './src/screens/MyListScreen';
 import FriendsScreen from './src/screens/FriendsScreen';
 import FriendWishlistScreen from './src/screens/FriendWishlistScreen';
@@ -134,6 +136,7 @@ function MainTabs() {
 function AppNavigator() {
   const { user, isLoading } = useAuth();
   const { theme, isDark } = useTheme();
+  const [showSplash, setShowSplash] = useState(true);
   
   const [fontsLoaded] = useFonts({
     'Inter-Regular': Inter_400Regular,
@@ -141,7 +144,37 @@ function AppNavigator() {
     'Inter-Bold': Inter_700Bold,
   });
 
+  useEffect(() => {
+    const preloadData = async () => {
+      if (user) {
+        // Trigger webhooks silently to update local storage
+        try {
+          const [userInfo, wishlist, friends] = await Promise.all([
+            fetchUserInfo(user.email).catch(() => null),
+            getUserWishlist(user.email).catch(() => []),
+            getUserFriends(user.email).catch(() => [])
+          ]);
+
+          if (userInfo) await saveUser({ ...userInfo, email: user.email });
+          if (wishlist) await saveItems(wishlist);
+          if (friends) await saveFriends(friends);
+        } catch (e) {
+          console.warn('Preload failed', e);
+        }
+      }
+    };
+
+    if (!isLoading) {
+        preloadData();
+    }
+  }, [user, isLoading]);
+
   if (isLoading || !fontsLoaded) {
+    // Initial loading state (fonts/auth) - minimal spinner or keep splash
+    // Since splash handles animation, we can just show splash content immediately if we wanted,
+    // but here we wait for basic resources.
+    // Better: Show SplashScreen immediately even if fonts loading? 
+    // Fonts are needed for text. So wait for fonts.
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -151,6 +184,7 @@ function AppNavigator() {
 
   return (
     <SafeAreaProvider>
+      {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
       <GestureHandlerRootView style={{ flex: 1 }}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
         <NavigationContainer 
