@@ -262,7 +262,6 @@ export const deleteProduct = async (productUrl, userEmail, productId) => {
         return true;
     } catch (error) {
         console.error('Error deleting product:', error);
-        // We might want to throw, or just log, depending on if we want to block UI removal
         throw error;
     }
 };

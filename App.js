@@ -161,11 +161,19 @@ function AppNavigator() {
             const loadData = async () => {
                 try {
                     console.log('Preloading data...');
-                    const [userInfo, wishlist, friends] = await Promise.all([
+                    
+                    // Safety timeout for data loading
+                    const timeout = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Data load timeout')), 10000)
+                    );
+
+                    const fetchData = Promise.all([
                         fetchUserInfo(user.email).catch(() => null),
                         getUserWishlist(user.email).catch(() => []),
                         getUserFriends(user.email).catch(() => [])
                     ]);
+
+                    const [userInfo, wishlist, friends] = await Promise.race([fetchData, timeout]);
 
                     if (userInfo) await saveUser({ ...userInfo, email: user.email });
                     if (wishlist) await saveItems(wishlist);
