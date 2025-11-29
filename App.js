@@ -150,7 +150,7 @@ function AppNavigator() {
     // When user is authenticated (loaded from storage or logged in)
     // and splash hasn't been shown, show it and load data.
     if (!isLoading && user && !splashShown) {
-        setShowSplash(true);
+        // setShowSplash(true); // TEMPORARILY DISABLED for debugging white screen
         setSplashShown(true);
         
         const runSequence = async () => {
