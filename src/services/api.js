@@ -20,19 +20,23 @@ export const fetchUserInfo = async (email) => {
         const data = response.data.output || response.data;
         console.log('Fetch User Info Response:', JSON.stringify(data, null, 2));
         
-        // Map response to app user structure
         // Handle array or single object
         const userData = Array.isArray(data) ? data[0] : data;
         
         if (!userData) return null;
 
+        console.log('User Data Keys:', Object.keys(userData));
+
         const image = userData['User Avatar'] || userData.user_avatar || userData.profile_image || userData.image || userData.profile_image_url;
         console.log('Parsed User Image:', image);
 
+        const firstName = userData['First Name'] || userData['first name'] || userData.first_name || userData.firstName || userData.name?.split(' ')[0];
+        const lastName = userData['Last Name'] || userData['last name'] || userData.last_name || userData.lastName || userData.name?.split(' ')[1];
+
         return {
-            firstName: userData.first_name || userData.firstName,
-            lastName: userData.last_name || userData.lastName,
-            email: userData.email,
+            firstName: firstName,
+            lastName: lastName,
+            email: userData['User Email'] || userData.email || email,
             image: image,
         };
     } catch (error) {

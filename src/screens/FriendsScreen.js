@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, RefreshControl, Image } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, RefreshControl, Image, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../theme/ThemeContext';
-import { getUserWishlist, getUserFriends, deleteFriend } from '../services/api';
+import { getUserWishlist, getUserFriends, deleteFriend, claimGift } from '../services/api';
 import { getFriends, saveFriends, getUser } from '../services/storage';
 import AppHeader from '../components/AppHeader';
 import ProductCard from '../components/ProductCard';
@@ -200,6 +200,61 @@ const FriendsScreen = ({ navigation }) => {
         }
     };
 
+    const executeClaim = async (item) => {
+        try {
+            const recipient = {
+                name: item.friendName,
+                email: item.friendEmail,
+                id: item.friendId
+            };
+            
+            await claimGift(item, user, recipient);
+            
+            // Update Feed UI locally
+            setFeedItems(prevItems => 
+                prevItems.map(i => 
+                    // Match by ID and friend email to be specific
+                    i.id === item.id && i.friendEmail === item.friendEmail 
+                        ? { ...i, wishedBy: user.firstName || 'You' } 
+                        : i
+                )
+            );
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } catch (error) {
+            console.error("Claim error", error);
+            Alert.alert('Error', 'Failed to claim gift. Please try again.');
+        }
+    };
+
+    const handleWishItem = (item) => {
+        if (!user) return;
+
+        if (item.wishedBy) {
+            Alert.alert("Already Wished", `This item has already been claimed by ${item.wishedBy}.`);
+            return;
+        }
+
+        const message = `Mark ${item.name} as wished for ${item.friendName}? This claims the gift!`;
+
+        if (Platform.OS === 'web') {
+            if (window.confirm(message)) {
+                executeClaim(item);
+            }
+        } else {
+            Alert.alert(
+                "Wish Item",
+                message,
+                [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                        text: "Confirm",
+                        onPress: () => executeClaim(item)
+                    }
+                ]
+            );
+        }
+    };
+
     const renderFriend = ({ item }) => (
         <Swipeable
             renderRightActions={() => (
@@ -234,6 +289,33 @@ const FriendsScreen = ({ navigation }) => {
         </Swipeable>
     );
 
+    const renderFeedRightActions = (progress, dragX, item) => {
+        if (item.wishedBy) return null;
+        
+        return (
+            <TouchableOpacity
+                style={{
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    width: 80,
+                    height: '100%',
+                }}
+                onPress={() => handleWishItem(item)}
+            >
+                <View style={{ 
+                    backgroundColor: theme.colors.success || '#4CAF50', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    width: 60, 
+                    height: 60, 
+                    borderRadius: 30 
+                }}>
+                    <Ionicons name="gift" size={24} color="#fff" />
+                </View>
+            </TouchableOpacity>
+        );
+    };
+
     const renderFeedItem = ({ item }) => (
         <View style={styles.feedItemContainer}>
             <View style={styles.feedHeader}>
@@ -251,10 +333,12 @@ const FriendsScreen = ({ navigation }) => {
                     <Text style={[styles.feedTimestamp, { color: theme.colors.textSecondary }]}>Added an item</Text>
                 </View>
             </View>
-            <ProductCard 
-                item={item} 
-                shouldShowWished={true} 
-            />
+            <Swipeable renderRightActions={(p, d) => renderFeedRightActions(p, d, item)}>
+                <ProductCard 
+                    item={item} 
+                    shouldShowWished={true} 
+                />
+            </Swipeable>
         </View>
     );
 
@@ -286,6 +370,7 @@ const FriendsScreen = ({ navigation }) => {
 
             {viewMode === 'list' ? (
                 <FlatList
+                    style={{ flex: 1 }}
                     data={friends}
                     renderItem={renderFriend}
                     keyExtractor={item => item.id}
@@ -312,6 +397,7 @@ const FriendsScreen = ({ navigation }) => {
                 />
             ) : (
                 <FlatList
+                    style={{ flex: 1 }}
                     data={feedItems}
                     renderItem={renderFeedItem}
                     keyExtractor={(item, index) => item.id + index} // Unique key

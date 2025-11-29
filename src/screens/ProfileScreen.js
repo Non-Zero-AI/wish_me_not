@@ -155,6 +155,7 @@ const ProfileScreen = ({ navigation }) => {
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <AppHeader title="Profile" />
             <ScrollView 
+                style={{ flex: 1 }}
                 contentContainerStyle={styles.content}
                 alwaysBounceVertical={true}
                 refreshControl={
