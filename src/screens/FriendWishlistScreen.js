@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import ProductCard from '../components/ProductCard';
 import { getUser } from '../services/storage';
@@ -74,6 +75,7 @@ const FriendWishlistScreen = ({ route, navigation }) => {
                 )
             );
         } catch (error) {
+            console.error("Claim error:", error);
             Alert.alert('Error', 'Failed to claim gift. Please try again.');
         }
     };
@@ -107,6 +109,37 @@ const FriendWishlistScreen = ({ route, navigation }) => {
         }
     };
 
+    const renderRightActions = (progress, dragX, item) => {
+        if (item.wishedBy) return null;
+
+        return (
+            <TouchableOpacity
+                style={{
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    width: 80,
+                    height: '100%',
+                }}
+                onPress={() => handleWishItem(item)}
+            >
+                <View style={{ 
+                    backgroundColor: theme.colors.success || '#4CAF50', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    width: 60, 
+                    height: 60, 
+                    borderRadius: 30 
+                }}>
+                    {Platform.OS === 'web' ? (
+                         <Text style={{fontSize: 24}}>🎁</Text>
+                     ) : (
+                         <Ionicons name="gift" size={24} color="#fff" />
+                     )}
+                </View>
+            </TouchableOpacity>
+        );
+    };
+
     return (
         <View style={[
             styles.container, 
@@ -114,6 +147,7 @@ const FriendWishlistScreen = ({ route, navigation }) => {
                 backgroundColor: theme.colors.background,
                 paddingTop: insets.top,
                 paddingBottom: 0,
+                overflow: 'hidden',
             }
         ]}>
             <AppHeader 
@@ -129,18 +163,20 @@ const FriendWishlistScreen = ({ route, navigation }) => {
                 </View>
             ) : (
                 <FlatList
+                    style={{ flex: 1 }}
                     data={items}
                     renderItem={({ item }) => (
                         <View style={{ marginBottom: 16 }}>
-                            <ProductCard 
-                                item={item} 
-                                shouldShowWished={true} 
-                                onWish={() => handleWishItem(item)}
-                            />
+                            <Swipeable renderRightActions={(p, d) => renderRightActions(p, d, item)}>
+                                <ProductCard 
+                                    item={item} 
+                                    shouldShowWished={true}
+                                />
+                            </Swipeable>
                         </View>
                     )}
                     keyExtractor={item => item.id}
-                    contentContainerStyle={[styles.listContent, { paddingBottom: 150 + insets.bottom }]}
+                    contentContainerStyle={[styles.listContent, { paddingBottom: (Platform.OS === 'web' ? 200 : 150) + insets.bottom }]}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
                     }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, RefreshControl, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Swipeable } from 'react-native-gesture-handler';
 import ProductCard from '../components/ProductCard';
 import { getItems, addItem, getUser, deleteItem, saveItems } from '../services/storage';
 import { addProduct, deleteProduct, getUserWishlist } from '../services/api';
@@ -109,6 +110,11 @@ const HomeScreen = () => {
             deleteProduct(itemToDelete.link, user.email, itemToDelete.id)
                 .catch(e => {
                     console.error('Background delete failed', e);
+                    if (Platform.OS !== 'web') {
+                        Alert.alert("Sync Warning", "Item deleted locally, but server sync failed.");
+                    } else {
+                        console.warn("Server sync failed");
+                    }
                 });
         } else {
             console.warn('Skipping server delete: Missing link or user', { link: itemToDelete.link, user: !!user });
@@ -157,6 +163,35 @@ const HomeScreen = () => {
         }
     };
 
+    const renderRightActions = (progress, dragX, item) => {
+        return (
+            <TouchableOpacity
+                style={{
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    width: 80,
+                    height: '100%',
+                }}
+                onPress={() => handleDeleteItem(item.id)}
+            >
+                <View style={{ 
+                    backgroundColor: theme.colors.error, 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    width: 60, 
+                    height: 60, 
+                    borderRadius: 30 
+                }}>
+                    {Platform.OS === 'web' ? (
+                         <Text style={{fontSize: 24}}>🗑️</Text>
+                     ) : (
+                         <Ionicons name="trash" size={24} color="#fff" />
+                     )}
+                </View>
+            </TouchableOpacity>
+        );
+    };
+
     return (
         <View style={[
             styles.container, 
@@ -164,6 +199,7 @@ const HomeScreen = () => {
                 backgroundColor: theme.colors.background,
                 paddingTop: insets.top,
                 paddingBottom: 0,
+                overflow: 'hidden',
             }
         ]}>
             <AppHeader 
@@ -176,18 +212,20 @@ const HomeScreen = () => {
             />
 
             <FlatList
+                style={{ flex: 1 }}
                 data={items}
                 renderItem={({ item }) => (
                     <View style={{ marginBottom: 16 }}>
-                        <ProductCard 
-                            item={item} 
-                            shouldShowWished={false} 
-                            onDelete={() => handleDeleteItem(item.id)}
-                        />
+                        <Swipeable renderRightActions={(p, d) => renderRightActions(p, d, item)}>
+                            <ProductCard 
+                                item={item} 
+                                shouldShowWished={false}
+                            />
+                        </Swipeable>
                     </View>
                 )}
                 keyExtractor={(item) => item.id}
-                contentContainerStyle={[styles.listContent, { paddingBottom: 150 + insets.bottom }]}
+                contentContainerStyle={[styles.listContent, { paddingBottom: (Platform.OS === 'web' ? 200 : 150) + insets.bottom }]}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
                 }

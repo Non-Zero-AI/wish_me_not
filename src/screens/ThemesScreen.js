@@ -63,6 +63,7 @@ const ThemesScreen = () => {
         backgroundColor: theme.colors.background,
         paddingTop: Platform.OS === 'web' ? 0 : insets.top,
         paddingBottom: Platform.OS === 'web' ? 0 : insets.bottom,
+        overflow: 'hidden',
       }
     ]}>
       <AppHeader title="Choose Theme" showBack={true} />
@@ -79,7 +80,7 @@ const ThemesScreen = () => {
 
       <ScrollView 
         style={{ flex: 1 }} 
-        contentContainerStyle={[styles.grid, { paddingBottom: 40 }]}
+        contentContainerStyle={[styles.grid, { paddingBottom: Platform.OS === 'web' ? 200 : 120 }]}
       >
         {themes.map(t => (
           <ThemePreview 
