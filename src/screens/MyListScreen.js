@@ -176,7 +176,11 @@ const HomeScreen = () => {
                                 </TouchableOpacity>
                             )}
                         >
-                            <ProductCard item={item} shouldShowWished={false} />
+                            <ProductCard 
+                                item={item} 
+                                shouldShowWished={false} 
+                                onDelete={() => handleDeleteItem(item.id)}
+                            />
                         </Swipeable>
                     </View>
                 )}

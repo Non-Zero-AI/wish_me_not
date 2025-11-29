@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, Linking, ActivityIndic
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 
-const ProductCard = ({ item, shouldShowWished = false }) => {
+const ProductCard = ({ item, shouldShowWished = false, onDelete }) => {
     const { theme } = useTheme();
 
     const handlePress = () => {
@@ -28,12 +28,23 @@ const ProductCard = ({ item, shouldShowWished = false }) => {
             ) : (
                 <View style={[styles.image, styles.placeholder, { backgroundColor: theme.colors.background }]} />
             )}
+            
             {shouldShowWished && (item.isClaimed || item.wishedBy) && (
                 <View style={[styles.wishedBadge, { backgroundColor: theme.colors.secondary }]}>
                     <Ionicons name="checkmark-circle" size={16} color={theme.colors.textInverse} />
                     <Text style={[styles.wishedText, { color: theme.colors.textInverse }]}>Claimed</Text>
                 </View>
             )}
+
+            {onDelete && (
+                <TouchableOpacity 
+                    style={[styles.deleteButton, { backgroundColor: theme.colors.error }]} 
+                    onPress={onDelete}
+                >
+                    <Ionicons name="trash" size={18} color={theme.colors.textInverse} />
+                </TouchableOpacity>
+            )}
+
             <View style={styles.content}>
                 <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={2}>{item.name || 'Unknown Product'}</Text>
                 
@@ -119,6 +130,22 @@ const styles = StyleSheet.create({
     wishedText: {
         fontSize: 12,
         fontWeight: '600',
+    },
+    deleteButton: {
+        position: 'absolute',
+        top: 12,
+        right: 12,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+        elevation: 5,
     },
 });
 
