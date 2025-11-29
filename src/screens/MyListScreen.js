@@ -151,7 +151,14 @@ const HomeScreen = () => {
             if (!user) return;
             
             const deepLink = `https://wish-me-not.vercel.app/wishlist/${encodeURIComponent(user.email)}`;
-            const shareMessage = `Hey! Check out my wishlist on Wish Me Not.\n\nIf you have the app, click here: ${deepLink}\n\nNew to the app? Download it and add me as a friend: ${user.email}`;
+            const shareMessage = `Hey! Check out my wishlist on Wish Me Not.
+
+Tap the link below:
+${deepLink}
+
+To view it:
+1. Tap the Share button & select 'Add to Home Screen'
+2. Sign up, and my wishlist will appear!`;
 
             await Share.share({
                 message: shareMessage,

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, SafeAreaView, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import * as Linking from 'expo-linking';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import { createUser } from '../services/api';
+import { addLocalFriend } from '../services/storage';
 
 const OnboardingScreen = ({ navigation }) => {
     const { theme } = useTheme();
@@ -11,6 +13,28 @@ const OnboardingScreen = ({ navigation }) => {
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
+    const [pendingFriendEmail, setPendingFriendEmail] = useState(null);
+
+    useEffect(() => {
+        const checkInitialURL = async () => {
+            try {
+                const url = await Linking.getInitialURL();
+                if (url) {
+                    // Parse email from wishlist/:email pattern
+                    // Support both scheme and https
+                    const match = url.match(/wishlist\/([^/?]+)/);
+                    if (match && match[1]) {
+                        const friendEmail = decodeURIComponent(match[1]);
+                        console.log('Deep link detected, pending friend:', friendEmail);
+                        setPendingFriendEmail(friendEmail);
+                    }
+                }
+            } catch (e) {
+                console.warn('Deep link check failed', e);
+            }
+        };
+        checkInitialURL();
+    }, []);
 
     const handleGetStarted = async () => {
         if (!firstName || !lastName || !email) {
@@ -23,6 +47,12 @@ const OnboardingScreen = ({ navigation }) => {
             const user = { firstName, lastName, email };
             // Send to automation webhook
             await createUser(user);
+            
+            // Add pending friend if any
+            if (pendingFriendEmail) {
+                await addLocalFriend(pendingFriendEmail);
+            }
+
             // Login locally
             await login(user);
         } catch (error) {

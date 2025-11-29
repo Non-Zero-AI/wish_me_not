@@ -40,6 +40,26 @@ export const getFriends = async () => {
   }
 };
 
+export const addLocalFriend = async (friendEmail, friendName) => {
+  try {
+    const friends = await getFriends();
+    if (!friends.some(f => f.email.toLowerCase() === friendEmail.trim().toLowerCase())) {
+        const newFriend = {
+            id: Date.now().toString(),
+            email: friendEmail.trim(),
+            name: friendName || friendEmail.split('@')[0]
+        };
+        const updatedFriends = [...friends, newFriend];
+        await saveFriends(updatedFriends);
+        return true;
+    }
+    return false; 
+  } catch (e) {
+    console.error('Failed to add local friend', e);
+    return false;
+  }
+};
+
 export const addItem = async (item) => {
   try {
     const existingItems = await getItems();

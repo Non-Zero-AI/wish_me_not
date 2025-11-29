@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import ProductCard from '../components/ProductCard';
-import { getUser } from '../services/storage';
+import { getUser, addLocalFriend } from '../services/storage';
 import { getUserWishlist, claimGift } from '../services/api';
 import { useTheme } from '../theme/ThemeContext';
 import AppHeader from '../components/AppHeader';
@@ -39,6 +39,15 @@ const FriendWishlistScreen = ({ route, navigation }) => {
     const loadCurrentUser = async () => {
         const user = await getUser();
         setCurrentUser(user);
+
+        // Auto-add friend if logged in
+        if (user && friendData.email) {
+             addLocalFriend(friendData.email, friendData.name).then(added => {
+                 if (added) {
+                     console.log('Auto-added friend via link');
+                 }
+             });
+        }
     };
 
     const loadFriendWishlist = async () => {
