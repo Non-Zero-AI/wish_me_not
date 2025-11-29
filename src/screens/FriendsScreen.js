@@ -172,19 +172,24 @@ const FriendsScreen = ({ navigation }) => {
     const onRefresh = async () => {
         setRefreshing(true);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        let currentUser = user;
-        if (!currentUser) {
-            currentUser = await getUser();
-            setUser(currentUser);
-        }
-        
-        if (currentUser) {
-            await loadFriends(currentUser.email);
-            if (viewMode === 'feed') {
-                await loadFeed();
+        try {
+            let currentUser = user;
+            if (!currentUser) {
+                currentUser = await getUser();
+                setUser(currentUser);
             }
+            
+            if (currentUser) {
+                await loadFriends(currentUser.email);
+                if (viewMode === 'feed') {
+                    await loadFeed();
+                }
+            }
+        } catch (error) {
+            console.error("Refresh failed:", error);
+        } finally {
+            setRefreshing(false);
         }
-        setRefreshing(false);
     };
 
     const switchMode = (mode) => {

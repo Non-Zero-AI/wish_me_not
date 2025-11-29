@@ -125,9 +125,20 @@ export const getUserFriends = async (userEmail) => {
                     }
                 });
             } else if (typeof item === 'object' && item !== null) {
-                const email = item.friends || item.Friends || item.friend_email || item.email;
+                // Helper to find email in object
+                let email = item.friends || item.Friends || item.friend_email || item.email || item.Email || item['User Email'];
+                if (!email || typeof email !== 'string' || !email.includes('@')) {
+                    // Scan all values for an email-like string
+                    for (const val of Object.values(item)) {
+                        if (typeof val === 'string' && val.includes('@')) {
+                            email = val;
+                            break;
+                        }
+                    }
+                }
+
                 const image = item['User Avatar'] || item.user_avatar || item.profile_image || item.image || item.profile_image_url || item.avatar;
-                const name = item.name || item.friend_name;
+                const name = item.name || item.friend_name || item.Name || item['First Name'];
                 
                 console.log('Processing Friend Item:', { email, image, name, raw: item });
 

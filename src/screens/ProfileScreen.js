@@ -37,8 +37,8 @@ const ProfileScreen = ({ navigation }) => {
         setRefreshing(true);
         if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         
-        if (email) {
-            try {
+        try {
+            if (email) {
                 const userData = await fetchUserInfo(email);
                 if (userData) {
                     const updatedUser = { ...userData, email }; // Ensure email is preserved
@@ -47,11 +47,12 @@ const ProfileScreen = ({ navigation }) => {
                     setLastName(updatedUser.lastName || '');
                     setImage(updatedUser.image || null);
                 }
-            } catch (e) {
-                console.error('Profile refresh failed', e);
             }
+        } catch (e) {
+            console.error('Profile refresh failed', e);
+        } finally {
+            setRefreshing(false);
         }
-        setRefreshing(false);
     };
 
     const pickImage = async () => {
