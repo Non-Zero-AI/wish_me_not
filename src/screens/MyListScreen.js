@@ -5,7 +5,6 @@ import ProductCard from '../components/ProductCard';
 import { getItems, addItem, getUser, deleteItem, saveItems } from '../services/storage';
 import { addProduct, deleteProduct, getUserWishlist } from '../services/api';
 import * as Linking from 'expo-linking';
-import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { useTheme } from '../theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import AppHeader from '../components/AppHeader';
@@ -164,40 +163,15 @@ const HomeScreen = () => {
 
             <FlatList
                 data={items}
-                renderItem={({ item }) => {
-                    if (Platform.OS === 'web') {
-                        return (
-                            <View style={{ marginBottom: 16 }}>
-                                <ProductCard 
-                                    item={item} 
-                                    shouldShowWished={false} 
-                                    onDelete={() => handleDeleteItem(item.id)}
-                                />
-                            </View>
-                        );
-                    }
-
-                    return (
-                        <View style={{ marginBottom: 16 }}>
-                            <Swipeable
-                                renderLeftActions={() => (
-                                    <TouchableOpacity
-                                        style={[styles.deleteAction, { backgroundColor: theme.colors.error }]}
-                                        onPress={() => handleDeleteItem(item.id)}
-                                    >
-                                        <Text style={styles.actionText}>Delete</Text>
-                                    </TouchableOpacity>
-                                )}
-                            >
-                                <ProductCard 
-                                    item={item} 
-                                    shouldShowWished={false} 
-                                    onDelete={() => handleDeleteItem(item.id)}
-                                />
-                            </Swipeable>
-                        </View>
-                    );
-                }}
+                renderItem={({ item }) => (
+                    <View style={{ marginBottom: 16 }}>
+                        <ProductCard 
+                            item={item} 
+                            shouldShowWished={false} 
+                            onDelete={() => handleDeleteItem(item.id)}
+                        />
+                    </View>
+                )}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.listContent}
                 refreshControl={
