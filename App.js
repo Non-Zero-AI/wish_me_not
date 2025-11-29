@@ -76,7 +76,6 @@ function MainTabs() {
           paddingBottom: Platform.OS === 'ios' ? 25 : 5,
           paddingTop: 5,
         },
-        tabBarButton: (props) => <TouchableOpacity {...props} />,
       })}
     >
       <Tab.Screen name="MyList" component={MyListScreen} options={{ title: 'My Wish List' }} />
