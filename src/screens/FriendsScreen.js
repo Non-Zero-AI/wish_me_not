@@ -55,7 +55,8 @@ const FriendsScreen = ({ navigation }) => {
                         ...item,
                         friendName: friend.name,
                         friendEmail: friend.email,
-                        friendId: friend.id
+                        friendId: friend.id,
+                        friendImage: friend.image
                     }));
                 } catch (e) {
                     console.warn(`Failed to load wishlist for ${friend.email}`, e);
@@ -291,7 +292,13 @@ const FriendsScreen = ({ navigation }) => {
                     contentContainerStyle={styles.listContent}
                     alwaysBounceVertical={true}
                     refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
+                        <RefreshControl 
+                            refreshing={refreshing} 
+                            onRefresh={onRefresh} 
+                            tintColor={theme.colors.primary}
+                            colors={[theme.colors.primary]}
+                            title="Refreshing..."
+                        />
                     }
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
@@ -311,7 +318,13 @@ const FriendsScreen = ({ navigation }) => {
                     contentContainerStyle={styles.listContent}
                     alwaysBounceVertical={true}
                     refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
+                        <RefreshControl 
+                            refreshing={refreshing} 
+                            onRefresh={onRefresh} 
+                            tintColor={theme.colors.primary}
+                            colors={[theme.colors.primary]}
+                            title="Refreshing..."
+                        />
                     }
                     ListHeaderComponent={
                         loadingFeed ? (

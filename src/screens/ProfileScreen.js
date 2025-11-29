@@ -158,7 +158,13 @@ const ProfileScreen = ({ navigation }) => {
                 contentContainerStyle={styles.content}
                 alwaysBounceVertical={true}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
+                    <RefreshControl 
+                        refreshing={refreshing} 
+                        onRefresh={onRefresh} 
+                        tintColor={theme.colors.primary}
+                        colors={[theme.colors.primary]}
+                        title="Refreshing..."
+                    />
                 }
             >
                 <TouchableOpacity onPress={pickImage} style={styles.imageContainer}>

@@ -228,7 +228,13 @@ const HomeScreen = () => {
                 contentContainerStyle={[styles.listContent, { paddingBottom: (Platform.OS === 'web' ? 200 : 150) + insets.bottom }]}
                 alwaysBounceVertical={true}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
+                    <RefreshControl 
+                        refreshing={refreshing} 
+                        onRefresh={onRefresh} 
+                        tintColor={theme.colors.primary}
+                        colors={[theme.colors.primary]}
+                        title="Refreshing..."
+                    />
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
@@ -320,6 +326,7 @@ const styles = StyleSheet.create({
     listContent: {
         padding: 16,
         paddingBottom: 150,
+        flexGrow: 1,
     },
     emptyContainer: {
         alignItems: 'center',
