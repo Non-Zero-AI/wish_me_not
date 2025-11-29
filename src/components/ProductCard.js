@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Linking, ActivityIndicator } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Linking, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -36,23 +36,31 @@ const ProductCard = ({ item, shouldShowWished = false, onDelete }) => {
                 </View>
             )}
 
-            {/* {onDelete && (
+            {onDelete && (
                 <TouchableOpacity 
                     style={[styles.actionButton, { backgroundColor: theme.colors.error }]} 
                     onPress={onDelete}
                 >
-                    <Ionicons name="trash" size={18} color={theme.colors.textInverse} />
+                    {Platform.OS === 'web' ? (
+                        <Text style={{fontSize: 16}}>🗑️</Text>
+                    ) : (
+                        <Ionicons name="trash" size={18} color={theme.colors.textInverse} />
+                    )}
                 </TouchableOpacity>
-            )} */}
+            )}
 
-            {/* {onWish && !item.wishedBy && !item.isClaimed && (
+            {onWish && !item.wishedBy && !item.isClaimed && (
                 <TouchableOpacity 
                     style={[styles.actionButton, { backgroundColor: theme.colors.success || '#4CAF50' }]} 
                     onPress={onWish}
                 >
-                    <Ionicons name="gift" size={18} color={theme.colors.textInverse} />
+                    {Platform.OS === 'web' ? (
+                        <Text style={{fontSize: 16}}>🎁</Text>
+                    ) : (
+                        <Ionicons name="gift" size={18} color={theme.colors.textInverse} />
+                    )}
                 </TouchableOpacity>
-            )} */}
+            )}
 
             <View style={styles.content}>
                 <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={2}>{item.name || 'Unknown Product'}</Text>
