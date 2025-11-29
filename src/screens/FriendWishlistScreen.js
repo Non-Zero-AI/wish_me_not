@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import ProductCard from '../components/ProductCard';
 import { getUser } from '../services/storage';
-import { getUserWishlist } from '../services/api';
+import { getUserWishlist, claimGift } from '../services/api';
 import { useTheme } from '../theme/ThemeContext';
 import AppHeader from '../components/AppHeader';
 
@@ -128,7 +128,11 @@ const FriendWishlistScreen = ({ route, navigation }) => {
                                     ) : null
                                 )}
                             >
-                                <ProductCard item={item} shouldShowWished={true} />
+                                <ProductCard 
+                                    item={item} 
+                                    shouldShowWished={true} 
+                                    onWish={() => handleWishItem(item)}
+                                />
                             </Swipeable>
                         </View>
                     )}

@@ -38,10 +38,19 @@ const ProductCard = ({ item, shouldShowWished = false, onDelete }) => {
 
             {onDelete && (
                 <TouchableOpacity 
-                    style={[styles.deleteButton, { backgroundColor: theme.colors.error }]} 
+                    style={[styles.actionButton, { backgroundColor: theme.colors.error }]} 
                     onPress={onDelete}
                 >
                     <Ionicons name="trash" size={18} color={theme.colors.textInverse} />
+                </TouchableOpacity>
+            )}
+
+            {onWish && !item.wishedBy && !item.isClaimed && (
+                <TouchableOpacity 
+                    style={[styles.actionButton, { backgroundColor: theme.colors.success }]} 
+                    onPress={onWish}
+                >
+                    <Ionicons name="gift" size={18} color={theme.colors.textInverse} />
                 </TouchableOpacity>
             )}
 
@@ -131,7 +140,7 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '600',
     },
-    deleteButton: {
+    actionButton: {
         position: 'absolute',
         top: 12,
         right: 12,
