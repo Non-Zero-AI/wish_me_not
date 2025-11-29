@@ -63,7 +63,6 @@ const ThemesScreen = () => {
         backgroundColor: theme.colors.background,
         paddingTop: Platform.OS === 'web' ? 0 : insets.top,
         paddingBottom: Platform.OS === 'web' ? 0 : insets.bottom,
-        overflow: 'hidden',
       }
     ]}>
       <AppHeader title="Choose Theme" showBack={true} />

@@ -24,6 +24,7 @@ import ThemesScreen from './src/screens/ThemesScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+const FriendsStack = createStackNavigator();
 
 const prefix = Linking.createURL('/');
 
@@ -36,17 +37,38 @@ const linking = {
         path: 'app',
         screens: {
           MyList: 'mylist',
-          Friends: 'friends',
+          FriendsStack: {
+            path: 'friends',
+            screens: {
+              FriendsList: '',
+              FriendWishlist: 'wishlist/:userId',
+            }
+          },
           Profile: 'profile',
         },
       },
-      FriendWishlist: 'wishlist/:userId',
       Themes: 'themes',
       PrivacyPolicy: 'privacy',
       UserAgreement: 'terms',
     },
   },
 };
+
+function FriendsStackScreen() {
+  const { theme } = useTheme();
+  return (
+    <FriendsStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        headerStyle: { backgroundColor: theme.colors.surface },
+        headerTintColor: theme.colors.text,
+      }}
+    >
+      <FriendsStack.Screen name="FriendsList" component={FriendsScreen} options={{ title: 'Friends' }} />
+      <FriendsStack.Screen name="FriendWishlist" component={FriendWishlistScreen} />
+    </FriendsStack.Navigator>
+  );
+}
 
 function MainTabs() {
   const { theme } = useTheme();
@@ -60,7 +82,7 @@ function MainTabs() {
 
           if (route.name === 'MyList') {
             iconName = focused ? 'list' : 'list-outline';
-          } else if (route.name === 'Friends') {
+          } else if (route.name === 'FriendsStack') {
             iconName = focused ? 'people' : 'people-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
@@ -80,7 +102,7 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="MyList" component={MyListScreen} options={{ title: 'My Wish List' }} />
-      <Tab.Screen name="Friends" component={FriendsScreen} options={{ title: 'Friends' }} />
+      <Tab.Screen name="FriendsStack" component={FriendsStackScreen} options={{ title: 'Friends' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );
@@ -121,11 +143,6 @@ function AppNavigator() {
             {user ? (
               <>
                 <Stack.Screen name="Main" component={MainTabs} />
-                <Stack.Screen 
-                  name="FriendWishlist" 
-                  component={FriendWishlistScreen} 
-                  options={{ headerShown: false }}
-                />
               </>
             ) : (
               <Stack.Screen name="Onboarding" component={OnboardingScreen} />

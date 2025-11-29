@@ -147,7 +147,6 @@ const FriendWishlistScreen = ({ route, navigation }) => {
                 backgroundColor: theme.colors.background,
                 paddingTop: insets.top,
                 paddingBottom: 0,
-                overflow: 'hidden',
             }
         ]}>
             <AppHeader 

@@ -36,10 +36,17 @@ const ProfileScreen = ({ navigation }) => {
             allowsEditing: true,
             aspect: [1, 1],
             quality: 0.5,
+            base64: true, // Request base64
         });
 
         if (!result.canceled) {
-            setImage(result.assets[0].uri);
+            const asset = result.assets[0];
+            if (Platform.OS === 'web' && asset.base64) {
+                // Use base64 for web persistence
+                setImage(`data:image/jpeg;base64,${asset.base64}`);
+            } else {
+                setImage(asset.uri);
+            }
         }
     };
 
