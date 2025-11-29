@@ -47,7 +47,7 @@ const ProductCard = ({ item, shouldShowWished = false, onDelete }) => {
 
             {onWish && !item.wishedBy && !item.isClaimed && (
                 <TouchableOpacity 
-                    style={[styles.actionButton, { backgroundColor: theme.colors.success }]} 
+                    style={[styles.actionButton, { backgroundColor: theme.colors.success || '#4CAF50' }]} 
                     onPress={onWish}
                 >
                     <Ionicons name="gift" size={18} color={theme.colors.textInverse} />
