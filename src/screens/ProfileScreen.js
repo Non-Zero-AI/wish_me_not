@@ -14,6 +14,7 @@ const ProfileScreen = ({ navigation }) => {
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [image, setImage] = useState(null);
+    const [showSurprises, setShowSurprises] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
@@ -29,6 +30,7 @@ const ProfileScreen = ({ navigation }) => {
             setLastName(user.lastName || '');
             setEmail(user.email || '');
             setImage(user.image || null);
+            setShowSurprises(user.showSurprises || false);
         }
         setLoading(false);
     };
@@ -41,7 +43,13 @@ const ProfileScreen = ({ navigation }) => {
             if (email) {
                 const userData = await fetchUserInfo(email);
                 if (userData) {
-                    const updatedUser = { ...userData, email }; // Ensure email is preserved
+                    // Preserve local preferences like showSurprises
+                    const user = await getUser();
+                    const updatedUser = { 
+                        ...userData, 
+                        email,
+                        showSurprises: user?.showSurprises || false 
+                    }; 
                     await saveUser(updatedUser);
                     setFirstName(updatedUser.firstName || '');
                     setLastName(updatedUser.lastName || '');
@@ -101,6 +109,45 @@ const ProfileScreen = ({ navigation }) => {
         }
     };
 
+    const handleToggleSurprises = (value) => {
+        if (value) {
+            // Trying to enable
+            if (Platform.OS === 'web') {
+                if (window.confirm("Spoiler Alert! 🫣\n\nAre you sure? This will reveal which friends have claimed your gifts. It might ruin the surprise!")) {
+                    setShowSurprises(true);
+                    // Save immediately
+                    saveUserPreference(true);
+                }
+            } else {
+                Alert.alert(
+                    "Spoiler Alert! 🫣",
+                    "Are you sure? This will reveal which friends have claimed your gifts. It might ruin the surprise!",
+                    [
+                        { text: "Keep it a Secret", style: "cancel" },
+                        { 
+                            text: "Reveal All", 
+                            style: "destructive",
+                            onPress: () => {
+                                setShowSurprises(true);
+                                saveUserPreference(true);
+                            }
+                        }
+                    ]
+                );
+            }
+        } else {
+            setShowSurprises(false);
+            saveUserPreference(false);
+        }
+    };
+
+    const saveUserPreference = async (surprisesValue) => {
+         const user = await getUser();
+         if (user) {
+             await saveUser({ ...user, showSurprises: surprisesValue });
+         }
+    };
+
     const handleSave = async () => {
         if (Platform.OS !== 'web') {
              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -116,7 +163,7 @@ const ProfileScreen = ({ navigation }) => {
         }
 
         setSaving(true);
-        const user = { firstName, lastName, email, image };
+        const user = { firstName, lastName, email, image, showSurprises };
         await saveUser(user);
         
         // Sync with Server
@@ -234,7 +281,21 @@ const ProfileScreen = ({ navigation }) => {
                 </View>
 
                 <View style={[styles.section, { borderTopColor: theme.colors.border }]}>
-                    <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Appearance</Text>
+                    <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Settings</Text>
+                    
+                    <View style={styles.row}>
+                        <View style={{ flex: 1, paddingRight: 10 }}>
+                            <Text style={[styles.rowText, { color: theme.colors.text }]}>Reveal Surprises 🫣</Text>
+                            <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>See who claimed your gifts</Text>
+                        </View>
+                        <Switch
+                            trackColor={{ false: theme.colors.surface, true: theme.colors.primary }}
+                            thumbColor={showSurprises ? theme.colors.secondary : '#f4f3f4'}
+                            onValueChange={handleToggleSurprises}
+                            value={showSurprises}
+                        />
+                    </View>
+
                     <View style={styles.row}>
                         <Text style={[styles.rowText, { color: theme.colors.text }]}>Dark Mode</Text>
                         <Switch

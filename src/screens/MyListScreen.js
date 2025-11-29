@@ -219,7 +219,7 @@ const HomeScreen = () => {
                         <Swipeable renderRightActions={(p, d) => renderRightActions(p, d, item)}>
                             <ProductCard 
                                 item={item} 
-                                shouldShowWished={false}
+                                shouldShowWished={user?.showSurprises}
                             />
                         </Swipeable>
                     </View>
