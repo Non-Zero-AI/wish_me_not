@@ -54,7 +54,7 @@ const SplashScreen = ({ onFinish, dataReady }) => {
     useEffect(() => {
         if (dataReady) {
             const timer = setTimeout(() => {
-                console.warn('Splash screen safety timeout triggered');
+                console.error('Splash screen safety timeout triggered - Forcing Exit');
                 onFinish(); // Force unmount
             }, 2000);
             return () => clearTimeout(timer);

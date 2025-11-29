@@ -274,7 +274,8 @@ To view it:
         <View style={[
             styles.container, 
             { 
-                backgroundColor: theme.colors.background,
+                backgroundColor: 'red', // DEBUG: Check if visible
+                // backgroundColor: theme.colors.background,
                 paddingTop: insets.top,
                 paddingBottom: 0,
                 overflow: 'hidden',
