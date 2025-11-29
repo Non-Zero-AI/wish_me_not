@@ -36,23 +36,23 @@ const ProductCard = ({ item, shouldShowWished = false, onDelete }) => {
                 </View>
             )}
 
-            {onDelete && (
+            {/* {onDelete && (
                 <TouchableOpacity 
                     style={[styles.actionButton, { backgroundColor: theme.colors.error }]} 
                     onPress={onDelete}
                 >
                     <Ionicons name="trash" size={18} color={theme.colors.textInverse} />
                 </TouchableOpacity>
-            )}
+            )} */}
 
-            {onWish && !item.wishedBy && !item.isClaimed && (
+            {/* {onWish && !item.wishedBy && !item.isClaimed && (
                 <TouchableOpacity 
                     style={[styles.actionButton, { backgroundColor: theme.colors.success || '#4CAF50' }]} 
                     onPress={onWish}
                 >
                     <Ionicons name="gift" size={18} color={theme.colors.textInverse} />
                 </TouchableOpacity>
-            )}
+            )} */}
 
             <View style={styles.content}>
                 <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={2}>{item.name || 'Unknown Product'}</Text>
