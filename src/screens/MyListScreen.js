@@ -164,8 +164,12 @@ const HomeScreen = () => {
             <FlatList
                 data={items}
                 renderItem={({ item }) => (
-                    <View style={{ marginBottom: 16, padding: 16, backgroundColor: '#eee' }}>
-                        <Text>Debug Item: {item.name}</Text>
+                    <View style={{ marginBottom: 16 }}>
+                        <ProductCard 
+                            item={item} 
+                            shouldShowWished={false} 
+                            onDelete={() => handleDeleteItem(item.id)}
+                        />
                     </View>
                 )}
                 keyExtractor={(item) => item.id}
