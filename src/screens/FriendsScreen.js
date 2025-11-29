@@ -35,9 +35,9 @@ const FriendsScreen = ({ navigation }) => {
         init();
     }, []);
 
-    // Trigger feed load when switching to feed mode
+    // Trigger feed load when switching to feed mode or when friends update
     useEffect(() => {
-        if (viewMode === 'feed' && feedItems.length === 0 && friends.length > 0) {
+        if (viewMode === 'feed' && friends.length > 0) {
             loadFeed();
         }
     }, [viewMode, friends]);

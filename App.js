@@ -136,7 +136,8 @@ function MainTabs() {
 function AppNavigator() {
   const { user, isLoading } = useAuth();
   const { theme, isDark } = useTheme();
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(false);
+  const [splashShown, setSplashShown] = useState(false);
   
   const [fontsLoaded] = useFonts({
     'Inter-Regular': Inter_400Regular,
@@ -145,36 +146,33 @@ function AppNavigator() {
   });
 
   useEffect(() => {
-    const preloadData = async () => {
-      if (user) {
-        // Trigger webhooks silently to update local storage
-        try {
-          const [userInfo, wishlist, friends] = await Promise.all([
-            fetchUserInfo(user.email).catch(() => null),
-            getUserWishlist(user.email).catch(() => []),
-            getUserFriends(user.email).catch(() => [])
-          ]);
+    // When user is authenticated (loaded from storage or logged in)
+    // and splash hasn't been shown, show it and load data.
+    if (!isLoading && user && !splashShown) {
+        setShowSplash(true);
+        setSplashShown(true);
+        
+        const preloadData = async () => {
+          try {
+            console.log('Preloading data...');
+            const [userInfo, wishlist, friends] = await Promise.all([
+              fetchUserInfo(user.email).catch(() => null),
+              getUserWishlist(user.email).catch(() => []),
+              getUserFriends(user.email).catch(() => [])
+            ]);
 
-          if (userInfo) await saveUser({ ...userInfo, email: user.email });
-          if (wishlist) await saveItems(wishlist);
-          if (friends) await saveFriends(friends);
-        } catch (e) {
-          console.warn('Preload failed', e);
-        }
-      }
-    };
-
-    if (!isLoading) {
+            if (userInfo) await saveUser({ ...userInfo, email: user.email });
+            if (wishlist) await saveItems(wishlist);
+            if (friends) await saveFriends(friends);
+          } catch (e) {
+            console.warn('Preload failed', e);
+          }
+        };
         preloadData();
     }
   }, [user, isLoading]);
 
   if (isLoading || !fontsLoaded) {
-    // Initial loading state (fonts/auth) - minimal spinner or keep splash
-    // Since splash handles animation, we can just show splash content immediately if we wanted,
-    // but here we wait for basic resources.
-    // Better: Show SplashScreen immediately even if fonts loading? 
-    // Fonts are needed for text. So wait for fonts.
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
