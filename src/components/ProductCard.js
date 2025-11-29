@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, Linking, ActivityIndic
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 
-const ProductCard = ({ item, shouldShowWished = false, onDelete }) => {
+const ProductCard = ({ item, shouldShowWished = false, onDelete, onWish }) => {
     const { theme } = useTheme();
 
     const handlePress = () => {
