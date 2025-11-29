@@ -29,6 +29,7 @@ const HomeScreen = () => {
     const [manualImage, setManualImage] = useState(null);
 
     useEffect(() => {
+        console.log('MyListScreen mounted');
         loadUser();
     }, []);
 

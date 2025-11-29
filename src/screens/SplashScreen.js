@@ -50,6 +50,17 @@ const SplashScreen = ({ onFinish, dataReady }) => {
         }
     }, [introComplete, dataReady]);
 
+    // Safety Timeout: If animation hangs or introComplete never sets, force exit
+    useEffect(() => {
+        if (dataReady) {
+            const timer = setTimeout(() => {
+                console.warn('Splash screen safety timeout triggered');
+                onFinish(); // Force unmount
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [dataReady]);
+
     const circleStyle = useAnimatedStyle(() => ({
         transform: [{ scale: circleScale.value }],
     }));
