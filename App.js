@@ -1,6 +1,11 @@
 import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { initLogger } from './src/services/logger';
+
+// Initialize remote logging
+initLogger();
+
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -150,7 +155,7 @@ function AppNavigator() {
     // When user is authenticated (loaded from storage or logged in)
     // and splash hasn't been shown, show it and load data.
     if (!isLoading && user && !splashShown) {
-        // setShowSplash(true); // TEMPORARILY DISABLED for debugging white screen
+        setShowSplash(true); 
         setSplashShown(true);
         
         const runSequence = async () => {
