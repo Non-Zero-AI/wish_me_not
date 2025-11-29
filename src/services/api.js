@@ -18,6 +18,7 @@ export const fetchUserInfo = async (email) => {
         const response = await axios.post(GET_USER_INFO_URL, { email });
         // Expecting response.data or response.data.output
         const data = response.data.output || response.data;
+        console.log('Fetch User Info Response:', JSON.stringify(data, null, 2));
         
         // Map response to app user structure
         // Handle array or single object
@@ -25,11 +26,14 @@ export const fetchUserInfo = async (email) => {
         
         if (!userData) return null;
 
+        const image = userData['User Avatar'] || userData.user_avatar || userData.profile_image || userData.image || userData.profile_image_url;
+        console.log('Parsed User Image:', image);
+
         return {
             firstName: userData.first_name || userData.firstName,
             lastName: userData.last_name || userData.lastName,
             email: userData.email,
-            image: userData.profile_image || userData.image || userData.profile_image_url,
+            image: image,
         };
     } catch (error) {
         console.error('Error fetching user info:', error);
@@ -122,8 +126,10 @@ export const getUserFriends = async (userEmail) => {
                 });
             } else if (typeof item === 'object' && item !== null) {
                 const email = item.friends || item.Friends || item.friend_email || item.email;
-                const image = item.profile_image || item.image || item.profile_image_url || item.avatar;
+                const image = item['User Avatar'] || item.user_avatar || item.profile_image || item.image || item.profile_image_url || item.avatar;
                 const name = item.name || item.friend_name;
+                
+                console.log('Processing Friend Item:', { email, image, name, raw: item });
 
                 if (email && typeof email === 'string') {
                     // Recursively handle string if it contains commas
@@ -146,11 +152,21 @@ export const getUserFriends = async (userEmail) => {
             processItem(data);
         }
 
-        // Deduplicate by email
+        // Deduplicate by email, merging data to preserve images/names
         const uniqueFriends = new Map();
         friendsList.forEach(f => {
-            if (f.email && !uniqueFriends.has(f.email)) {
-                uniqueFriends.set(f.email, f);
+            if (f.email) {
+                const existing = uniqueFriends.get(f.email);
+                if (!existing) {
+                    uniqueFriends.set(f.email, f);
+                } else {
+                    // Merge: Prefer new info if existing is missing it
+                    uniqueFriends.set(f.email, {
+                        email: f.email,
+                        image: existing.image || f.image,
+                        name: existing.name || f.name
+                    });
+                }
             }
         });
 
