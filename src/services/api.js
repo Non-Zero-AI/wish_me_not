@@ -239,6 +239,8 @@ export const addManualProduct = async (productData, user) => {
     try {
         const payload = {
             email: user.email,
+            first_name: user.firstName,
+            last_name: user.lastName,
             name: productData.name,
             price: productData.price,
             image: productData.image,

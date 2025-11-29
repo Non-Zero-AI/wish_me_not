@@ -430,7 +430,7 @@ To view it:
                                     placeholderTextColor={theme.colors.textSecondary}
                                     value={manualPrice}
                                     onChangeText={setManualPrice}
-                                    keyboardType="numeric" // or decimal-pad
+                                    keyboardType="decimal-pad"
                                 />
                             </>
                         )}
