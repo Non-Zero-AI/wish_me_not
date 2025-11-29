@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert, Safe
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { getUser, saveUser } from '../services/storage';
-import { uploadProfileImage } from '../services/api';
+import { updateUserProfile } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import AppHeader from '../components/AppHeader';
@@ -59,7 +59,7 @@ const ProfileScreen = ({ navigation }) => {
             // Immediate Background Upload
             if (email) {
                 console.log('Uploading profile image for:', email);
-                uploadProfileImage(email, imageUri)
+                updateUserProfile({ firstName, lastName, email }, imageUri)
                     .then(res => {
                         console.log('Upload success:', res);
                         // If webhook returns a public URL, use it
@@ -95,6 +95,14 @@ const ProfileScreen = ({ navigation }) => {
         setSaving(true);
         const user = { firstName, lastName, email, image };
         await saveUser(user);
+        
+        // Sync with Server
+        try {
+            await updateUserProfile(user, image);
+        } catch (e) {
+            console.error('Failed to sync profile with server', e);
+        }
+
         setSaving(false);
         
         if (Platform.OS === 'web') {

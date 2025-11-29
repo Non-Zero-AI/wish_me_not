@@ -11,27 +11,38 @@ const GET_FRIENDS_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Get_Friends'
 const DELETE_FRIEND_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Delete-Item'; 
 const UPLOAD_IMAGE_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/set_profile_image';
 
-export const uploadProfileImage = async (userEmail, imageUri) => {
+export const updateUserProfile = async (user, imageUri) => {
     try {
         const formData = new FormData();
-        formData.append('email', userEmail);
+        formData.append('email', user.email);
+        formData.append('first_name', user.firstName);
+        formData.append('last_name', user.lastName);
 
-        if (Platform.OS === 'web') {
-            // For web, we need to fetch the blob and append it
-            const res = await fetch(imageUri);
-            const blob = await res.blob();
-            formData.append('Image', blob, 'profile.jpg');
-        } else {
-            // For native
-            const filename = imageUri.split('/').pop();
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : `image/jpeg`;
+        if (imageUri) {
+            const isLocal = imageUri.startsWith('file://') || imageUri.startsWith('blob:') || imageUri.startsWith('data:');
             
-            formData.append('Image', {
-                uri: imageUri,
-                name: filename,
-                type,
-            });
+            if (isLocal) {
+                if (Platform.OS === 'web') {
+                    // For web, we need to fetch the blob and append it
+                    const res = await fetch(imageUri);
+                    const blob = await res.blob();
+                    formData.append('Image', blob, 'profile.jpg');
+                } else {
+                    // For native
+                    const filename = imageUri.split('/').pop();
+                    const match = /\.(\w+)$/.exec(filename);
+                    const type = match ? `image/${match[1]}` : `image/jpeg`;
+                    
+                    formData.append('Image', {
+                        uri: imageUri,
+                        name: filename,
+                        type,
+                    });
+                }
+            } else {
+                 // It's a remote URL, pass it as string if backend supports it
+                 formData.append('profile_image_url', imageUri);
+            }
         }
 
         const response = await axios.post(UPLOAD_IMAGE_URL, formData, {
@@ -41,7 +52,7 @@ export const uploadProfileImage = async (userEmail, imageUri) => {
         });
         return response.data;
     } catch (error) {
-        console.error('Error uploading profile image:', error);
+        console.error('Error updating profile:', error);
         throw error;
     }
 };
