@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert, SafeAreaView, ActivityIndicator, Switch, ScrollView, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as Haptics from 'expo-haptics';
 import { getUser, saveUser } from '../services/storage';
+import { uploadProfileImage } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import AppHeader from '../components/AppHeader';
@@ -40,17 +42,47 @@ const ProfileScreen = ({ navigation }) => {
         });
 
         if (!result.canceled) {
+            if (Platform.OS !== 'web') {
+                Haptics.selectionAsync();
+            }
+            
             const asset = result.assets[0];
+            let imageUri = asset.uri;
+
             if (Platform.OS === 'web' && asset.base64) {
                 // Use base64 for web persistence
-                setImage(`data:image/jpeg;base64,${asset.base64}`);
-            } else {
-                setImage(asset.uri);
+                imageUri = `data:image/jpeg;base64,${asset.base64}`;
+            }
+            
+            setImage(imageUri);
+
+            // Immediate Background Upload
+            if (email) {
+                console.log('Uploading profile image for:', email);
+                uploadProfileImage(email, imageUri)
+                    .then(res => {
+                        console.log('Upload success:', res);
+                        // If webhook returns a public URL, use it
+                        // Assuming structure: { output: { profile_image_url: '...' } } or { profile_image_url: '...' }
+                        const remoteUrl = res?.output?.profile_image_url || res?.profile_image_url;
+                        if (remoteUrl) {
+                            setImage(remoteUrl);
+                            // Also save user with new URL immediately to be safe
+                            saveUser({ firstName, lastName, email, image: remoteUrl });
+                        }
+                    })
+                    .catch(err => {
+                        console.warn('Background upload failed', err);
+                    });
             }
         }
     };
 
     const handleSave = async () => {
+        if (Platform.OS !== 'web') {
+             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+
         if (!firstName || !lastName || !email) {
             if (Platform.OS === 'web') {
                 window.alert('Please fill in all fields.');

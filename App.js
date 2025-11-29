@@ -8,6 +8,7 @@ import { ActivityIndicator, View, StyleSheet, StatusBar, TouchableOpacity, Platf
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useFonts, Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 
 import { getUser } from './src/services/storage';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
@@ -133,8 +134,14 @@ function MainTabs() {
 function AppNavigator() {
   const { user, isLoading } = useAuth();
   const { theme, isDark } = useTheme();
+  
+  const [fontsLoaded] = useFonts({
+    'Inter-Regular': Inter_400Regular,
+    'Inter-SemiBold': Inter_600SemiBold,
+    'Inter-Bold': Inter_700Bold,
+  });
 
-  if (isLoading) {
+  if (isLoading || !fontsLoaded) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />

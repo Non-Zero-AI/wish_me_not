@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Platform } from 'react-native';
 
 // Production webhooks
 const WEBHOOK_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Wish_Me_Not';
@@ -7,8 +8,43 @@ const DELETE_ITEM_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Delete-Item'
 const CREATE_USER_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/create_user';
 const CLAIM_GIFT_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/claim_gift';
 const GET_FRIENDS_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Get_Friends';
-// Using the same endpoint as Delete-Item as per user request, assuming backend handles polymorphism
 const DELETE_FRIEND_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Delete-Item'; 
+const UPLOAD_IMAGE_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/set_profile_image';
+
+export const uploadProfileImage = async (userEmail, imageUri) => {
+    try {
+        const formData = new FormData();
+        formData.append('email', userEmail);
+
+        if (Platform.OS === 'web') {
+            // For web, we need to fetch the blob and append it
+            const res = await fetch(imageUri);
+            const blob = await res.blob();
+            formData.append('Image', blob, 'profile.jpg');
+        } else {
+            // For native
+            const filename = imageUri.split('/').pop();
+            const match = /\.(\w+)$/.exec(filename);
+            const type = match ? `image/${match[1]}` : `image/jpeg`;
+            
+            formData.append('Image', {
+                uri: imageUri,
+                name: filename,
+                type,
+            });
+        }
+
+        const response = await axios.post(UPLOAD_IMAGE_URL, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error uploading profile image:', error);
+        throw error;
+    }
+};
 
 export const createUser = async (user) => {
     try {

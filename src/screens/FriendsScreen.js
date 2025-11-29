@@ -3,10 +3,12 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, A
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '../theme/ThemeContext';
 import { getUserWishlist, getUserFriends, deleteFriend } from '../services/api';
 import { getFriends, saveFriends, getUser } from '../services/storage';
 import AppHeader from '../components/AppHeader';
+import ProductCard from '../components/ProductCard';
 
 const FriendsScreen = ({ navigation }) => {
     const { theme } = useTheme();
@@ -16,6 +18,9 @@ const FriendsScreen = ({ navigation }) => {
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [user, setUser] = useState(null);
+    const [viewMode, setViewMode] = useState('list'); // 'list' or 'feed'
+    const [feedItems, setFeedItems] = useState([]);
+    const [loadingFeed, setLoadingFeed] = useState(false);
 
     useEffect(() => {
         const init = async () => {
@@ -30,6 +35,50 @@ const FriendsScreen = ({ navigation }) => {
         init();
     }, []);
 
+    // Trigger feed load when switching to feed mode
+    useEffect(() => {
+        if (viewMode === 'feed' && feedItems.length === 0 && friends.length > 0) {
+            loadFeed();
+        }
+    }, [viewMode, friends]);
+
+    const loadFeed = async () => {
+        setLoadingFeed(true);
+        try {
+            let allItems = [];
+            // Fetch wishlists for all friends in parallel
+            const promises = friends.map(async (friend) => {
+                try {
+                    const items = await getUserWishlist(friend.email);
+                    // Attach friend info to each item
+                    return items.map(item => ({
+                        ...item,
+                        friendName: friend.name,
+                        friendEmail: friend.email,
+                        friendId: friend.id
+                    }));
+                } catch (e) {
+                    console.warn(`Failed to load wishlist for ${friend.email}`, e);
+                    return [];
+                }
+            });
+
+            const results = await Promise.all(promises);
+            results.forEach(items => allItems.push(...items));
+            
+            // Sort by something? Maybe random or name for now.
+            // Let's shuffle for "Feed" feel or just list them.
+            // sorting by reversed ID might give "newest" if IDs are timestamps
+            allItems.sort((a, b) => b.id - a.id);
+
+            setFeedItems(allItems);
+        } catch (e) {
+            console.error("Error loading feed", e);
+        } finally {
+            setLoadingFeed(false);
+        }
+    };
+
     const loadFriends = async (email) => {
         // 1. Load Local FIRST for speed (prevents "No friends" flash)
         const storedFriends = await getFriends();
@@ -43,6 +92,9 @@ const FriendsScreen = ({ navigation }) => {
             if (serverFriends && serverFriends.length > 0) {
                 setFriends(serverFriends);
                 await saveFriends(serverFriends); // Cache
+                
+                // If in feed mode, reload feed?
+                // setFeedItems([]); // Optional: force reload
             }
         } catch (e) {
             console.error('Server fetch failed, keeping local', e);
@@ -119,6 +171,7 @@ const FriendsScreen = ({ navigation }) => {
 
     const onRefresh = async () => {
         setRefreshing(true);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         let currentUser = user;
         if (!currentUser) {
             currentUser = await getUser();
@@ -127,8 +180,18 @@ const FriendsScreen = ({ navigation }) => {
         
         if (currentUser) {
             await loadFriends(currentUser.email);
+            if (viewMode === 'feed') {
+                await loadFeed();
+            }
         }
         setRefreshing(false);
+    };
+
+    const switchMode = (mode) => {
+        if (mode !== viewMode) {
+            Haptics.selectionAsync();
+            setViewMode(mode);
+        }
     };
 
     const renderFriend = ({ item }) => (
@@ -161,6 +224,26 @@ const FriendsScreen = ({ navigation }) => {
         </Swipeable>
     );
 
+    const renderFeedItem = ({ item }) => (
+        <View style={styles.feedItemContainer}>
+            <View style={styles.feedHeader}>
+                <View style={[styles.avatarSmall, { backgroundColor: theme.colors.secondary }]}>
+                    <Text style={[styles.avatarTextSmall, { color: theme.colors.textInverse }]}>
+                        {item.friendName?.charAt(0).toUpperCase()}
+                    </Text>
+                </View>
+                <View>
+                    <Text style={[styles.feedFriendName, { color: theme.colors.text }]}>{item.friendName}</Text>
+                    <Text style={[styles.feedTimestamp, { color: theme.colors.textSecondary }]}>Added an item</Text>
+                </View>
+            </View>
+            <ProductCard 
+                item={item} 
+                shouldShowWished={true} 
+            />
+        </View>
+    );
+
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <AppHeader 
@@ -171,26 +254,65 @@ const FriendsScreen = ({ navigation }) => {
                     </TouchableOpacity>
                 }
             />
+            
+            <View style={[styles.tabContainer, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+                <TouchableOpacity 
+                    style={[styles.tabButton, viewMode === 'list' && { borderBottomColor: theme.colors.primary, borderBottomWidth: 2 }]}
+                    onPress={() => switchMode('list')}
+                >
+                    <Text style={[styles.tabText, { color: viewMode === 'list' ? theme.colors.primary : theme.colors.textSecondary }]}>My Friends</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                    style={[styles.tabButton, viewMode === 'feed' && { borderBottomColor: theme.colors.primary, borderBottomWidth: 2 }]}
+                    onPress={() => switchMode('feed')}
+                >
+                    <Text style={[styles.tabText, { color: viewMode === 'feed' ? theme.colors.primary : theme.colors.textSecondary }]}>Feed</Text>
+                </TouchableOpacity>
+            </View>
 
-            <FlatList
-                data={friends}
-                renderItem={renderFriend}
-                keyExtractor={item => item.id}
-                contentContainerStyle={styles.listContent}
-                alwaysBounceVertical={true}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
-                }
-                ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No friends yet.</Text>
-                        {user && <Text style={{color: theme.colors.textSecondary, fontSize: 12, marginTop: 4}}>Logged in as: {user.email}</Text>}
-                        <TouchableOpacity onPress={onRefresh} style={{marginTop: 20, padding: 10, backgroundColor: theme.colors.surface, borderRadius: 8}}>
-                            <Text style={{color: theme.colors.primary}}>Tap to Retry</Text>
-                        </TouchableOpacity>
-                    </View>
-                }
-            />
+            {viewMode === 'list' ? (
+                <FlatList
+                    data={friends}
+                    renderItem={renderFriend}
+                    keyExtractor={item => item.id}
+                    contentContainerStyle={styles.listContent}
+                    alwaysBounceVertical={true}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
+                    }
+                    ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No friends yet.</Text>
+                            {user && <Text style={{color: theme.colors.textSecondary, fontSize: 12, marginTop: 4}}>Logged in as: {user.email}</Text>}
+                            <TouchableOpacity onPress={onRefresh} style={{marginTop: 20, padding: 10, backgroundColor: theme.colors.surface, borderRadius: 8}}>
+                                <Text style={{color: theme.colors.primary}}>Tap to Retry</Text>
+                            </TouchableOpacity>
+                        </View>
+                    }
+                />
+            ) : (
+                <FlatList
+                    data={feedItems}
+                    renderItem={renderFeedItem}
+                    keyExtractor={(item, index) => item.id + index} // Unique key
+                    contentContainerStyle={styles.listContent}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
+                    }
+                    ListHeaderComponent={
+                        loadingFeed ? (
+                             <ActivityIndicator size="small" color={theme.colors.primary} style={{ marginVertical: 20 }} />
+                        ) : null
+                    }
+                    ListEmptyComponent={
+                        !loadingFeed && (
+                            <View style={styles.emptyContainer}>
+                                <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No items to show.</Text>
+                            </View>
+                        )
+                    }
+                />
+            )}
 
             <Modal
                 animationType="slide"
@@ -261,9 +383,23 @@ const styles = StyleSheet.create({
     addButton: {
         padding: 8,
     },
+    tabContainer: {
+        flexDirection: 'row',
+        borderBottomWidth: 1,
+    },
+    tabButton: {
+        flex: 1,
+        paddingVertical: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    tabText: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
     listContent: {
         padding: 16,
-        paddingBottom: 80,
+        paddingBottom: 120,
     },
     friendCard: {
         flexDirection: 'row',
@@ -312,6 +448,34 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: '600',
         padding: 20,
+    },
+    feedItemContainer: {
+        marginBottom: 24,
+    },
+    feedHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 4,
+        marginBottom: 10,
+    },
+    avatarSmall: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 10,
+    },
+    avatarTextSmall: {
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    feedFriendName: {
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    feedTimestamp: {
+        fontSize: 12,
     },
     emptyContainer: {
         alignItems: 'center',
