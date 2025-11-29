@@ -52,7 +52,11 @@ const ProfileScreen = ({ navigation }) => {
 
     const handleSave = async () => {
         if (!firstName || !lastName || !email) {
-            Alert.alert('Error', 'Please fill in all fields.');
+            if (Platform.OS === 'web') {
+                window.alert('Please fill in all fields.');
+            } else {
+                Alert.alert('Error', 'Please fill in all fields.');
+            }
             return;
         }
 
@@ -60,7 +64,12 @@ const ProfileScreen = ({ navigation }) => {
         const user = { firstName, lastName, email, image };
         await saveUser(user);
         setSaving(false);
-        Alert.alert('Success', 'Profile updated!');
+        
+        if (Platform.OS === 'web') {
+            window.alert('Profile updated!');
+        } else {
+            Alert.alert('Success', 'Profile updated!');
+        }
     };
 
     const handleAppRefresh = () => {

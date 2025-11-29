@@ -25,6 +25,7 @@ import ThemesScreen from './src/screens/ThemesScreen';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 const FriendsStack = createStackNavigator();
+const ProfileStack = createStackNavigator();
 
 const prefix = Linking.createURL('/');
 
@@ -44,10 +45,15 @@ const linking = {
               FriendWishlist: 'wishlist/:userId',
             }
           },
-          Profile: 'profile',
+          ProfileStack: {
+            path: 'profile',
+            screens: {
+              ProfileScreen: '',
+              Themes: 'themes',
+            }
+          },
         },
       },
-      Themes: 'themes',
       PrivacyPolicy: 'privacy',
       UserAgreement: 'terms',
     },
@@ -70,6 +76,22 @@ function FriendsStackScreen() {
   );
 }
 
+function ProfileStackScreen() {
+  const { theme } = useTheme();
+  return (
+    <ProfileStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        headerStyle: { backgroundColor: theme.colors.surface },
+        headerTintColor: theme.colors.text,
+      }}
+    >
+      <ProfileStack.Screen name="ProfileScreen" component={ProfileScreen} options={{ title: 'Profile' }} />
+      <ProfileStack.Screen name="Themes" component={ThemesScreen} />
+    </ProfileStack.Navigator>
+  );
+}
+
 function MainTabs() {
   const { theme } = useTheme();
   
@@ -84,7 +106,7 @@ function MainTabs() {
             iconName = focused ? 'list' : 'list-outline';
           } else if (route.name === 'FriendsStack') {
             iconName = focused ? 'people' : 'people-outline';
-          } else if (route.name === 'Profile') {
+          } else if (route.name === 'ProfileStack') {
             iconName = focused ? 'person' : 'person-outline';
           }
 
@@ -103,7 +125,7 @@ function MainTabs() {
     >
       <Tab.Screen name="MyList" component={MyListScreen} options={{ title: 'My Wish List' }} />
       <Tab.Screen name="FriendsStack" component={FriendsStackScreen} options={{ title: 'Friends' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
+      <Tab.Screen name="ProfileStack" component={ProfileStackScreen} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );
 }
@@ -156,11 +178,6 @@ function AppNavigator() {
               name="UserAgreement" 
               component={UserAgreementScreen} 
               options={{ headerShown: true, title: 'User Agreement' }}
-            />
-            <Stack.Screen 
-              name="Themes" 
-              component={ThemesScreen} 
-              options={{ headerShown: false }}
             />
           </Stack.Navigator>
         </NavigationContainer>

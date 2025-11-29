@@ -31,21 +31,22 @@ const FriendsScreen = ({ navigation }) => {
     }, []);
 
     const loadFriends = async (email) => {
-        // 1. Try Server
+        // 1. Load Local FIRST for speed (prevents "No friends" flash)
+        const storedFriends = await getFriends();
+        if (storedFriends.length > 0) {
+            setFriends(storedFriends);
+        }
+
+        // 2. Then try Server for updates
         try {
             const serverFriends = await getUserFriends(email);
             if (serverFriends && serverFriends.length > 0) {
                 setFriends(serverFriends);
                 await saveFriends(serverFriends); // Cache
-                return;
             }
         } catch (e) {
-            console.error('Server fetch failed, falling back to local', e);
+            console.error('Server fetch failed, keeping local', e);
         }
-
-        // 2. Fallback to Local
-        const storedFriends = await getFriends();
-        setFriends(storedFriends);
     };
 
     const handleAddFriend = async () => {
@@ -176,6 +177,7 @@ const FriendsScreen = ({ navigation }) => {
                 renderItem={renderFriend}
                 keyExtractor={item => item.id}
                 contentContainerStyle={styles.listContent}
+                alwaysBounceVertical={true}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
                 }
