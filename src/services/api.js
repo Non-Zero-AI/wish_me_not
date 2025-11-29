@@ -93,16 +93,28 @@ export const updateUserProfile = async (user, imageUri) => {
 
 export const createUser = async (user) => {
     try {
-        await axios.post(CREATE_USER_URL, {
-            first_name: user.firstName,
-            last_name: user.lastName,
-            email: user.email,
-        });
+        console.log('Creating user:', user);
+        await axios.post(CREATE_USER_URL, user);
         return true;
     } catch (error) {
         console.error('Error creating user:', error);
         // Non-blocking error
         return false;
+    }
+};
+
+export const sendFeedback = async (email, message) => {
+    try {
+        console.log('Sending feedback:', { email, message });
+        await axios.post(SEND_FEEDBACK_URL, { 
+            email, 
+            feedback: message,
+            timestamp: new Date().toISOString()
+        });
+        return true;
+    } catch (error) {
+        console.error('Error sending feedback:', error);
+        throw error;
     }
 };
 

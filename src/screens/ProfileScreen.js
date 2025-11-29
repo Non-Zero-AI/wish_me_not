@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert, SafeAreaView, ActivityIndicator, Switch, ScrollView, Platform, RefreshControl } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert, SafeAreaView, ActivityIndicator, Switch, ScrollView, Platform, RefreshControl, Modal, KeyboardAvoidingView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { getUser, saveUser } from '../services/storage';
-import { updateUserProfile, fetchUserInfo } from '../services/api';
+import { updateUserProfile, fetchUserInfo, sendFeedback } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import AppHeader from '../components/AppHeader';
@@ -18,6 +18,11 @@ const ProfileScreen = ({ navigation }) => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    
+    // Feedback State
+    const [feedbackVisible, setFeedbackVisible] = useState(false);
+    const [feedbackText, setFeedbackText] = useState('');
+    const [sendingFeedback, setSendingFeedback] = useState(false);
 
     useEffect(() => {
         loadProfile();
@@ -182,6 +187,30 @@ const ProfileScreen = ({ navigation }) => {
         }
     };
 
+    const handleSendFeedback = async () => {
+        if (!feedbackText.trim()) return;
+        
+        setSendingFeedback(true);
+        try {
+            await sendFeedback(email, feedbackText);
+            setFeedbackVisible(false);
+            setFeedbackText('');
+            if (Platform.OS === 'web') {
+                window.alert('Thank You\n\nYour feedback has been sent!');
+            } else {
+                Alert.alert('Thank You', 'Your feedback has been sent!');
+            }
+        } catch (error) {
+             if (Platform.OS === 'web') {
+                window.alert('Error\n\nFailed to send feedback. Please try again.');
+            } else {
+                Alert.alert('Error', 'Failed to send feedback. Please try again.');
+            }
+        } finally {
+            setSendingFeedback(false);
+        }
+    };
+
     const handleAppRefresh = () => {
         if (Platform.OS === 'web') {
             window.location.reload();
@@ -313,6 +342,10 @@ const ProfileScreen = ({ navigation }) => {
 
                 <View style={[styles.section, { borderTopColor: theme.colors.border }]}>
                     <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>About</Text>
+                    <TouchableOpacity onPress={() => setFeedbackVisible(true)} style={styles.linkRow}>
+                        <Text style={[styles.linkText, { color: theme.colors.text }]}>Send Feedback</Text>
+                        <Ionicons name="chatbubble-ellipses-outline" size={20} color={theme.colors.primary} />
+                    </TouchableOpacity>
                     <TouchableOpacity onPress={handleAppRefresh} style={styles.linkRow}>
                         <Text style={[styles.linkText, { color: theme.colors.primary }]}>Force App Refresh</Text>
                         <Ionicons name="refresh" size={20} color={theme.colors.primary} />
@@ -329,6 +362,61 @@ const ProfileScreen = ({ navigation }) => {
                 
                 <View style={{ height: 40 }} /> 
             </ScrollView>
+
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={feedbackVisible}
+                onRequestClose={() => setFeedbackVisible(false)}
+            >
+                <KeyboardAvoidingView 
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.modalOverlay}
+                >
+                    <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
+                        <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Send Feedback</Text>
+                        <Text style={[styles.modalSubtitle, { color: theme.colors.textSecondary }]}>
+                            Have an idea or found a bug? Let us know!
+                        </Text>
+                        
+                        <TextInput
+                            style={[styles.input, styles.textArea, { 
+                                backgroundColor: theme.colors.background, 
+                                color: theme.colors.text,
+                                borderColor: theme.colors.border 
+                            }]}
+                            placeholder="Type your message here..."
+                            placeholderTextColor={theme.colors.textSecondary}
+                            value={feedbackText}
+                            onChangeText={setFeedbackText}
+                            multiline
+                            textAlignVertical="top"
+                            autoFocus
+                        />
+                        
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: theme.colors.background }]}
+                                onPress={() => setFeedbackVisible(false)}
+                                disabled={sendingFeedback}
+                            >
+                                <Text style={[styles.cancelButtonText, { color: theme.colors.text }]}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: theme.colors.primary }]}
+                                onPress={handleSendFeedback}
+                                disabled={sendingFeedback}
+                            >
+                                {sendingFeedback ? (
+                                    <ActivityIndicator color={theme.colors.textInverse} size="small" />
+                                ) : (
+                                    <Text style={[styles.saveButtonText, { color: theme.colors.textInverse }]}>Send</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </KeyboardAvoidingView>
+            </Modal>
         </SafeAreaView>
     );
 };
@@ -438,6 +526,51 @@ const styles = StyleSheet.create({
     linkText: {
         fontSize: 14,
         fontWeight: '500',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        padding: 20,
+    },
+    modalContent: {
+        borderRadius: 16,
+        padding: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    modalSubtitle: {
+        fontSize: 14,
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    textArea: {
+        height: 120,
+        paddingTop: 12,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 12,
+    },
+    modalButton: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    cancelButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
 
