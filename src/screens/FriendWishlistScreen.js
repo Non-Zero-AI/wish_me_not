@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
@@ -113,29 +113,43 @@ const FriendWishlistScreen = ({ route, navigation }) => {
             ) : (
                 <FlatList
                     data={items}
-                    renderItem={({ item }) => (
-                        <View style={{ marginBottom: 16 }}>
-                            <Swipeable
-                                enabled={!item.wishedBy}
-                                renderRightActions={() => (
-                                    !item.wishedBy ? (
-                                        <TouchableOpacity
-                                            style={[styles.wishAction, { backgroundColor: theme.colors.success, margin: 0 }]}
-                                            onPress={() => handleWishItem(item)}
-                                        >
-                                            <Text style={styles.actionText}>Wish</Text>
-                                        </TouchableOpacity>
-                                    ) : null
-                                )}
-                            >
-                                <ProductCard 
-                                    item={item} 
-                                    shouldShowWished={true} 
-                                    onWish={() => handleWishItem(item)}
-                                />
-                            </Swipeable>
-                        </View>
-                    )}
+                    renderItem={({ item }) => {
+                        if (Platform.OS === 'web') {
+                            return (
+                                <View style={{ marginBottom: 16 }}>
+                                    <ProductCard 
+                                        item={item} 
+                                        shouldShowWished={true} 
+                                        onWish={() => handleWishItem(item)}
+                                    />
+                                </View>
+                            );
+                        }
+
+                        return (
+                            <View style={{ marginBottom: 16 }}>
+                                <Swipeable
+                                    enabled={!item.wishedBy}
+                                    renderRightActions={() => (
+                                        !item.wishedBy ? (
+                                            <TouchableOpacity
+                                                style={[styles.wishAction, { backgroundColor: theme.colors.success, margin: 0 }]}
+                                                onPress={() => handleWishItem(item)}
+                                            >
+                                                <Text style={styles.actionText}>Wish</Text>
+                                            </TouchableOpacity>
+                                        ) : null
+                                    )}
+                                >
+                                    <ProductCard 
+                                        item={item} 
+                                        shouldShowWished={true} 
+                                        onWish={() => handleWishItem(item)}
+                                    />
+                                </Swipeable>
+                            </View>
+                        );
+                    }}
                     keyExtractor={item => item.id}
                     contentContainerStyle={styles.listContent}
                     refreshControl={

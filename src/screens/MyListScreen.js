@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, RefreshControl } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, RefreshControl, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ProductCard from '../components/ProductCard';
 import { getItems, addItem, getUser, deleteItem, saveItems } from '../services/storage';
@@ -164,26 +164,40 @@ const HomeScreen = () => {
 
             <FlatList
                 data={items}
-                renderItem={({ item }) => (
-                    <View style={{ marginBottom: 16 }}>
-                        <Swipeable
-                            renderLeftActions={() => (
-                                <TouchableOpacity
-                                    style={[styles.deleteAction, { backgroundColor: theme.colors.error }]}
-                                    onPress={() => handleDeleteItem(item.id)}
-                                >
-                                    <Text style={styles.actionText}>Delete</Text>
-                                </TouchableOpacity>
-                            )}
-                        >
-                            <ProductCard 
-                                item={item} 
-                                shouldShowWished={false} 
-                                onDelete={() => handleDeleteItem(item.id)}
-                            />
-                        </Swipeable>
-                    </View>
-                )}
+                renderItem={({ item }) => {
+                    if (Platform.OS === 'web') {
+                        return (
+                            <View style={{ marginBottom: 16 }}>
+                                <ProductCard 
+                                    item={item} 
+                                    shouldShowWished={false} 
+                                    onDelete={() => handleDeleteItem(item.id)}
+                                />
+                            </View>
+                        );
+                    }
+
+                    return (
+                        <View style={{ marginBottom: 16 }}>
+                            <Swipeable
+                                renderLeftActions={() => (
+                                    <TouchableOpacity
+                                        style={[styles.deleteAction, { backgroundColor: theme.colors.error }]}
+                                        onPress={() => handleDeleteItem(item.id)}
+                                    >
+                                        <Text style={styles.actionText}>Delete</Text>
+                                    </TouchableOpacity>
+                                )}
+                            >
+                                <ProductCard 
+                                    item={item} 
+                                    shouldShowWished={false} 
+                                    onDelete={() => handleDeleteItem(item.id)}
+                                />
+                            </Swipeable>
+                        </View>
+                    );
+                }}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.listContent}
                 refreshControl={
