@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert, SafeAreaView, ActivityIndicator, Switch, ScrollView, Platform } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert, SafeAreaView, ActivityIndicator, Switch, ScrollView, Platform, RefreshControl } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { getUser, saveUser } from '../services/storage';
-import { updateUserProfile } from '../services/api';
+import { updateUserProfile, fetchUserInfo } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import AppHeader from '../components/AppHeader';
@@ -16,6 +16,7 @@ const ProfileScreen = ({ navigation }) => {
     const [image, setImage] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
         loadProfile();
@@ -30,6 +31,27 @@ const ProfileScreen = ({ navigation }) => {
             setImage(user.image || null);
         }
         setLoading(false);
+    };
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        
+        if (email) {
+            try {
+                const userData = await fetchUserInfo(email);
+                if (userData) {
+                    const updatedUser = { ...userData, email }; // Ensure email is preserved
+                    await saveUser(updatedUser);
+                    setFirstName(updatedUser.firstName || '');
+                    setLastName(updatedUser.lastName || '');
+                    setImage(updatedUser.image || null);
+                }
+            } catch (e) {
+                console.error('Profile refresh failed', e);
+            }
+        }
+        setRefreshing(false);
     };
 
     const pickImage = async () => {
@@ -131,8 +153,12 @@ const ProfileScreen = ({ navigation }) => {
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <AppHeader title="Profile" />
-
-            <ScrollView contentContainerStyle={styles.content}>
+            <ScrollView 
+                contentContainerStyle={styles.content}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
+                }
+            >
                 <TouchableOpacity onPress={pickImage} style={styles.imageContainer}>
                     {image ? (
                         <Image source={{ uri: image }} style={[styles.profileImage, { borderColor: theme.colors.border, borderWidth: 2 }]} />

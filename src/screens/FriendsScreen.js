@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, RefreshControl, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
@@ -209,8 +209,12 @@ const FriendsScreen = ({ navigation }) => {
                 style={[styles.friendCard, { backgroundColor: theme.colors.surface }]}
                 onPress={() => navigation.navigate('FriendWishlist', { friend: item })}
             >
-                <View style={[styles.avatar, { backgroundColor: theme.colors.secondary }]}>
-                    <Text style={[styles.avatarText, { color: theme.colors.textInverse }]}>{item.name.charAt(0).toUpperCase()}</Text>
+                <View style={[styles.avatar, { backgroundColor: theme.colors.secondary, overflow: 'hidden' }]}>
+                    {item.image ? (
+                        <Image source={{ uri: item.image }} style={styles.avatarImage} />
+                    ) : (
+                        <Text style={[styles.avatarText, { color: theme.colors.textInverse }]}>{item.name.charAt(0).toUpperCase()}</Text>
+                    )}
                 </View>
                 <View style={styles.friendInfo}>
                     <Text style={[styles.friendName, { color: theme.colors.text }]}>{item.name}</Text>
@@ -227,10 +231,14 @@ const FriendsScreen = ({ navigation }) => {
     const renderFeedItem = ({ item }) => (
         <View style={styles.feedItemContainer}>
             <View style={styles.feedHeader}>
-                <View style={[styles.avatarSmall, { backgroundColor: theme.colors.secondary }]}>
-                    <Text style={[styles.avatarTextSmall, { color: theme.colors.textInverse }]}>
-                        {item.friendName?.charAt(0).toUpperCase()}
-                    </Text>
+                <View style={[styles.avatarSmall, { backgroundColor: theme.colors.secondary, overflow: 'hidden' }]}>
+                     {item.friendImage ? (
+                        <Image source={{ uri: item.friendImage }} style={styles.avatarImage} />
+                    ) : (
+                        <Text style={[styles.avatarTextSmall, { color: theme.colors.textInverse }]}>
+                            {item.friendName?.charAt(0).toUpperCase()}
+                        </Text>
+                    )}
                 </View>
                 <View>
                     <Text style={[styles.feedFriendName, { color: theme.colors.text }]}>{item.friendName}</Text>
@@ -420,6 +428,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 16,
+    },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     avatarText: {
         fontSize: 20,

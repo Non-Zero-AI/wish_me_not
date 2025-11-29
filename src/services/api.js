@@ -10,6 +10,32 @@ const CLAIM_GIFT_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/claim_gift';
 const GET_FRIENDS_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Get_Friends';
 const DELETE_FRIEND_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Delete-Item'; 
 const UPLOAD_IMAGE_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/set_profile_image';
+const GET_USER_INFO_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/get_user_info';
+
+export const fetchUserInfo = async (email) => {
+    try {
+        console.log('Fetching user info for:', email);
+        const response = await axios.post(GET_USER_INFO_URL, { email });
+        // Expecting response.data or response.data.output
+        const data = response.data.output || response.data;
+        
+        // Map response to app user structure
+        // Handle array or single object
+        const userData = Array.isArray(data) ? data[0] : data;
+        
+        if (!userData) return null;
+
+        return {
+            firstName: userData.first_name || userData.firstName,
+            lastName: userData.last_name || userData.lastName,
+            email: userData.email,
+            image: userData.profile_image || userData.image || userData.profile_image_url,
+        };
+    } catch (error) {
+        console.error('Error fetching user info:', error);
+        throw error;
+    }
+};
 
 export const updateUserProfile = async (user, imageUri) => {
     try {
@@ -81,69 +107,83 @@ export const getUserFriends = async (userEmail) => {
 
         console.log('Get Friends Raw Response:', JSON.stringify(response.data, null, 2));
 
-        // Expecting response to contain a list of emails or a comma separated string
-        // Handle potential n8n output wrapper
+        // Expecting response to contain a list of emails or objects
         const data = response.data.output || response.data; 
-        let friendEmails = [];
-        let rawValues = [];
+        let friendsList = [];
 
-        // Step 1: Extract potential values regardless of structure
+        const processItem = (item) => {
+            if (typeof item === 'string') {
+                // Handle comma/newline separation
+                item.split(/[,\n]+/).forEach(email => {
+                    const clean = email.trim();
+                    if (clean && clean.includes('@')) {
+                        friendsList.push({ email: clean });
+                    }
+                });
+            } else if (typeof item === 'object' && item !== null) {
+                const email = item.friends || item.Friends || item.friend_email || item.email;
+                const image = item.profile_image || item.image || item.profile_image_url || item.avatar;
+                const name = item.name || item.friend_name;
+
+                if (email && typeof email === 'string') {
+                    // Recursively handle string if it contains commas
+                    if (email.includes(',') || email.includes('\n')) {
+                        processItem(email); 
+                    } else {
+                        friendsList.push({ 
+                            email: email.trim(), 
+                            image: image,
+                            name: name
+                        });
+                    }
+                }
+            }
+        };
+
         if (Array.isArray(data)) {
-             // If array of rows, extract relevant columns (Case insensitive check)
-             rawValues = data.map(row => row.friends || row.Friends || row.friend_email || row.email).filter(v => v);
-        } else if (typeof data === 'object' && data !== null) {
-             // If single object
-             if (data.friends) rawValues.push(data.friends);
-             if (data.Friends) rawValues.push(data.Friends);
-        } else if (typeof data === 'string') {
-             rawValues.push(data);
+            data.forEach(processItem);
+        } else {
+            processItem(data);
         }
 
-        // Step 2: Normalize and Split (handle comma-separated strings mixed with arrays, and newlines)
-        rawValues.forEach(val => {
-            if (typeof val === 'string') {
-                // Split by comma OR newline
-                const parts = val.split(/[,\n]+/).map(e => e.trim());
-                friendEmails.push(...parts);
-            } else if (Array.isArray(val)) {
-                // Nested array
-                friendEmails.push(...val);
+        // Deduplicate by email
+        const uniqueFriends = new Map();
+        friendsList.forEach(f => {
+            if (f.email && !uniqueFriends.has(f.email)) {
+                uniqueFriends.set(f.email, f);
             }
         });
 
-        // Step 3: Clean and Deduplicate
-        friendEmails = [...new Set(friendEmails)]; // Remove duplicates
-        friendEmails = friendEmails.filter(e => e && typeof e === 'string' && e.includes('@'));
-        
-        console.log('Parsed Friend Emails:', friendEmails);
+        const uniqueList = Array.from(uniqueFriends.values());
+        console.log('Parsed Friends:', uniqueList);
 
-        if (friendEmails.length === 0) {
+        if (uniqueList.length === 0) {
              console.warn('No friends found in response data');
              return [];
         }
 
         // Enrich with details from wishlist (parallel)
-        const friendsWithDetails = await Promise.all(friendEmails.map(async (email) => {
+        const friendsWithDetails = await Promise.all(uniqueList.map(async (friend) => {
             try {
-                // We reuse the existing getUserWishlist function
-                const wishlist = await getUserWishlist(email);
+                const wishlist = await getUserWishlist(friend.email);
                 
-                // Try to find a name from the items
-                // getUserWishlist returns items with 'userName' property
-                const friendName = wishlist.length > 0 ? wishlist[0].userName : null;
+                // Try to find a name from the items if not provided
+                const friendName = friend.name || (wishlist.length > 0 ? wishlist[0].userName : null);
                 
                 return {
-                    id: email,
-                    name: friendName || email.split('@')[0], // Fallback to email prefix
-                    email: email,
+                    id: friend.email,
+                    name: friendName || friend.email.split('@')[0], 
+                    email: friend.email,
+                    image: friend.image, // Pass through the image from Get_Friends
                     itemCount: wishlist.length
                 };
             } catch (e) {
-                console.warn(`Failed to fetch details for ${email}`, e);
+                console.warn(`Failed to fetch details for ${friend.email}`, e);
                 return {
-                    id: email,
-                    name: email.split('@')[0],
-                    email: email
+                    id: friend.email,
+                    name: friend.name || friend.email.split('@')[0],
+                    email: friend.email,
+                    image: friend.image
                 };
             }
         }));
