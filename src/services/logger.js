@@ -80,20 +80,26 @@ const queueLog = (level, args) => {
 
 export const initLogger = () => {
     // Wrap consoles
-    console.log = (...args) => {
-        originalConsoleLog(...args);
-        queueLog('info', args);
-    };
+    try {
+        console.log = (...args) => {
+            originalConsoleLog(...args);
+            queueLog('info', args);
+        };
 
-    console.warn = (...args) => {
-        originalConsoleWarn(...args);
-        queueLog('warn', args);
-    };
+        console.warn = (...args) => {
+            originalConsoleWarn(...args);
+            queueLog('warn', args);
+        };
 
-    console.error = (...args) => {
-        originalConsoleError(...args);
-        queueLog('error', args);
-    };
+        console.error = (...args) => {
+            originalConsoleError(...args);
+            queueLog('error', args);
+        };
+    } catch (e) {
+        // If we can't override console, just ignore it.
+        // This prevents 'Cannot set indexed properties' crashes on some platforms.
+        originalConsoleWarn('Failed to initialize remote logger console overrides', e);
+    }
 
     // Global Handlers
     if (Platform.OS === 'web') {
