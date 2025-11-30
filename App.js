@@ -271,7 +271,7 @@ function AppNavigator() {
   }
 
   return (
-    <SafeAreaProvider style={{ backgroundColor: theme.colors.background }}>
+    <SafeAreaProvider style={{ flex: 1, backgroundColor: theme.colors.background }}>
       {showSplash && <SplashScreen dataReady={dataReady} onFinish={() => setShowSplash(false)} />}
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
