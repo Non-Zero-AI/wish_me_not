@@ -41,12 +41,12 @@ const SplashScreen = ({ onFinish, dataReady }) => {
     // Trigger only when intro is done AND data is ready
     useEffect(() => {
         if (introComplete && dataReady) {
-             containerOpacity.value = withTiming(0, { duration: 800 }, (finished) => {
+             containerOpacity.value = withTiming(0, { duration: 2000 }, (finished) => {
                 if (finished) {
                     runOnJS(onFinish)();
                 }
             });
-            containerScale.value = withTiming(1.5, { duration: 800 });
+            containerScale.value = withTiming(1.5, { duration: 2000 });
         }
     }, [introComplete, dataReady]);
 
@@ -56,7 +56,7 @@ const SplashScreen = ({ onFinish, dataReady }) => {
             const timer = setTimeout(() => {
                 console.error('Splash screen safety timeout triggered - Forcing Exit');
                 onFinish(); // Force unmount
-            }, 2000);
+            }, 4500);
             return () => clearTimeout(timer);
         }
     }, [dataReady]);
@@ -91,10 +91,10 @@ const SplashScreen = ({ onFinish, dataReady }) => {
             {/* Content */}
             <View style={styles.contentContainer}>
                 <Animated.Text style={[styles.title, { color: theme.colors.primary }, titleStyle]}>
-                    Welcome to Wish Me Not.
+                    Wish Me Not
                 </Animated.Text>
                 <Animated.Text style={[styles.subtitle, { color: theme.colors.text }, subtitleStyle]}>
-                    Where your friends don’t have to guess, and you don’t have to hope.
+                    Stop guessing, Start Gifting
                 </Animated.Text>
             </View>
         </Animated.View>
