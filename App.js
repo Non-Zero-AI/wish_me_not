@@ -199,6 +199,7 @@ function DrawerNavigator() {
     <Drawer.Navigator 
         drawerContent={props => <CustomDrawerContent {...props} />}
         screenOptions={{ headerShown: false }}
+        useLegacyImplementation={true}
     >
        <Drawer.Screen name="Tabs" component={MainTabs} />
     </Drawer.Navigator>
