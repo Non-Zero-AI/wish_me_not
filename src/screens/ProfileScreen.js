@@ -234,58 +234,86 @@ const ProfileScreen = ({ navigation, route }) => {
     // --- Rendering ---
 
     const renderHeader = () => (
-        <View style={[styles.profileHeader, { backgroundColor: theme.colors.surface }]}>
-            <View style={styles.profileInfoContainer}>
-                <TouchableOpacity onPress={() => navigation.navigate('Themes')} style={styles.avatarContainer}> 
-                     {/* Navigate to Themes or Edit Profile on press? Maybe Edit Profile in Drawer. */}
-                     {user?.image ? (
-                        <Image source={{ uri: user.image }} style={[styles.avatar, { borderColor: theme.colors.border }]} />
-                     ) : (
-                        <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.secondary }]}>
-                            <Text style={[styles.avatarText, { color: theme.colors.textInverse }]}>
-                                {user?.firstName?.charAt(0).toUpperCase()}
-                            </Text>
-                        </View>
-                     )}
-                </TouchableOpacity>
-                
-                <View style={styles.statsContainer}>
-                    <View style={styles.statItem}>
-                        <Text style={[styles.statNumber, { color: theme.colors.text }]}>{items.length}</Text>
-                        <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Wishes</Text>
-                    </View>
-                    <View style={styles.statItem}>
-                        <Text style={[styles.statNumber, { color: theme.colors.text }]}>{friendsCount}</Text>
-                        <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Friends</Text>
+        <View style={styles.profileHeaderContainer}>
+            {/* Banner Image - Placeholder or dynamic if available */}
+            <Image 
+                source={{ uri: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?q=80&w=1000&auto=format&fit=crop' }} 
+                style={styles.bannerImage}
+                resizeMode="cover"
+            />
+            
+            <View style={styles.profileContent}>
+                <View style={styles.headerTopRow}>
+                    {/* Avatar - Overlapping Banner */}
+                    <TouchableOpacity onPress={() => navigation.navigate('Themes')} activeOpacity={0.8}> 
+                         {user?.image ? (
+                            <Image source={{ uri: user.image }} style={[styles.avatar, { borderColor: theme.colors.background }]} />
+                         ) : (
+                            <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.secondary, borderColor: theme.colors.background }]}>
+                                <Text style={[styles.avatarText, { color: theme.colors.textInverse }]}>
+                                    {user?.firstName?.charAt(0).toUpperCase()}
+                                </Text>
+                            </View>
+                         )}
+                    </TouchableOpacity>
+                    
+                    {/* Action Buttons (Right Side) */}
+                    <View style={styles.headerActions}>
+                        <TouchableOpacity 
+                            style={[styles.pillButton, { borderColor: theme.colors.border }]}
+                            onPress={toggleSurprises}
+                        >
+                            <Ionicons name={showLocalSurprises ? "eye-off-outline" : "eye-outline"} size={20} color={theme.colors.text} />
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity 
+                            style={[styles.pillButton, { borderColor: theme.colors.border }]}
+                            onPress={handleShare}
+                        >
+                            <Ionicons name="share-social-outline" size={20} color={theme.colors.text} />
+                        </TouchableOpacity>
                     </View>
                 </View>
-            </View>
-            
-            <View style={styles.bioContainer}>
-                <Text style={[styles.name, { color: theme.colors.text }]}>
-                    {user ? `${user.firstName} ${user.lastName}` : 'Loading...'}
-                </Text>
-                <Text style={[styles.email, { color: theme.colors.textSecondary }]}>{user?.email}</Text>
-            </View>
-            
-            <View style={styles.actionButtons}>
-                <TouchableOpacity 
-                    style={[styles.actionButton, { backgroundColor: theme.colors.background, borderColor: theme.colors.border, borderWidth: 1 }]}
-                    onPress={toggleSurprises}
-                >
-                    <Ionicons name={showLocalSurprises ? "eye-off" : "eye"} size={20} color={theme.colors.text} />
-                    <Text style={[styles.actionButtonText, { color: theme.colors.text }]}>
-                        {showLocalSurprises ? 'Hide Claims' : 'Reveal Claims'}
-                    </Text>
-                </TouchableOpacity>
                 
-                <TouchableOpacity 
-                    style={[styles.actionButton, { backgroundColor: theme.colors.background, borderColor: theme.colors.border, borderWidth: 1 }]}
-                    onPress={handleShare}
-                >
-                    <Ionicons name="share-outline" size={20} color={theme.colors.text} />
-                    <Text style={[styles.actionButtonText, { color: theme.colors.text }]}>Share List</Text>
-                </TouchableOpacity>
+                {/* User Info */}
+                <View style={styles.userInfo}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Text style={[styles.name, { color: theme.colors.text }]}>
+                            {user ? `${user.firstName} ${user.lastName || ''}` : 'Loading...'}
+                        </Text>
+                        <Ionicons name="checkmark-circle" size={16} color={theme.colors.primary} />
+                    </View>
+                    <Text style={[styles.handle, { color: theme.colors.textSecondary }]}>
+                        @{user?.username || user?.firstName?.toLowerCase().replace(/\s/g, '') || 'user'}
+                    </Text>
+                    
+                    <Text style={[styles.bio, { color: theme.colors.text }]}>
+                        Wishlist creator. Gift enthusiast. 🎁
+                    </Text>
+                    
+                    {/* Stats */}
+                    <View style={styles.statsRow}>
+                        <Text style={[styles.statText, { color: theme.colors.textSecondary }]}>
+                            <Text style={[styles.statCount, { color: theme.colors.text }]}>{friendsCount}</Text> Friends
+                        </Text>
+                        <Text style={[styles.statText, { color: theme.colors.textSecondary }]}>
+                            <Text style={[styles.statCount, { color: theme.colors.text }]}>{items.length}</Text> Wishes
+                        </Text>
+                    </View>
+                </View>
+
+                {/* Tabs (Visual Only) */}
+                <View style={[styles.tabRow, { borderBottomColor: theme.colors.border }]}>
+                    <View style={[styles.activeTab, { borderBottomColor: theme.colors.primary }]}>
+                        <Text style={[styles.activeTabText, { color: theme.colors.text }]}>Wishes</Text>
+                    </View>
+                    <View style={styles.inactiveTab}>
+                        <Text style={[styles.inactiveTabText, { color: theme.colors.textSecondary }]}>Claimed</Text>
+                    </View>
+                    <View style={styles.inactiveTab}>
+                        <Text style={[styles.inactiveTabText, { color: theme.colors.textSecondary }]}>Likes</Text>
+                    </View>
+                </View>
             </View>
         </View>
     );
@@ -359,97 +387,89 @@ const ProfileScreen = ({ navigation, route }) => {
 
             <Modal
                 animationType="slide"
-                transparent={true}
+                presentationStyle="pageSheet"
                 visible={modalVisible}
                 onRequestClose={() => setModalVisible(false)}
             >
-                <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
-                        <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Add Item</Text>
-                        
-                        <View style={styles.tabContainer}>
-                            <TouchableOpacity 
-                                style={[styles.tab, entryMode === 'link' && styles.activeTab]} 
-                                onPress={() => setEntryMode('link')}
-                            >
-                                <Text style={[styles.tabText, entryMode === 'link' && styles.activeTabText]}>Link</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity 
-                                style={[styles.tab, entryMode === 'manual' && styles.activeTab]} 
-                                onPress={() => setEntryMode('manual')}
-                            >
-                                <Text style={[styles.tabText, entryMode === 'manual' && styles.activeTabText]}>Manual</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        {entryMode === 'link' ? (
-                            <>
-                                <Text style={[styles.modalSubtitle, { color: theme.colors.textSecondary }]}>Paste a product URL below</Text>
-                                <TextInput
-                                    style={[styles.input, { backgroundColor: theme.colors.background, color: theme.colors.text, borderColor: theme.colors.border }]}
-                                    placeholder="https://example.com/product"
+                <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+                    <View style={styles.composerHeader}>
+                        <TouchableOpacity onPress={() => setModalVisible(false)} style={{ padding: 8 }}>
+                            <Text style={{ fontSize: 16, color: theme.colors.text }}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                            style={[styles.postButton, { backgroundColor: theme.colors.primary, opacity: (!manualName && !url) ? 0.5 : 1 }]}
+                            onPress={handleAddItem}
+                            disabled={(!manualName && !url) || adding}
+                        >
+                             {adding ? (
+                                <ActivityIndicator size="small" color="#fff" />
+                             ) : (
+                                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 14 }}>Post</Text>
+                             )}
+                        </TouchableOpacity>
+                    </View>
+                    
+                    <View style={styles.composerContent}>
+                         <View style={{ marginRight: 12 }}>
+                             {user?.image ? (
+                                <Image source={{ uri: user.image }} style={styles.composerAvatar} />
+                             ) : (
+                                <View style={[styles.composerAvatar, { backgroundColor: theme.colors.secondary, justifyContent: 'center', alignItems: 'center' }]}>
+                                    <Text style={{ color: theme.colors.textInverse, fontWeight: 'bold', fontSize: 16 }}>{user?.firstName?.charAt(0)}</Text>
+                                </View>
+                             )}
+                         </View>
+                         
+                         <View style={{ flex: 1 }}>
+                            <TextInput
+                                placeholder="What's happening?"
+                                placeholderTextColor={theme.colors.textSecondary}
+                                multiline
+                                maxLength={180}
+                                style={[styles.composerInput, { color: theme.colors.text }]}
+                                value={manualName}
+                                onChangeText={setManualName}
+                                autoFocus
+                            />
+                            
+                            {/* Link Input Area */}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.colors.border }}>
+                                <Ionicons name="link-outline" size={20} color={theme.colors.primary} />
+                                <TextInput 
+                                    placeholder="Add a product link (optional)"
                                     placeholderTextColor={theme.colors.textSecondary}
                                     value={url}
                                     onChangeText={setUrl}
+                                    style={{ flex: 1, marginLeft: 8, color: theme.colors.primary, fontSize: 14 }}
                                     autoCapitalize="none"
-                                    autoCorrect={false}
                                 />
-                            </>
-                        ) : (
-                            <>
-                                <TouchableOpacity onPress={handlePickImage} style={styles.imagePreview}>
-                                    {manualImage ? (
-                                        <Image source={{ uri: manualImage }} style={styles.previewImage} resizeMode="cover" />
-                                    ) : (
-                                        <View style={{ alignItems: 'center' }}>
-                                            <Ionicons name="camera-outline" size={32} color={theme.colors.textSecondary} />
-                                            <Text style={{ color: theme.colors.textSecondary, marginTop: 4 }}>Add Image</Text>
-                                        </View>
-                                    )}
-                                </TouchableOpacity>
-
-                                <TextInput
-                                    style={[styles.input, { backgroundColor: theme.colors.background, color: theme.colors.text, borderColor: theme.colors.border, marginBottom: 12 }]}
-                                    placeholder="Item Name"
-                                    placeholderTextColor={theme.colors.textSecondary}
-                                    value={manualName}
-                                    onChangeText={setManualName}
-                                />
-                                
-                                <TextInput
-                                    style={[styles.input, { backgroundColor: theme.colors.background, color: theme.colors.text, borderColor: theme.colors.border }]}
-                                    placeholder="Price"
-                                    placeholderTextColor={theme.colors.textSecondary}
-                                    value={manualPrice}
-                                    onChangeText={setManualPrice}
-                                    keyboardType="decimal-pad"
-                                />
-                            </>
-                        )}
-
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.cancelButton, { backgroundColor: theme.colors.background }]}
-                                onPress={() => setModalVisible(false)}
-                                disabled={adding}
-                            >
-                                <Text style={[styles.cancelButtonText, { color: theme.colors.text }]}>Cancel</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.addButton, { backgroundColor: theme.colors.primary }]}
-                                onPress={handleAddItem}
-                                disabled={adding}
-                            >
-                                {adding ? (
-                                    <ActivityIndicator color={theme.colors.textInverse} size="small" />
-                                ) : (
-                                    <Text style={[styles.addButtonText, { color: theme.colors.textInverse }]}>Add</Text>
-                                )}
-                            </TouchableOpacity>
-                        </View>
+                            </View>
+                            
+                            {/* Image Preview */}
+                            {manualImage && (
+                                <View style={{ marginTop: 12, position: 'relative' }}>
+                                    <Image source={{ uri: manualImage }} style={styles.composerImagePreview} />
+                                    <TouchableOpacity 
+                                        style={styles.removeImageButton}
+                                        onPress={() => setManualImage(null)}
+                                    >
+                                        <Ionicons name="close" size={16} color="#fff" />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                         </View>
                     </View>
-                </View>
+                    
+                    {/* Toolbar */}
+                    <View style={[styles.composerToolbar, { borderTopColor: theme.colors.border }]}>
+                        <TouchableOpacity onPress={handlePickImage}>
+                            <Ionicons name="image-outline" size={24} color={theme.colors.primary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={{ marginLeft: 24 }}>
+                            <Ionicons name="camera-outline" size={24} color={theme.colors.primary} />
+                        </TouchableOpacity>
+                    </View>
+                </SafeAreaView>
             </Modal>
         </SafeAreaView>
     );
@@ -458,105 +478,155 @@ const ProfileScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
     container: { flex: 1 },
     menuButton: { padding: 8 },
-    listContent: { paddingHorizontal: 16 },
-    itemContainer: { marginBottom: 16 },
+    listContent: { paddingHorizontal: 0 },
+    itemContainer: { marginHorizontal: 16, marginBottom: 16 },
     
-    profileHeader: {
-        padding: 20,
-        borderRadius: 16,
-        marginBottom: 24,
-        marginTop: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    profileInfoContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+    // Profile Header
+    profileHeaderContainer: {
         marginBottom: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+        paddingBottom: 0
     },
-    avatarContainer: {
-        marginRight: 20,
+    bannerImage: {
+        width: '100%',
+        height: 120,
+    },
+    profileContent: {
+        paddingHorizontal: 16,
+    },
+    headerTopRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+        marginTop: -40,
+        marginBottom: 12,
     },
     avatar: {
         width: 80,
         height: 80,
         borderRadius: 40,
-        borderWidth: 2,
+        borderWidth: 4,
     },
     avatarPlaceholder: {
         width: 80,
         height: 80,
         borderRadius: 40,
+        borderWidth: 4,
         justifyContent: 'center',
         alignItems: 'center',
     },
     avatarText: { fontSize: 32, fontWeight: 'bold' },
-    statsContainer: {
-        flex: 1,
+    headerActions: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
+        gap: 8,
+        marginBottom: 0,
     },
-    statItem: {
+    pillButton: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        borderWidth: 1,
+        justifyContent: 'center',
         alignItems: 'center',
     },
-    statNumber: {
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    statLabel: {
-        fontSize: 12,
-    },
-    bioContainer: {
+    userInfo: {
         marginBottom: 16,
     },
     name: {
         fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 4,
+        fontWeight: '800',
+        marginBottom: 2,
     },
-    email: {
-        fontSize: 14,
+    handle: {
+        fontSize: 15,
     },
-    actionButtons: {
+    bio: {
+        fontSize: 15,
+        marginVertical: 12,
+        lineHeight: 20,
+    },
+    statsRow: {
         flexDirection: 'row',
-        gap: 10,
+        gap: 16,
     },
-    actionButton: {
+    statText: {
+        fontSize: 15,
+    },
+    statCount: {
+        fontWeight: 'bold',
+    },
+    tabRow: {
+        flexDirection: 'row',
+        marginTop: 8,
+    },
+    activeTab: {
+        paddingVertical: 12,
+        borderBottomWidth: 3,
+        marginRight: 24,
+    },
+    inactiveTab: {
+        paddingVertical: 12,
+        marginRight: 24,
+    },
+    activeTabText: {
+        fontWeight: 'bold',
+        fontSize: 15,
+    },
+    inactiveTabText: {
+        fontWeight: '600',
+        fontSize: 15,
+    },
+
+    // Composer
+    composerHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee'
+    },
+    postButton: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+    },
+    composerContent: {
         flex: 1,
         flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 8,
-        borderRadius: 8,
-        gap: 6,
+        padding: 16,
     },
-    actionButtonText: {
-        fontSize: 14,
-        fontWeight: '600',
+    composerAvatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
     },
-    
-    emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 50 },
-    emptyText: { fontSize: 18, fontWeight: '600', marginBottom: 8 },
-    emptySubtext: { fontSize: 14 },
-    
-    fab: {
+    composerInput: {
+        fontSize: 18,
+        textAlignVertical: 'top',
+        minHeight: 100,
+    },
+    composerImagePreview: {
+        width: '100%',
+        height: 200,
+        borderRadius: 12,
+        resizeMode: 'cover',
+    },
+    removeImageButton: {
         position: 'absolute',
-        bottom: 30,
-        right: 30,
-        width: 60,
-        height: 60,
-        borderRadius: 30,
+        top: 8,
+        right: 8,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        padding: 4,
+        borderRadius: 12,
+    },
+    composerToolbar: {
+        flexDirection: 'row',
+        padding: 16,
+        borderTopWidth: 1,
         alignItems: 'center',
-        justifyContent: 'center',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 5,
-        zIndex: 100,
     },
     
     deleteActionContainer: {
@@ -573,24 +643,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     
+    emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 50 },
+    emptyText: { fontSize: 18, fontWeight: '600', marginBottom: 8 },
+    emptySubtext: { fontSize: 14 },
+    
+    // Modal
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
-    modalContent: { borderRadius: 16, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5 },
-    modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 8, textAlign: 'center' },
-    modalSubtitle: { fontSize: 14, marginBottom: 20, textAlign: 'center' },
-    tabContainer: { flexDirection: 'row', marginBottom: 20, backgroundColor: '#f0f0f0', borderRadius: 8, padding: 4 },
-    tab: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 6 },
-    activeTab: { backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 1, elevation: 2 },
-    tabText: { fontSize: 14, fontWeight: '500', color: '#666' },
-    activeTabText: { color: '#000', fontWeight: '600' },
-    input: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 10, marginBottom: 24, fontSize: 16, borderWidth: 1 },
-    imagePreview: { width: '100%', height: 150, borderRadius: 8, marginBottom: 16, backgroundColor: '#f5f5f5', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', borderWidth: 1, borderColor: '#eee' },
-    previewImage: { width: '100%', height: '100%' },
-    modalButtons: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
-    modalButton: { flex: 1, paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
-    cancelButton: {},
-    addButton: {},
-    cancelButtonText: { fontWeight: '600', fontSize: 16 },
-    addButtonText: { fontWeight: '600', fontSize: 16 },
 });
 
 export default ProfileScreen;

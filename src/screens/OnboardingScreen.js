@@ -9,8 +9,7 @@ import { addLocalFriend } from '../services/storage';
 const OnboardingScreen = ({ navigation }) => {
     const { theme } = useTheme();
     const { login } = useAuth();
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
+    const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [pendingFriendEmail, setPendingFriendEmail] = useState(null);
@@ -37,14 +36,15 @@ const OnboardingScreen = ({ navigation }) => {
     }, []);
 
     const handleGetStarted = async () => {
-        if (!firstName || !lastName || !email) {
+        if (!username || !email) {
             Alert.alert('Missing Information', 'Please fill in all fields to continue.');
             return;
         }
 
         setLoading(true);
         try {
-            const user = { firstName, lastName, email };
+            // Map username to firstName for backward compatibility
+            const user = { firstName: username, lastName: '', email, username };
             // Send to automation webhook
             await createUser(user);
             
@@ -82,23 +82,12 @@ const OnboardingScreen = ({ navigation }) => {
                             color: theme.colors.text,
                             borderColor: theme.colors.border
                         }]}
-                        placeholder="First Name"
+                        placeholder="Username"
                         placeholderTextColor={theme.colors.textSecondary}
-                        value={firstName}
-                        onChangeText={setFirstName}
-                        autoCapitalize="words"
-                    />
-                    <TextInput
-                        style={[styles.input, { 
-                            backgroundColor: theme.colors.surface, 
-                            color: theme.colors.text,
-                            borderColor: theme.colors.border
-                        }]}
-                        placeholder="Last Name"
-                        placeholderTextColor={theme.colors.textSecondary}
-                        value={lastName}
-                        onChangeText={setLastName}
-                        autoCapitalize="words"
+                        value={username}
+                        onChangeText={setUsername}
+                        autoCapitalize="none"
+                        autoCorrect={false}
                     />
                     <TextInput
                         style={[styles.input, { 

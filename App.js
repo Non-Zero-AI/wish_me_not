@@ -173,6 +173,17 @@ function MainTabs() {
         }}
       />
 
+      <Tab.Screen 
+        name="DMs" 
+        component={View} 
+        options={{ 
+            title: 'Messages',
+            tabBarIcon: ({ focused, color, size }) => (
+                <Ionicons name={focused ? "mail" : "mail-outline"} size={size} color={color} />
+            )
+        }} 
+      />
+
       <Tab.Screen name="ProfileStack" component={ProfileStackScreen} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );

@@ -168,21 +168,6 @@ const HomeScreen = ({ navigation }) => {
 
     const renderFeedItem = ({ item }) => (
         <View style={styles.feedItemContainer}>
-            <View style={styles.feedHeader}>
-                <View style={[styles.avatarSmall, { backgroundColor: theme.colors.secondary, overflow: 'hidden' }]}>
-                     {item.friendImage ? (
-                        <Image source={{ uri: item.friendImage }} style={styles.avatarImage} />
-                    ) : (
-                        <Text style={[styles.avatarTextSmall, { color: theme.colors.textInverse }]}>
-                            {item.friendName?.charAt(0).toUpperCase()}
-                        </Text>
-                    )}
-                </View>
-                <View>
-                    <Text style={[styles.feedFriendName, { color: theme.colors.text }]}>{item.friendName}</Text>
-                    <Text style={[styles.feedTimestamp, { color: theme.colors.textSecondary }]}>Added an item</Text>
-                </View>
-            </View>
             <SwipeableRow renderRightActions={(p, d) => renderRightActions(p, d, item)}>
                 <ProductCard 
                     item={item} 
