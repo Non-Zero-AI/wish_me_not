@@ -19,6 +19,7 @@ import { getUser, saveUser, saveItems, saveFriends } from './src/services/storag
 import { fetchUserInfo, getUserWishlist, getUserFriends } from './src/services/api';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
+import ErrorBoundary from './src/components/ErrorBoundary';
 
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import SplashScreen from './src/screens/SplashScreen';
@@ -94,7 +95,9 @@ function ProfileStackScreen() {
         headerTintColor: theme.colors.text,
       }}
     >
-      <ProfileStack.Screen name="ProfileScreen" component={ProfileScreen} options={{ title: 'Profile' }} />
+      <ProfileStack.Screen name="ProfileScreen" options={{ title: 'Profile' }}>
+        {props => <ErrorBoundary><ProfileScreen {...props} /></ErrorBoundary>}
+      </ProfileStack.Screen>
       <ProfileStack.Screen name="Themes" component={ThemesScreen} />
     </ProfileStack.Navigator>
   );
