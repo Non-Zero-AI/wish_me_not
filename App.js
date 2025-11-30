@@ -215,23 +215,8 @@ function AppNavigator() {
     'Inter-Regular': Inter_400Regular,
     'Inter-SemiBold': Inter_600SemiBold,
     'Inter-Bold': Inter_700Bold,
+    'Adamina': require('./assets/Fonts/Adamina/Adamina-Regular.ttf'),
   });
-
-  const [adaminaLoaded, setAdaminaLoaded] = useState(false);
-
-  useEffect(() => {
-      async function loadAdamina() {
-          try {
-              await Font.loadAsync({
-                  'Adamina': 'https://github.com/google/fonts/raw/main/ofl/adamina/Adamina-Regular.ttf',
-              });
-              setAdaminaLoaded(true);
-          } catch (e) {
-              console.log('Failed to load Adamina font', e);
-          }
-      }
-      loadAdamina();
-  }, []);
 
   useEffect(() => {
     if (!isLoading && user && !splashShown) {
