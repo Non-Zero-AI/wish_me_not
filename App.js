@@ -1,6 +1,4 @@
-import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { initLogger } from './src/services/logger';
 
 // Initialize remote logging
@@ -32,11 +30,9 @@ import ProfileScreen from './src/screens/ProfileScreen';
 import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 import UserAgreementScreen from './src/screens/UserAgreementScreen';
 import ThemesScreen from './src/screens/ThemesScreen';
-// import CustomDrawerContent from './src/components/CustomDrawerContent';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
-// const Drawer = createDrawerNavigator();
 const FriendsStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 
@@ -192,19 +188,6 @@ function MainTabs() {
     </Tab.Navigator>
   );
 }
-
-/*
-function DrawerNavigator() {
-  return (
-    <Drawer.Navigator 
-        drawerContent={props => <CustomDrawerContent {...props} />}
-        screenOptions={{ headerShown: false }}
-    >
-       <Drawer.Screen name="Tabs" component={MainTabs} />
-    </Drawer.Navigator>
-  );
-}
-*/
 
 function AppNavigator() {
   const { user, isLoading } = useAuth();
