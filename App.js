@@ -193,6 +193,14 @@ function AppNavigator() {
     );
   }
 
+  // ULTIMATE DEBUG: Bypass everything
+  return (
+    <View style={{ flex: 1, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: 24, color: 'black' }}>System Check: App is running</Text>
+    </View>
+  );
+
+  /*
   return (
     <SafeAreaProvider style={{ backgroundColor: theme.colors.background }}>
       {showSplash && <SplashScreen dataReady={dataReady} onFinish={() => setShowSplash(false)} />}
@@ -234,6 +242,7 @@ function AppNavigator() {
       </View>
     </SafeAreaProvider>
   );
+  */
 }
 
 export default function App() {
