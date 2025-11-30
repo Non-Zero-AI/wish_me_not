@@ -36,6 +36,7 @@ import ProfileScreen from './src/screens/ProfileScreen';
 import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 import UserAgreementScreen from './src/screens/UserAgreementScreen';
 import ThemesScreen from './src/screens/ThemesScreen';
+import DMScreen from './src/screens/DMScreen';
 
 const RootTabs = createBottomTabNavigator();
 const Tab = createBottomTabNavigator();
@@ -193,7 +194,7 @@ function MainTabs() {
 
       <Tab.Screen 
         name="DMs" 
-        component={View} 
+        component={DMScreen} 
         options={{ 
             title: 'Messages',
             tabBarIcon: ({ focused, color, size }) => (
