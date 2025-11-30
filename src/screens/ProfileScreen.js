@@ -292,13 +292,22 @@ const ProfileScreen = ({ navigation }) => {
         </TouchableOpacity>
     );
 
+    const SwipeableWrapper = ({ children, renderRightActions }) => {
+        if (Platform.OS === 'web') return children;
+        return (
+            <Swipeable renderRightActions={renderRightActions}>
+                {children}
+            </Swipeable>
+        );
+    };
+
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <AppHeader 
                 title="Profile" 
                 leftAction={
-                    <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
-                         <Ionicons name="menu" size={28} color={theme.colors.primary} />
+                    <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.menuButton}>
+                         <Ionicons name="home" size={24} color={theme.colors.primary} />
                     </TouchableOpacity>
                 }
                 rightAction={
@@ -314,12 +323,12 @@ const ProfileScreen = ({ navigation }) => {
                 ListHeaderComponent={renderHeader}
                 renderItem={({ item }) => (
                     <View style={styles.itemContainer}>
-                        <Swipeable renderRightActions={(p, d) => renderRightActions(p, d, item)}>
+                        <SwipeableWrapper renderRightActions={(p, d) => renderRightActions(p, d, item)}>
                             <ProductCard 
                                 item={item} 
                                 shouldShowWished={showLocalSurprises}
                             />
-                        </Swipeable>
+                        </SwipeableWrapper>
                     </View>
                 )}
                 keyExtractor={(item) => item.id}

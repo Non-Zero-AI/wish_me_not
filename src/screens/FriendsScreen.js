@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, RefreshControl, Image } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, RefreshControl, Image, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -124,8 +124,17 @@ const FriendsScreen = ({ navigation }) => {
         setRefreshing(false);
     };
 
+    const SwipeableWrapper = ({ children, renderRightActions }) => {
+        if (Platform.OS === 'web') return children;
+        return (
+            <Swipeable renderRightActions={renderRightActions}>
+                {children}
+            </Swipeable>
+        );
+    };
+
     const renderFriend = ({ item }) => (
-        <Swipeable
+        <SwipeableWrapper
             renderRightActions={() => (
                 <TouchableOpacity
                     style={[styles.deleteAction, { backgroundColor: theme.colors.error }]}
@@ -155,7 +164,7 @@ const FriendsScreen = ({ navigation }) => {
                 </View>
                 <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
             </TouchableOpacity>
-        </Swipeable>
+        </SwipeableWrapper>
     );
 
     return (

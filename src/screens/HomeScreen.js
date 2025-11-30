@@ -166,6 +166,15 @@ const HomeScreen = ({ navigation }) => {
         );
     };
 
+    const SwipeableWrapper = ({ children, renderRightActions }) => {
+        if (Platform.OS === 'web') return children;
+        return (
+            <Swipeable renderRightActions={renderRightActions}>
+                {children}
+            </Swipeable>
+        );
+    };
+
     const renderFeedItem = ({ item }) => (
         <View style={styles.feedItemContainer}>
             <View style={styles.feedHeader}>
@@ -183,12 +192,13 @@ const HomeScreen = ({ navigation }) => {
                     <Text style={[styles.feedTimestamp, { color: theme.colors.textSecondary }]}>Added an item</Text>
                 </View>
             </View>
-            <Swipeable renderRightActions={(p, d) => renderRightActions(p, d, item)}>
+            <SwipeableWrapper renderRightActions={(p, d) => renderRightActions(p, d, item)}>
                 <ProductCard 
                     item={item} 
                     shouldShowWished={true} 
+                    onWish={Platform.OS === 'web' ? () => handleWishItem(item) : undefined}
                 />
-            </Swipeable>
+            </SwipeableWrapper>
         </View>
     );
 
@@ -196,11 +206,7 @@ const HomeScreen = ({ navigation }) => {
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <AppHeader 
                 title="Home" 
-                leftAction={
-                    <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
-                         <Ionicons name="menu" size={28} color={theme.colors.primary} />
-                    </TouchableOpacity>
-                }
+                leftAction={null}
                 rightAction={
                      <TouchableOpacity onPress={onRefresh} style={styles.menuButton}>
                          <Ionicons name="refresh" size={24} color={theme.colors.primary} />
