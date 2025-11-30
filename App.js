@@ -195,9 +195,12 @@ function AppNavigator() {
 
   // ULTIMATE DEBUG: Bypass everything
   return (
-    <View style={{ flex: 1, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ fontSize: 24, color: 'black' }}>System Check: App is running</Text>
-    </View>
+    <SafeAreaProvider style={{ backgroundColor: theme.colors.background }}>
+        <View style={{ flex: 1, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ fontSize: 24, color: 'black' }}>System Check: App is running</Text>
+            <Text style={{ fontSize: 16, color: 'black' }}>SafeAreaProvider is active</Text>
+        </View>
+    </SafeAreaProvider>
   );
 
   /*
