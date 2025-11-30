@@ -1,577 +1,586 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert, SafeAreaView, ActivityIndicator, Switch, ScrollView, Platform, RefreshControl, Modal, KeyboardAvoidingView } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, RefreshControl, Platform, Image, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Swipeable } from 'react-native-gesture-handler';
 import * as ImagePicker from 'expo-image-picker';
-import * as Haptics from 'expo-haptics';
-import { getUser, saveUser } from '../services/storage';
-import { updateUserProfile, fetchUserInfo, sendFeedback } from '../services/api';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../theme/ThemeContext';
+import * as Haptics from 'expo-haptics';
+
+import ProductCard from '../components/ProductCard';
 import AppHeader from '../components/AppHeader';
+import { useTheme } from '../theme/ThemeContext';
+import { getItems, addItem, getUser, deleteItem, saveItems, saveUser, getFriends } from '../services/storage';
+import { addProduct, deleteProduct, getUserWishlist, addManualProduct, updateUserProfile } from '../services/api';
 
 const ProfileScreen = ({ navigation }) => {
-    const { theme, isDark, toggleTheme } = useTheme();
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
-    const [email, setEmail] = useState('');
-    const [image, setImage] = useState(null);
-    const [showSurprises, setShowSurprises] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
+    const { theme } = useTheme();
+    const insets = useSafeAreaInsets();
+    
+    // User & Profile State
+    const [user, setUser] = useState(null);
+    const [friendsCount, setFriendsCount] = useState(0);
+    const [showLocalSurprises, setShowLocalSurprises] = useState(false);
+    
+    // Wishlist State
+    const [items, setItems] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     
-    // Feedback State
-    const [feedbackVisible, setFeedbackVisible] = useState(false);
-    const [feedbackText, setFeedbackText] = useState('');
-    const [sendingFeedback, setSendingFeedback] = useState(false);
+    // Manual Entry / Add Item State
+    const [modalVisible, setModalVisible] = useState(false);
+    const [entryMode, setEntryMode] = useState('link');
+    const [url, setUrl] = useState('');
+    const [manualName, setManualName] = useState('');
+    const [manualPrice, setManualPrice] = useState('');
+    const [manualImage, setManualImage] = useState(null);
+    const [adding, setAdding] = useState(false);
 
-    useEffect(() => {
-        loadProfile();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            loadData();
+        }, [])
+    );
 
-    const loadProfile = async () => {
-        const user = await getUser();
-        if (user) {
-            setFirstName(user.firstName || '');
-            setLastName(user.lastName || '');
-            setEmail(user.email || '');
-            setImage(user.image || null);
-            setShowSurprises(user.showSurprises || false);
+    const loadData = async () => {
+        const userData = await getUser();
+        setUser(userData);
+        if (userData) {
+            setShowLocalSurprises(userData.showSurprises || false);
+            loadItems(userData.email);
+            
+            // Load friends count
+            const friends = await getFriends();
+            setFriendsCount(friends.length);
         }
-        setLoading(false);
+    };
+
+    const loadItems = async (email) => {
+        // Local first
+        const storedItems = await getItems();
+        setItems(storedItems);
+
+        // Server sync
+        try {
+            const serverItems = await getUserWishlist(email);
+            if (Array.isArray(serverItems)) {
+                setItems(serverItems);
+                await saveItems(serverItems);
+            }
+        } catch (error) {
+            console.error('Sync error:', error);
+        }
     };
 
     const onRefresh = async () => {
         setRefreshing(true);
         if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        
-        try {
-            if (email) {
-                const userData = await fetchUserInfo(email);
-                if (userData) {
-                    // Preserve local preferences like showSurprises
-                    const user = await getUser();
-                    const updatedUser = { 
-                        ...userData, 
-                        email,
-                        showSurprises: user?.showSurprises || false 
-                    }; 
-                    await saveUser(updatedUser);
-                    setFirstName(updatedUser.firstName || '');
-                    setLastName(updatedUser.lastName || '');
-                    setImage(updatedUser.image || null);
-                }
-            }
-        } catch (e) {
-            console.error('Profile refresh failed', e);
-        } finally {
-            setRefreshing(false);
+        await loadData();
+        setRefreshing(false);
+    };
+
+    const toggleSurprises = async () => {
+        const newValue = !showLocalSurprises;
+        setShowLocalSurprises(newValue);
+        if (user) {
+            const updatedUser = { ...user, showSurprises: newValue };
+            setUser(updatedUser);
+            await saveUser(updatedUser);
         }
     };
 
-    const pickImage = async () => {
+    const handleShare = async () => {
+        try {
+            if (!user) return;
+            const deepLink = `https://wish-me-not.vercel.app/wishlist/${encodeURIComponent(user.email)}`;
+            const shareMessage = `Check out my wishlist on Wish Me Not!\n\n${deepLink}`;
+            await Share.share({
+                message: shareMessage,
+                title: 'My Wish List',
+                url: deepLink,
+            });
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    // --- Item Management ---
+
+    const handlePickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
-            aspect: [1, 1],
+            aspect: [4, 3],
             quality: 0.5,
-            base64: true, // Request base64
+            base64: true,
         });
 
         if (!result.canceled) {
-            if (Platform.OS !== 'web') {
-                Haptics.selectionAsync();
-            }
-            
             const asset = result.assets[0];
-            let imageUri = asset.uri;
-
-            if (Platform.OS === 'web' && asset.base64) {
-                // Use base64 for web persistence
-                imageUri = `data:image/jpeg;base64,${asset.base64}`;
-            }
-            
-            setImage(imageUri);
-
-            // Immediate Background Upload
-            if (email) {
-                console.log('Uploading profile image for:', email);
-                updateUserProfile({ firstName, lastName, email }, imageUri)
-                    .then(res => {
-                        console.log('Upload success:', res);
-                        // If webhook returns a public URL, use it
-                        // Assuming structure: { output: { profile_image_url: '...' } } or { profile_image_url: '...' }
-                        const remoteUrl = res?.output?.profile_image_url || res?.profile_image_url;
-                        if (remoteUrl) {
-                            setImage(remoteUrl);
-                            // Also save user with new URL immediately to be safe
-                            saveUser({ firstName, lastName, email, image: remoteUrl });
-                        }
-                    })
-                    .catch(err => {
-                        console.warn('Background upload failed', err);
-                    });
-            }
+            const imageUri = asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : asset.uri;
+            setManualImage(imageUri);
         }
     };
 
-    const handleToggleSurprises = (value) => {
-        if (value) {
-            // Trying to enable
-            if (Platform.OS === 'web') {
-                if (window.confirm("Spoiler Alert! 🫣\n\nAre you sure? This will reveal which friends have claimed your gifts. It might ruin the surprise!")) {
-                    setShowSurprises(true);
-                    // Save immediately
-                    saveUserPreference(true);
-                }
-            } else {
-                Alert.alert(
-                    "Spoiler Alert! 🫣",
-                    "Are you sure? This will reveal which friends have claimed your gifts. It might ruin the surprise!",
-                    [
-                        { text: "Keep it a Secret", style: "cancel" },
-                        { 
-                            text: "Reveal All", 
-                            style: "destructive",
-                            onPress: () => {
-                                setShowSurprises(true);
-                                saveUserPreference(true);
-                            }
-                        }
-                    ]
-                );
-            }
-        } else {
-            setShowSurprises(false);
-            saveUserPreference(false);
+    const handleAddManual = async () => {
+        if (!manualName || !manualPrice) {
+             Alert.alert("Missing Info", "Please enter name and price.");
+             return;
+        }
+        setAdding(true);
+        const tempId = Date.now().toString();
+        
+        const tempItem = { 
+            id: tempId, 
+            name: manualName, 
+            price: manualPrice, 
+            image: manualImage, 
+            loading: true,
+            isManual: true
+        };
+        
+        setItems(prevItems => [tempItem, ...prevItems]);
+        setModalVisible(false);
+        
+        // Reset form
+        setManualName(''); 
+        setManualPrice(''); 
+        setManualImage(null);
+
+        try {
+             const product = await addManualProduct({
+                 name: manualName,
+                 price: manualPrice,
+                 image: manualImage
+             }, user);
+             
+             const newItems = await addItem(product);
+             setItems(newItems);
+        } catch (e) {
+             Alert.alert("Error", "Failed to add manual item.");
+             setItems(prev => prev.filter(i => i.id !== tempId));
+        } finally {
+             setAdding(false);
         }
     };
 
-    const saveUserPreference = async (surprisesValue) => {
-         const user = await getUser();
-         if (user) {
-             await saveUser({ ...user, showSurprises: surprisesValue });
-         }
-    };
-
-    const handleSave = async () => {
-        if (Platform.OS !== 'web') {
-             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        }
-
-        if (!firstName || !lastName || !email) {
-            if (Platform.OS === 'web') {
-                window.alert('Please fill in all fields.');
-            } else {
-                Alert.alert('Error', 'Please fill in all fields.');
-            }
+    const handleAddItem = async () => {
+        if (entryMode === 'manual') {
+            handleAddManual();
             return;
         }
 
-        setSaving(true);
-        const user = { firstName, lastName, email, image, showSurprises };
-        await saveUser(user);
-        
-        // Sync with Server
-        try {
-            await updateUserProfile(user, image);
-        } catch (e) {
-            console.error('Failed to sync profile with server', e);
-        }
+        if (!url) return;
 
-        setSaving(false);
-        
-        if (Platform.OS === 'web') {
-            window.alert('Profile updated!');
-        } else {
-            Alert.alert('Success', 'Profile updated!');
-        }
-    };
+        const tempId = Date.now().toString();
+        const tempItem = { id: tempId, url, loading: true };
 
-    const handleSendFeedback = async () => {
-        if (!feedbackText.trim()) return;
-        
-        setSendingFeedback(true);
+        setItems(prevItems => [tempItem, ...prevItems]);
+        setUrl('');
+        setModalVisible(false);
+
         try {
-            await sendFeedback(email, feedbackText);
-            setFeedbackVisible(false);
-            setFeedbackText('');
-            if (Platform.OS === 'web') {
-                window.alert('Thank You\n\nYour feedback has been sent!');
-            } else {
-                Alert.alert('Thank You', 'Your feedback has been sent!');
+            if (!user) {
+                Alert.alert('Error', 'User not found.');
+                return;
             }
+
+            const productData = await addProduct(url, user);
+            const newItems = await addItem(productData);
+            setItems(newItems);
+
         } catch (error) {
-             if (Platform.OS === 'web') {
-                window.alert('Error\n\nFailed to send feedback. Please try again.');
-            } else {
-                Alert.alert('Error', 'Failed to send feedback. Please try again.');
-            }
-        } finally {
-            setSendingFeedback(false);
+            Alert.alert('Error', 'Failed to fetch product details.');
+            setItems(prevItems => prevItems.filter(i => i.id !== tempId));
         }
     };
 
-    const handleAppRefresh = () => {
+    const executeDelete = async (itemId) => {
+        const itemToDelete = items.find(i => i.id === itemId);
+        if (!itemToDelete) return;
+
+        setItems(prevItems => prevItems.filter(i => i.id !== itemId));
+        await deleteItem(itemId);
+
+        if (itemToDelete.link && user) {
+            deleteProduct(itemToDelete.link, user.email, itemToDelete.id).catch(console.error);
+        }
+    };
+
+    const handleDeleteItem = (itemId) => {
         if (Platform.OS === 'web') {
-            window.location.reload();
+            if (window.confirm("Are you sure you want to delete this item?")) executeDelete(itemId);
         } else {
-            Alert.alert('Info', 'This feature is only for the web version to clear cache.');
+            Alert.alert(
+                "Delete Item",
+                "Are you sure you want to delete this item?",
+                [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Delete", style: "destructive", onPress: () => executeDelete(itemId) }
+                ]
+            );
         }
     };
 
-    if (loading) {
-        return (
-            <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
-                <ActivityIndicator size="large" color={theme.colors.primary} />
+    // --- Rendering ---
+
+    const renderHeader = () => (
+        <View style={[styles.profileHeader, { backgroundColor: theme.colors.surface }]}>
+            <View style={styles.profileInfoContainer}>
+                <TouchableOpacity onPress={() => navigation.navigate('Themes')} style={styles.avatarContainer}> 
+                     {/* Navigate to Themes or Edit Profile on press? Maybe Edit Profile in Drawer. */}
+                     {user?.image ? (
+                        <Image source={{ uri: user.image }} style={[styles.avatar, { borderColor: theme.colors.border }]} />
+                     ) : (
+                        <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.secondary }]}>
+                            <Text style={[styles.avatarText, { color: theme.colors.textInverse }]}>
+                                {user?.firstName?.charAt(0).toUpperCase()}
+                            </Text>
+                        </View>
+                     )}
+                </TouchableOpacity>
+                
+                <View style={styles.statsContainer}>
+                    <View style={styles.statItem}>
+                        <Text style={[styles.statNumber, { color: theme.colors.text }]}>{items.length}</Text>
+                        <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Wishes</Text>
+                    </View>
+                    <View style={styles.statItem}>
+                        <Text style={[styles.statNumber, { color: theme.colors.text }]}>{friendsCount}</Text>
+                        <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Friends</Text>
+                    </View>
+                </View>
             </View>
-        );
-    }
+            
+            <View style={styles.bioContainer}>
+                <Text style={[styles.name, { color: theme.colors.text }]}>
+                    {user ? `${user.firstName} ${user.lastName}` : 'Loading...'}
+                </Text>
+                <Text style={[styles.email, { color: theme.colors.textSecondary }]}>{user?.email}</Text>
+            </View>
+            
+            <View style={styles.actionButtons}>
+                <TouchableOpacity 
+                    style={[styles.actionButton, { backgroundColor: theme.colors.background, borderColor: theme.colors.border, borderWidth: 1 }]}
+                    onPress={toggleSurprises}
+                >
+                    <Ionicons name={showLocalSurprises ? "eye-off" : "eye"} size={20} color={theme.colors.text} />
+                    <Text style={[styles.actionButtonText, { color: theme.colors.text }]}>
+                        {showLocalSurprises ? 'Hide Claims' : 'Reveal Claims'}
+                    </Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                    style={[styles.actionButton, { backgroundColor: theme.colors.background, borderColor: theme.colors.border, borderWidth: 1 }]}
+                    onPress={handleShare}
+                >
+                    <Ionicons name="share-outline" size={20} color={theme.colors.text} />
+                    <Text style={[styles.actionButtonText, { color: theme.colors.text }]}>Share List</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
+
+    const renderRightActions = (progress, dragX, item) => (
+        <TouchableOpacity
+            style={styles.deleteActionContainer}
+            onPress={() => handleDeleteItem(item.id)}
+        >
+            <View style={[styles.deleteAction, { backgroundColor: theme.colors.error }]}>
+                <Ionicons name="trash" size={24} color="#fff" />
+            </View>
+        </TouchableOpacity>
+    );
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <AppHeader title="Profile" />
-            <ScrollView 
+            <AppHeader 
+                title="Profile" 
+                leftAction={
+                    <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
+                         <Ionicons name="menu" size={28} color={theme.colors.primary} />
+                    </TouchableOpacity>
+                }
+                rightAction={
+                    <TouchableOpacity onPress={onRefresh} style={styles.menuButton}>
+                         <Ionicons name="refresh" size={24} color={theme.colors.primary} />
+                    </TouchableOpacity>
+                }
+            />
+
+            <FlatList
                 style={{ flex: 1 }}
-                contentContainerStyle={styles.content}
-                alwaysBounceVertical={true}
+                data={items}
+                ListHeaderComponent={renderHeader}
+                renderItem={({ item }) => (
+                    <View style={styles.itemContainer}>
+                        <Swipeable renderRightActions={(p, d) => renderRightActions(p, d, item)}>
+                            <ProductCard 
+                                item={item} 
+                                shouldShowWished={showLocalSurprises}
+                            />
+                        </Swipeable>
+                    </View>
+                )}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={[styles.listContent, { paddingBottom: 100 }]}
                 refreshControl={
                     <RefreshControl 
                         refreshing={refreshing} 
                         onRefresh={onRefresh} 
                         tintColor={theme.colors.primary}
                         colors={[theme.colors.primary]}
-                        title="Refreshing..."
                     />
                 }
+                ListEmptyComponent={
+                    <View style={styles.emptyContainer}>
+                        <Text style={[styles.emptyText, { color: theme.colors.text }]}>Your wish list is empty.</Text>
+                        <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>Tap + to start adding wishes!</Text>
+                    </View>
+                }
+            />
+
+            <TouchableOpacity 
+                style={[styles.fab, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]} 
+                onPress={() => setModalVisible(true)}
             >
-                <TouchableOpacity onPress={pickImage} style={styles.imageContainer}>
-                    {image ? (
-                        <Image source={{ uri: image }} style={[styles.profileImage, { borderColor: theme.colors.border, borderWidth: 2 }]} />
-                    ) : (
-                        <View style={[styles.placeholderImage, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 2 }]}>
-                            <Ionicons name="camera" size={40} color={theme.colors.textSecondary} />
-                        </View>
-                    )}
-                    <View style={[styles.editIcon, { backgroundColor: theme.colors.secondary, borderColor: theme.colors.background }]}>
-                        <Ionicons name="pencil" size={16} color={theme.colors.textInverse} />
-                    </View>
-                </TouchableOpacity>
-
-                <View style={styles.form}>
-                    <Text style={[styles.label, { color: theme.colors.textSecondary }]}>First Name</Text>
-                    <TextInput
-                        style={[styles.input, { 
-                            backgroundColor: theme.colors.surface, 
-                            color: theme.colors.text,
-                            borderColor: theme.colors.border
-                        }]}
-                        value={firstName}
-                        onChangeText={setFirstName}
-                        placeholderTextColor={theme.colors.textSecondary}
-                    />
-
-                    <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Last Name</Text>
-                    <TextInput
-                        style={[styles.input, { 
-                            backgroundColor: theme.colors.surface, 
-                            color: theme.colors.text,
-                            borderColor: theme.colors.border
-                        }]}
-                        value={lastName}
-                        onChangeText={setLastName}
-                        placeholderTextColor={theme.colors.textSecondary}
-                    />
-
-                    <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Email</Text>
-                    <TextInput
-                        style={[styles.input, { 
-                            backgroundColor: theme.colors.surface, 
-                            color: theme.colors.text,
-                            borderColor: theme.colors.border
-                        }]}
-                        value={email}
-                        onChangeText={setEmail}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        placeholderTextColor={theme.colors.textSecondary}
-                    />
-
-                    <TouchableOpacity
-                        style={[styles.saveButton, { backgroundColor: theme.colors.primary }]}
-                        onPress={handleSave}
-                        disabled={saving}
-                    >
-                        {saving ? (
-                            <ActivityIndicator color={theme.colors.textInverse} />
-                        ) : (
-                            <Text style={[styles.saveButtonText, { color: theme.colors.textInverse }]}>Save Changes</Text>
-                        )}
-                    </TouchableOpacity>
-                </View>
-
-                <View style={[styles.section, { borderTopColor: theme.colors.border }]}>
-                    <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Settings</Text>
-                    
-                    <View style={styles.row}>
-                        <View style={{ flex: 1, paddingRight: 10 }}>
-                            <Text style={[styles.rowText, { color: theme.colors.text }]}>Reveal Surprises 🫣</Text>
-                            <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>See who claimed your gifts</Text>
-                        </View>
-                        <Switch
-                            trackColor={{ false: theme.colors.surface, true: theme.colors.primary }}
-                            thumbColor={showSurprises ? theme.colors.secondary : '#f4f3f4'}
-                            onValueChange={handleToggleSurprises}
-                            value={showSurprises}
-                        />
-                    </View>
-
-                    <View style={styles.row}>
-                        <Text style={[styles.rowText, { color: theme.colors.text }]}>Dark Mode</Text>
-                        <Switch
-                            trackColor={{ false: theme.colors.surface, true: theme.colors.primary }}
-                            thumbColor={isDark ? theme.colors.secondary : '#f4f3f4'}
-                            onValueChange={toggleTheme}
-                            value={isDark}
-                        />
-                    </View>
-                    <TouchableOpacity onPress={() => navigation.navigate('Themes')} style={styles.linkRow}>
-                        <Text style={[styles.linkText, { color: theme.colors.text }]}>Choose Theme</Text>
-                        <Ionicons name="color-palette" size={20} color={theme.colors.primary} />
-                    </TouchableOpacity>
-                </View>
-
-                <View style={[styles.section, { borderTopColor: theme.colors.border }]}>
-                    <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>About</Text>
-                    <TouchableOpacity onPress={() => setFeedbackVisible(true)} style={styles.linkRow}>
-                        <Text style={[styles.linkText, { color: theme.colors.text }]}>Send Feedback</Text>
-                        <Ionicons name="chatbubble-ellipses-outline" size={20} color={theme.colors.primary} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={handleAppRefresh} style={styles.linkRow}>
-                        <Text style={[styles.linkText, { color: theme.colors.primary }]}>Force App Refresh</Text>
-                        <Ionicons name="refresh" size={20} color={theme.colors.primary} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('PrivacyPolicy')} style={styles.linkRow}>
-                        <Text style={[styles.linkText, { color: theme.colors.secondary }]}>Privacy Policy</Text>
-                        <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('UserAgreement')} style={styles.linkRow}>
-                        <Text style={[styles.linkText, { color: theme.colors.secondary }]}>User Agreement</Text>
-                        <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-                    </TouchableOpacity>
-                </View>
-                
-                <View style={{ height: 40 }} /> 
-            </ScrollView>
+                <Ionicons name="add" size={32} color={theme.colors.textInverse} />
+            </TouchableOpacity>
 
             <Modal
                 animationType="slide"
                 transparent={true}
-                visible={feedbackVisible}
-                onRequestClose={() => setFeedbackVisible(false)}
+                visible={modalVisible}
+                onRequestClose={() => setModalVisible(false)}
             >
-                <KeyboardAvoidingView 
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    style={styles.modalOverlay}
-                >
+                <View style={styles.modalOverlay}>
                     <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
-                        <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Send Feedback</Text>
-                        <Text style={[styles.modalSubtitle, { color: theme.colors.textSecondary }]}>
-                            Have an idea or found a bug? Let us know!
-                        </Text>
+                        <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Add Item</Text>
                         
-                        <TextInput
-                            style={[styles.input, styles.textArea, { 
-                                backgroundColor: theme.colors.background, 
-                                color: theme.colors.text,
-                                borderColor: theme.colors.border 
-                            }]}
-                            placeholder="Type your message here..."
-                            placeholderTextColor={theme.colors.textSecondary}
-                            value={feedbackText}
-                            onChangeText={setFeedbackText}
-                            multiline
-                            textAlignVertical="top"
-                            autoFocus
-                        />
-                        
+                        <View style={styles.tabContainer}>
+                            <TouchableOpacity 
+                                style={[styles.tab, entryMode === 'link' && styles.activeTab]} 
+                                onPress={() => setEntryMode('link')}
+                            >
+                                <Text style={[styles.tabText, entryMode === 'link' && styles.activeTabText]}>Link</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={[styles.tab, entryMode === 'manual' && styles.activeTab]} 
+                                onPress={() => setEntryMode('manual')}
+                            >
+                                <Text style={[styles.tabText, entryMode === 'manual' && styles.activeTabText]}>Manual</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {entryMode === 'link' ? (
+                            <>
+                                <Text style={[styles.modalSubtitle, { color: theme.colors.textSecondary }]}>Paste a product URL below</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: theme.colors.background, color: theme.colors.text, borderColor: theme.colors.border }]}
+                                    placeholder="https://example.com/product"
+                                    placeholderTextColor={theme.colors.textSecondary}
+                                    value={url}
+                                    onChangeText={setUrl}
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
+                                />
+                            </>
+                        ) : (
+                            <>
+                                <TouchableOpacity onPress={handlePickImage} style={styles.imagePreview}>
+                                    {manualImage ? (
+                                        <Image source={{ uri: manualImage }} style={styles.previewImage} resizeMode="cover" />
+                                    ) : (
+                                        <View style={{ alignItems: 'center' }}>
+                                            <Ionicons name="camera-outline" size={32} color={theme.colors.textSecondary} />
+                                            <Text style={{ color: theme.colors.textSecondary, marginTop: 4 }}>Add Image</Text>
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: theme.colors.background, color: theme.colors.text, borderColor: theme.colors.border, marginBottom: 12 }]}
+                                    placeholder="Item Name"
+                                    placeholderTextColor={theme.colors.textSecondary}
+                                    value={manualName}
+                                    onChangeText={setManualName}
+                                />
+                                
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: theme.colors.background, color: theme.colors.text, borderColor: theme.colors.border }]}
+                                    placeholder="Price"
+                                    placeholderTextColor={theme.colors.textSecondary}
+                                    value={manualPrice}
+                                    onChangeText={setManualPrice}
+                                    keyboardType="decimal-pad"
+                                />
+                            </>
+                        )}
+
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
-                                style={[styles.modalButton, { backgroundColor: theme.colors.background }]}
-                                onPress={() => setFeedbackVisible(false)}
-                                disabled={sendingFeedback}
+                                style={[styles.modalButton, styles.cancelButton, { backgroundColor: theme.colors.background }]}
+                                onPress={() => setModalVisible(false)}
+                                disabled={adding}
                             >
                                 <Text style={[styles.cancelButtonText, { color: theme.colors.text }]}>Cancel</Text>
                             </TouchableOpacity>
+
                             <TouchableOpacity
-                                style={[styles.modalButton, { backgroundColor: theme.colors.primary }]}
-                                onPress={handleSendFeedback}
-                                disabled={sendingFeedback}
+                                style={[styles.modalButton, styles.addButton, { backgroundColor: theme.colors.primary }]}
+                                onPress={handleAddItem}
+                                disabled={adding}
                             >
-                                {sendingFeedback ? (
+                                {adding ? (
                                     <ActivityIndicator color={theme.colors.textInverse} size="small" />
                                 ) : (
-                                    <Text style={[styles.saveButtonText, { color: theme.colors.textInverse }]}>Send</Text>
+                                    <Text style={[styles.addButtonText, { color: theme.colors.textInverse }]}>Add</Text>
                                 )}
                             </TouchableOpacity>
                         </View>
                     </View>
-                </KeyboardAvoidingView>
+                </View>
             </Modal>
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    header: {
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-    },
-    headerTitle: {
-        fontSize: 22,
-        fontWeight: 'bold',
-    },
-    content: {
-        padding: 24,
-        alignItems: 'center',
-    },
-    imageContainer: {
-        marginBottom: 32,
-        position: 'relative',
-    },
-    profileImage: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-    },
-    placeholderImage: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    editIcon: {
-        position: 'absolute',
-        bottom: 0,
-        right: 0,
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 3,
-    },
-    form: {
-        width: '100%',
-        marginBottom: 32,
-    },
-    label: {
-        fontSize: 14,
-        marginBottom: 8,
-        marginLeft: 4,
-    },
-    input: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderRadius: 10,
-        marginBottom: 20,
-        fontSize: 16,
-        borderWidth: 1,
-    },
-    saveButton: {
-        paddingVertical: 16,
-        borderRadius: 12,
-        alignItems: 'center',
-        marginTop: 12,
-    },
-    saveButtonText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    section: {
-        width: '100%',
-        borderTopWidth: 1,
-        paddingTop: 24,
-        marginBottom: 8,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 16,
-    },
-    row: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 16,
-    },
-    rowText: {
-        fontSize: 16,
-    },
-    linkRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 12,
-    },
-    linkText: {
-        fontSize: 14,
-        fontWeight: '500',
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'center',
+    container: { flex: 1 },
+    menuButton: { padding: 8 },
+    listContent: { paddingHorizontal: 16 },
+    itemContainer: { marginBottom: 16 },
+    
+    profileHeader: {
         padding: 20,
-    },
-    modalContent: {
         borderRadius: 16,
-        padding: 24,
+        marginBottom: 24,
+        marginTop: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
+        shadowOpacity: 0.1,
         shadowRadius: 4,
-        elevation: 5,
+        elevation: 3,
     },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 8,
-        textAlign: 'center',
-    },
-    modalSubtitle: {
-        fontSize: 14,
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-    textArea: {
-        height: 120,
-        paddingTop: 12,
-    },
-    modalButtons: {
+    profileInfoContainer: {
         flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        gap: 12,
+        marginBottom: 16,
     },
-    modalButton: {
-        flex: 1,
-        paddingVertical: 12,
-        borderRadius: 10,
+    avatarContainer: {
+        marginRight: 20,
+    },
+    avatar: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        borderWidth: 2,
+    },
+    avatarPlaceholder: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        justifyContent: 'center',
         alignItems: 'center',
     },
-    cancelButtonText: {
-        fontSize: 16,
+    avatarText: { fontSize: 32, fontWeight: 'bold' },
+    statsContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+    },
+    statItem: {
+        alignItems: 'center',
+    },
+    statNumber: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    statLabel: {
+        fontSize: 12,
+    },
+    bioContainer: {
+        marginBottom: 16,
+    },
+    name: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 4,
+    },
+    email: {
+        fontSize: 14,
+    },
+    actionButtons: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+    actionButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 8,
+        borderRadius: 8,
+        gap: 6,
+    },
+    actionButtonText: {
+        fontSize: 14,
         fontWeight: '600',
     },
+    
+    emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 50 },
+    emptyText: { fontSize: 18, fontWeight: '600', marginBottom: 8 },
+    emptySubtext: { fontSize: 14 },
+    
+    fab: {
+        position: 'absolute',
+        bottom: 30,
+        right: 30,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
+        zIndex: 100,
+    },
+    
+    deleteActionContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 80,
+        height: '100%',
+    },
+    deleteAction: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
+    modalContent: { borderRadius: 16, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5 },
+    modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 8, textAlign: 'center' },
+    modalSubtitle: { fontSize: 14, marginBottom: 20, textAlign: 'center' },
+    tabContainer: { flexDirection: 'row', marginBottom: 20, backgroundColor: '#f0f0f0', borderRadius: 8, padding: 4 },
+    tab: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 6 },
+    activeTab: { backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 1, elevation: 2 },
+    tabText: { fontSize: 14, fontWeight: '500', color: '#666' },
+    activeTabText: { color: '#000', fontWeight: '600' },
+    input: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 10, marginBottom: 24, fontSize: 16, borderWidth: 1 },
+    imagePreview: { width: '100%', height: 150, borderRadius: 8, marginBottom: 16, backgroundColor: '#f5f5f5', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', borderWidth: 1, borderColor: '#eee' },
+    previewImage: { width: '100%', height: '100%' },
+    modalButtons: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+    modalButton: { flex: 1, paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
+    cancelButton: {},
+    addButton: {},
+    cancelButtonText: { fontWeight: '600', fontSize: 16 },
+    addButtonText: { fontWeight: '600', fontSize: 16 },
 });
 
 export default ProfileScreen;
