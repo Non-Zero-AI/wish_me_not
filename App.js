@@ -25,7 +25,9 @@ import { getUser, saveUser, saveItems, saveFriends } from './src/services/storag
 import { fetchUserInfo, getUserWishlist, getUserFriends } from './src/services/api';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { ModalProvider, useModal } from './src/context/ModalContext';
 import ErrorBoundary from './src/components/ErrorBoundary';
+import AddWishModal from './src/components/AddWishModal';
 
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import SplashScreen from './src/screens/SplashScreen';
@@ -122,6 +124,7 @@ function ProfileStackScreen() {
 
 function MainTabs() {
   const { theme } = useTheme();
+  const { setAddModalVisible } = useModal();
   
   return (
     <Tab.Navigator
@@ -159,13 +162,10 @@ function MainTabs() {
       <Tab.Screen 
         name="Add" 
         component={View} 
-        listeners={({ navigation }) => ({
+        listeners={() => ({
             tabPress: (e) => {
                 e.preventDefault();
-                navigation.navigate('ProfileStack', { 
-                    screen: 'ProfileScreen', 
-                    params: { openModal: true } 
-                });
+                setAddModalVisible(true);
             },
         })}
         options={{
@@ -211,6 +211,7 @@ function MainTabs() {
 function AppNavigator() {
   const { user, isLoading } = useAuth();
   const { theme, isDark } = useTheme();
+  const { isAddModalVisible, setAddModalVisible } = useModal();
   const [showSplash, setShowSplash] = useState(false);
   const [splashShown, setSplashShown] = useState(false);
   const [dataReady, setDataReady] = useState(false);
@@ -309,6 +310,13 @@ function AppNavigator() {
             />
           </RootTabs.Navigator>
         </NavigationContainer>
+        {user && (
+            <AddWishModal 
+                visible={isAddModalVisible} 
+                onClose={() => setAddModalVisible(false)}
+                user={user}
+            />
+        )}
       </View>
     </SafeAreaProvider>
   );
@@ -318,9 +326,11 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <ErrorBoundary>
-            <AppNavigator />
-        </ErrorBoundary>
+        <ModalProvider>
+          <ErrorBoundary>
+              <AppNavigator />
+          </ErrorBoundary>
+        </ModalProvider>
       </AuthProvider>
     </ThemeProvider>
   );
