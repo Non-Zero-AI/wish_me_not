@@ -64,26 +64,62 @@ const OnboardingScreen = ({ navigation }) => {
     };
 
     return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
-            <Text style={{ fontSize: 20, color: theme.colors.text }}>Onboarding Screen Debug</Text>
-            <TouchableOpacity onPress={handleGetStarted} style={{ marginTop: 20, padding: 10, backgroundColor: theme.colors.primary }}>
-                <Text style={{ color: 'white' }}>Force Login</Text>
-            </TouchableOpacity>
-        </View>
-    );
-
-    /*
-    return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.content}
             >
-    ...
+                <View style={styles.header}>
+                    <Text style={[styles.title, { color: theme.colors.primary, fontFamily: theme.fonts.bold }]}>Welcome to Wish Me Not</Text>
+                    <Text style={[styles.tagline, { color: theme.colors.secondary, fontFamily: theme.fonts.medium }]}>Stop guessing. Start gifting.</Text>
+                    <Text style={[styles.subtitle, { color: theme.colors.textSecondary, fontFamily: theme.fonts.regular }]}>Create your wish list and share it with friends.</Text>
+                </View>
+
+                <View style={styles.form}>
+                    <TextInput
+                        style={[styles.input, { 
+                            backgroundColor: theme.colors.surface, 
+                            color: theme.colors.text,
+                            borderColor: theme.colors.border,
+                            fontFamily: theme.fonts.regular
+                        }]}
+                        placeholder="Username"
+                        placeholderTextColor={theme.colors.textSecondary}
+                        value={username}
+                        onChangeText={setUsername}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                    />
+                    <TextInput
+                        style={[styles.input, { 
+                            backgroundColor: theme.colors.surface, 
+                            color: theme.colors.text,
+                            borderColor: theme.colors.border,
+                            fontFamily: theme.fonts.regular
+                        }]}
+                        placeholder="Email Address"
+                        placeholderTextColor={theme.colors.textSecondary}
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                    />
+                </View>
+
+                <TouchableOpacity
+                    style={[styles.button, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]}
+                    onPress={handleGetStarted}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <ActivityIndicator color={theme.colors.textInverse} />
+                    ) : (
+                        <Text style={[styles.buttonText, { color: theme.colors.textInverse, fontFamily: theme.fonts.bold }]}>Get Started</Text>
+                    )}
+                </TouchableOpacity>
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
-    */
 };
 
 const styles = StyleSheet.create({
