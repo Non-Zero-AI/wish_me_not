@@ -9,7 +9,7 @@ initLogger();
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+// import { createDrawerNavigator } from '@react-navigation/drawer';
 import { ActivityIndicator, View, StyleSheet, StatusBar, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
@@ -32,11 +32,11 @@ import ProfileScreen from './src/screens/ProfileScreen';
 import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 import UserAgreementScreen from './src/screens/UserAgreementScreen';
 import ThemesScreen from './src/screens/ThemesScreen';
-import CustomDrawerContent from './src/components/CustomDrawerContent';
+// import CustomDrawerContent from './src/components/CustomDrawerContent';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
-const Drawer = createDrawerNavigator();
+// const Drawer = createDrawerNavigator();
 const FriendsStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 
@@ -193,6 +193,7 @@ function MainTabs() {
   );
 }
 
+/*
 function DrawerNavigator() {
   return (
     <Drawer.Navigator 
@@ -203,6 +204,7 @@ function DrawerNavigator() {
     </Drawer.Navigator>
   );
 }
+*/
 
 function AppNavigator() {
   const { user, isLoading } = useAuth();
