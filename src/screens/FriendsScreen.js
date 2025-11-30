@@ -95,11 +95,14 @@ const FriendsScreen = ({ navigation }) => {
         try {
             const serverFriends = await getUserFriends(email);
             if (serverFriends && serverFriends.length > 0) {
-                setFriends(serverFriends);
-                await saveFriends(serverFriends); // Cache
+                // Deep compare to avoid re-renders if data hasn't changed
+                // This prevents image flashing
+                const hasChanged = JSON.stringify(serverFriends) !== JSON.stringify(friends);
                 
-                // If in feed mode, reload feed?
-                // setFeedItems([]); // Optional: force reload
+                if (hasChanged || friends.length === 0) {
+                    setFriends(serverFriends);
+                    await saveFriends(serverFriends); // Cache
+                }
             }
         } catch (e) {
             console.error('Server fetch failed, keeping local', e);

@@ -284,8 +284,10 @@ export const getUserWishlist = async (userEmail) => {
                 link: item['Product URL'] || item.product_url,
                 wishedBy: item.wished_by || item.wishedBy || null,
                 userName: item.user_name || item['User Name'] || null,
-                isClaimed: item['Is Claimed'] === true || item['Is Claimed'] === 'true' || item.is_claimed === true || item.is_claimed === 'true',
-                claimedBy: item['Claimed By'] || item.claimed_by || null,
+                // Fix claim status mapping based on "Claim Status": "Is Claimed"
+                isClaimed: item['Claim Status'] === 'Is Claimed' || item['Is Claimed'] === true || item['Is Claimed'] === 'true' || item.is_claimed === true,
+                claimedBy: item['Claimed By'] || item.claimed_by || item['Claiment Name'] || null,
+                claimedByEmail: item['Claiment Email'] || item.claiment_email || null
             }));
         }
 
