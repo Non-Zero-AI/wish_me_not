@@ -164,7 +164,11 @@ const FriendsScreen = ({ navigation }) => {
                 title="Friends" 
                 leftAction={
                     <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.addButton}>
-                         <Ionicons name="menu" size={28} color={theme.colors.primary} />
+                         {user?.image ? (
+                            <Image source={{ uri: user.image }} style={{ width: 32, height: 32, borderRadius: 16 }} />
+                         ) : (
+                            <Ionicons name="menu" size={28} color={theme.colors.primary} />
+                         )}
                     </TouchableOpacity>
                 }
                 rightAction={
@@ -195,7 +199,9 @@ const FriendsScreen = ({ navigation }) => {
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No friends yet.</Text>
+                        <Text style={[styles.emptyText, { color: theme.colors.textSecondary, textAlign: 'center', paddingHorizontal: 32 }]}>
+                            Gifting is better with Friends; add Friends to start seeing what they have on their Wishlists
+                        </Text>
                         <TouchableOpacity onPress={() => setModalVisible(true)} style={{marginTop: 20, padding: 10, backgroundColor: theme.colors.surface, borderRadius: 8}}>
                             <Text style={{color: theme.colors.primary}}>Add Your First Friend</Text>
                         </TouchableOpacity>

@@ -76,6 +76,11 @@ export const ThemeProvider = ({ children }) => {
       ...baseTheme.colors,
       ...activeColors,
     },
+    fonts: {
+      regular: 'Adamina',
+      medium: 'Adamina', 
+      bold: 'Adamina', // Adamina might only have one weight, so we map all to it
+    }
   };
 
   const value = {

@@ -9,7 +9,7 @@ const AppHeader = ({ title, showBack, rightAction, leftAction, subTitle }) => {
   const navigation = useNavigation();
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
       <View style={styles.brandingRow}>
          <View style={styles.logoContainer}>
             <Ionicons name="gift" size={20} color={theme.colors.primary} />

@@ -182,9 +182,17 @@ const HomeScreen = ({ navigation }) => {
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <AppHeader 
                 title="Home" 
-                leftAction={null}
+                leftAction={
+                    <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuButton}>
+                         {user?.image ? (
+                            <Image source={{ uri: user.image }} style={{ width: 32, height: 32, borderRadius: 16 }} />
+                         ) : (
+                            <Ionicons name="menu" size={28} color={theme.colors.primary} />
+                         )}
+                    </TouchableOpacity>
+                }
                 rightAction={
-                     <TouchableOpacity onPress={onRefresh} style={styles.menuButton}>
+                    <TouchableOpacity onPress={onRefresh} style={styles.menuButton}>
                          <Ionicons name="refresh" size={24} color={theme.colors.primary} />
                     </TouchableOpacity>
                 }
@@ -207,9 +215,8 @@ const HomeScreen = ({ navigation }) => {
                 ListEmptyComponent={
                     !loading && (
                         <View style={styles.emptyContainer}>
-                            <Text style={[styles.emptyText, { color: theme.colors.text }]}>No recent activity.</Text>
-                            <Text style={[styles.emptySubText, { color: theme.colors.textSecondary }]}>
-                                Add friends to see their wishes here!
+                            <Text style={[styles.emptyText, { color: theme.colors.textSecondary, textAlign: 'center', paddingHorizontal: 32 }]}>
+                                Gifting is better with Friends; add Friends to start seeing what they have on their Wishlists
                             </Text>
                         </View>
                     )

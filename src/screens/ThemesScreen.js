@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch, Platform, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import { themes } from '../theme/themes';
@@ -90,6 +90,19 @@ const ThemesScreen = () => {
             onSelect={() => setThemeId(t.id)}
           />
         ))}
+        
+        <View style={styles.affiliateContainer}>
+            <Text style={[styles.affiliateText, { color: theme.colors.textSecondary }]}>
+                Color themes brought to you by Coolors, click our{' '}
+                <Text 
+                    style={{ color: theme.colors.primary, textDecorationLine: 'underline', fontWeight: 'bold' }}
+                    onPress={() => Linking.openURL('https://coolors.co/?ref=6929554bfd89e1000f3efb62')}
+                >
+                    Affiliate Link
+                </Text>
+                {' '}to support
+            </Text>
+        </View>
       </ScrollView>
     </View>
   );
@@ -185,6 +198,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,
+  },
+  affiliateContainer: {
+    width: '100%',
+    padding: 20,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  affiliateText: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
   }
 });
 

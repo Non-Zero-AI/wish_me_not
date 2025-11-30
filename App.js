@@ -9,9 +9,11 @@ initLogger();
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import { ActivityIndicator, View, StyleSheet, StatusBar, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
+import * as Font from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts, Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 
@@ -30,9 +32,11 @@ import ProfileScreen from './src/screens/ProfileScreen';
 import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 import UserAgreementScreen from './src/screens/UserAgreementScreen';
 import ThemesScreen from './src/screens/ThemesScreen';
+import CustomDrawerContent from './src/components/CustomDrawerContent';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+const Drawer = createDrawerNavigator();
 const FriendsStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 
@@ -189,6 +193,17 @@ function MainTabs() {
   );
 }
 
+function DrawerNavigator() {
+  return (
+    <Drawer.Navigator 
+        drawerContent={props => <CustomDrawerContent {...props} />}
+        screenOptions={{ headerShown: false }}
+    >
+       <Drawer.Screen name="Tabs" component={MainTabs} />
+    </Drawer.Navigator>
+  );
+}
+
 function AppNavigator() {
   const { user, isLoading } = useAuth();
   const { theme, isDark } = useTheme();
@@ -201,6 +216,22 @@ function AppNavigator() {
     'Inter-SemiBold': Inter_600SemiBold,
     'Inter-Bold': Inter_700Bold,
   });
+
+  const [adaminaLoaded, setAdaminaLoaded] = useState(false);
+
+  useEffect(() => {
+      async function loadAdamina() {
+          try {
+              await Font.loadAsync({
+                  'Adamina': 'https://github.com/google/fonts/raw/main/ofl/adamina/Adamina-Regular.ttf',
+              });
+              setAdaminaLoaded(true);
+          } catch (e) {
+              console.log('Failed to load Adamina font', e);
+          }
+      }
+      loadAdamina();
+  }, []);
 
   useEffect(() => {
     if (!isLoading && user && !splashShown) {
@@ -272,7 +303,7 @@ function AppNavigator() {
             }}
           >
             {user ? (
-              <Stack.Screen name="Main" component={MainTabs} />
+              <Stack.Screen name="Main" component={DrawerNavigator} />
             ) : (
               <Stack.Screen name="Onboarding" component={OnboardingScreen} />
             )}
