@@ -13,7 +13,7 @@ const AppHeader = ({ title, showBack, rightAction, leftAction, subTitle }) => {
       <View style={styles.brandingRow}>
          <View style={styles.logoContainer}>
             <Ionicons name="gift" size={20} color={theme.colors.primary} />
-            <Text style={[styles.appName, { color: theme.colors.primary }]}>Wish Me Not</Text>
+            <Text style={[styles.appName, { color: theme.colors.primary, fontFamily: theme.fonts.bold }]}>Wish Me Not</Text>
          </View>
       </View>
       
@@ -26,7 +26,7 @@ const AppHeader = ({ title, showBack, rightAction, leftAction, subTitle }) => {
                 </TouchableOpacity>
             )}
             <View>
-                <Text style={[styles.title, { color: theme.colors.text }]}>{title}</Text>
+                <Text style={[styles.title, { color: theme.colors.text, fontFamily: theme.fonts.bold }]}>{title}</Text>
                 {subTitle && <Text style={[styles.subTitle, { color: theme.colors.textSecondary }]}>{subTitle}</Text>}
             </View>
         </View>
@@ -59,23 +59,10 @@ const styles = StyleSheet.create({
         fontWeight: '800',
         textTransform: 'uppercase',
         letterSpacing: 1,
+        // fontFamily: theme.fonts.bold // Need to use useTheme inside component, this is styles object.
+        // So I will apply it in inline style inside render
     },
-    titleRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        minHeight: 32,
-    },
-    leftContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        flex: 1,
-    },
-    backButton: {
-        padding: 4,
-        marginRight: 4,
-    },
+    // ...
     title: {
         fontSize: 22,
         fontWeight: 'bold',

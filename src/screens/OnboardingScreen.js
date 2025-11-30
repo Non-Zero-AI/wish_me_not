@@ -70,9 +70,9 @@ const OnboardingScreen = ({ navigation }) => {
                 style={styles.content}
             >
                 <View style={styles.header}>
-                    <Text style={[styles.title, { color: theme.colors.primary }]}>Welcome to Wish Me Not</Text>
-                    <Text style={[styles.tagline, { color: theme.colors.secondary }]}>Stop guessing. Start gifting.</Text>
-                    <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>Create your wish list and share it with friends.</Text>
+                    <Text style={[styles.title, { color: theme.colors.primary, fontFamily: theme.fonts.bold }]}>Welcome to Wish Me Not</Text>
+                    <Text style={[styles.tagline, { color: theme.colors.secondary, fontFamily: theme.fonts.medium }]}>Stop guessing. Start gifting.</Text>
+                    <Text style={[styles.subtitle, { color: theme.colors.textSecondary, fontFamily: theme.fonts.regular }]}>Create your wish list and share it with friends.</Text>
                 </View>
 
                 <View style={styles.form}>
@@ -80,7 +80,8 @@ const OnboardingScreen = ({ navigation }) => {
                         style={[styles.input, { 
                             backgroundColor: theme.colors.surface, 
                             color: theme.colors.text,
-                            borderColor: theme.colors.border
+                            borderColor: theme.colors.border,
+                            fontFamily: theme.fonts.regular
                         }]}
                         placeholder="Username"
                         placeholderTextColor={theme.colors.textSecondary}
@@ -93,7 +94,8 @@ const OnboardingScreen = ({ navigation }) => {
                         style={[styles.input, { 
                             backgroundColor: theme.colors.surface, 
                             color: theme.colors.text,
-                            borderColor: theme.colors.border
+                            borderColor: theme.colors.border,
+                            fontFamily: theme.fonts.regular
                         }]}
                         placeholder="Email Address"
                         placeholderTextColor={theme.colors.textSecondary}
@@ -112,7 +114,7 @@ const OnboardingScreen = ({ navigation }) => {
                     {loading ? (
                         <ActivityIndicator color={theme.colors.textInverse} />
                     ) : (
-                        <Text style={[styles.buttonText, { color: theme.colors.textInverse }]}>Get Started</Text>
+                        <Text style={[styles.buttonText, { color: theme.colors.textInverse, fontFamily: theme.fonts.bold }]}>Get Started</Text>
                     )}
                 </TouchableOpacity>
             </KeyboardAvoidingView>

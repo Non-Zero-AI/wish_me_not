@@ -92,10 +92,10 @@ const ThemesScreen = () => {
         ))}
         
         <View style={styles.affiliateContainer}>
-            <Text style={[styles.affiliateText, { color: theme.colors.textSecondary }]}>
+            <Text style={[styles.affiliateText, { color: theme.colors.textSecondary, fontFamily: theme.fonts.regular }]}>
                 Color themes brought to you by Coolors, click our{' '}
                 <Text 
-                    style={{ color: theme.colors.primary, textDecorationLine: 'underline', fontWeight: 'bold' }}
+                    style={{ color: theme.colors.primary, textDecorationLine: 'underline', fontWeight: 'bold', fontFamily: theme.fonts.bold }}
                     onPress={() => Linking.openURL('https://coolors.co/?ref=6929554bfd89e1000f3efb62')}
                 >
                     Affiliate Link
@@ -209,6 +209,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
+    // fontFamily: theme.fonts.regular // Again, styles object. Inline or component.
   }
 });
 

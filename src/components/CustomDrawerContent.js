@@ -31,19 +31,19 @@ const CustomDrawerContent = (props) => {
                             </View>
                         )}
                     </TouchableOpacity>
-                    <Text style={[styles.name, { color: theme.colors.text }]}>
+                    <Text style={[styles.name, { color: theme.colors.text, fontFamily: theme.fonts.bold }]}>
                         {user ? `${user.firstName} ${user.lastName || ''}` : 'Guest'}
                     </Text>
-                    <Text style={[styles.handle, { color: theme.colors.textSecondary }]}>
+                    <Text style={[styles.handle, { color: theme.colors.textSecondary, fontFamily: theme.fonts.regular }]}>
                         @{user?.username || user?.firstName?.toLowerCase() || 'guest'}
                     </Text>
 
                     <View style={styles.statsRow}>
-                        <Text style={[styles.statText, { color: theme.colors.textSecondary }]}>
-                            <Text style={[styles.statCount, { color: theme.colors.text }]}>0</Text> Following
+                        <Text style={[styles.statText, { color: theme.colors.textSecondary, fontFamily: theme.fonts.regular }]}>
+                            <Text style={[styles.statCount, { color: theme.colors.text, fontFamily: theme.fonts.bold }]}>0</Text> Following
                         </Text>
-                        <Text style={[styles.statText, { color: theme.colors.textSecondary, marginLeft: 16 }]}>
-                            <Text style={[styles.statCount, { color: theme.colors.text }]}>0</Text> Followers
+                        <Text style={[styles.statText, { color: theme.colors.textSecondary, marginLeft: 16, fontFamily: theme.fonts.regular }]}>
+                            <Text style={[styles.statCount, { color: theme.colors.text, fontFamily: theme.fonts.bold }]}>0</Text> Followers
                         </Text>
                     </View>
                 </View>
@@ -52,25 +52,25 @@ const CustomDrawerContent = (props) => {
                 <View style={styles.menuItems}>
                     <DrawerItem
                         label="Profile"
-                        labelStyle={{ color: theme.colors.text, fontSize: 16, fontWeight: '600' }}
+                        labelStyle={{ color: theme.colors.text, fontSize: 16, fontWeight: '600', fontFamily: theme.fonts.medium }}
                         icon={({ color, size }) => <Ionicons name="person-outline" size={24} color={theme.colors.text} />}
                         onPress={() => props.navigation.navigate('ProfileStack')}
                     />
                     <DrawerItem
                         label="Communities"
-                        labelStyle={{ color: theme.colors.text, fontSize: 16, fontWeight: '600' }}
+                        labelStyle={{ color: theme.colors.text, fontSize: 16, fontWeight: '600', fontFamily: theme.fonts.medium }}
                         icon={({ color, size }) => <Ionicons name="people-outline" size={24} color={theme.colors.text} />}
                         onPress={() => handleComingSoon('Communities')}
                     />
                     <DrawerItem
                         label="Bookmarks"
-                        labelStyle={{ color: theme.colors.text, fontSize: 16, fontWeight: '600' }}
+                        labelStyle={{ color: theme.colors.text, fontSize: 16, fontWeight: '600', fontFamily: theme.fonts.medium }}
                         icon={({ color, size }) => <Ionicons name="bookmark-outline" size={24} color={theme.colors.text} />}
                         onPress={() => handleComingSoon('Bookmarks')}
                     />
                     <DrawerItem
                         label="Lists"
-                        labelStyle={{ color: theme.colors.text, fontSize: 16, fontWeight: '600' }}
+                        labelStyle={{ color: theme.colors.text, fontSize: 16, fontWeight: '600', fontFamily: theme.fonts.medium }}
                         icon={({ color, size }) => <Ionicons name="list-outline" size={24} color={theme.colors.text} />}
                         onPress={() => handleComingSoon('Lists')}
                     />
@@ -81,7 +81,7 @@ const CustomDrawerContent = (props) => {
                 <View style={styles.bottomItems}>
                     <DrawerItem
                         label="Settings and privacy"
-                        labelStyle={{ color: theme.colors.text, fontSize: 16, fontWeight: '600' }}
+                        labelStyle={{ color: theme.colors.text, fontSize: 16, fontWeight: '600', fontFamily: theme.fonts.medium }}
                         icon={({ color, size }) => <Ionicons name="settings-outline" size={24} color={theme.colors.text} />}
                         onPress={() => props.navigation.navigate('ProfileStack', { screen: 'Themes' })} 
                     />
