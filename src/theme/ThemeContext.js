@@ -86,9 +86,11 @@ export const ThemeProvider = ({ children }) => {
     setThemeId,
   };
 
-  if (!isLoaded) {
-    return null;
-  }
+  // Don't block render. Use default theme while loading.
+  // SplashScreen will cover any potential flash.
+  // if (!isLoaded) {
+  //   return null;
+  // }
 
   return (
     <ThemeContext.Provider value={value}>

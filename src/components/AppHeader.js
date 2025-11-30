@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 
-const AppHeader = ({ title, showBack, rightAction, subTitle }) => {
+const AppHeader = ({ title, showBack, rightAction, leftAction, subTitle }) => {
   const { theme } = useTheme();
   const navigation = useNavigation();
 
@@ -19,6 +19,7 @@ const AppHeader = ({ title, showBack, rightAction, subTitle }) => {
       
       <View style={styles.titleRow}>
         <View style={styles.leftContainer}>
+            {leftAction}
             {showBack && (
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color={theme.colors.text} />

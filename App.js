@@ -201,7 +201,7 @@ function AppNavigator() {
 
   return (
     <SafeAreaProvider style={{ backgroundColor: theme.colors.background }}>
-      {/* {showSplash && <SplashScreen dataReady={dataReady} onFinish={() => setShowSplash(false)} />} */}
+      {showSplash && <SplashScreen dataReady={dataReady} onFinish={() => setShowSplash(false)} />}
       <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.colors.background }}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
         <NavigationContainer 
@@ -221,7 +221,7 @@ function AppNavigator() {
             }}
           >
             {user ? (
-              <Stack.Screen name="Main" component={MainDrawer} />
+              <Stack.Screen name="Main" component={MainTabs} />
             ) : (
               <Stack.Screen name="Onboarding" component={OnboardingScreen} />
             )}

@@ -1,84 +1,110 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
-import Animated, { 
-    useSharedValue, 
-    useAnimatedStyle, 
-    withTiming, 
-    withDelay, 
-    runOnJS,
-    Easing
-} from 'react-native-reanimated';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, Animated, Easing, Text } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
-
-const { width } = Dimensions.get('window');
 
 const SplashScreen = ({ onFinish, dataReady }) => {
     const { theme } = useTheme();
     
     // Animation Values
-    const circleScale = useSharedValue(0);
-    const titleOpacity = useSharedValue(0);
-    const subtitleOpacity = useSharedValue(0);
-    const containerOpacity = useSharedValue(1);
-    const containerScale = useSharedValue(1);
+    const circleScale = useRef(new Animated.Value(0)).current;
+    const titleOpacity = useRef(new Animated.Value(0)).current;
+    const subtitleOpacity = useRef(new Animated.Value(0)).current;
+    const containerOpacity = useRef(new Animated.Value(1)).current;
+    const containerScale = useRef(new Animated.Value(1)).current;
     
-    const [introComplete, setIntroComplete] = React.useState(false);
+    const [introComplete, setIntroComplete] = useState(false);
 
     useEffect(() => {
-        // 1. Circle Expand (Scope Out) - Start from black, reveal theme background
-        circleScale.value = withTiming(40, { duration: 1200, easing: Easing.out(Easing.exp) });
+        // 1. Circle Expand
+        Animated.timing(circleScale, {
+            toValue: 40,
+            duration: 1200,
+            easing: Easing.out(Easing.exp),
+            useNativeDriver: true, // Native driver is safer for Web too (often polyfilled)
+        }).start();
 
         // 2. Reveal Text Sequence
-        titleOpacity.value = withDelay(1000, withTiming(1, { duration: 1000 }));
-        subtitleOpacity.value = withDelay(2000, withTiming(1, { duration: 1000 }, (finished) => {
+        Animated.sequence([
+            Animated.delay(1000),
+            Animated.timing(titleOpacity, {
+                toValue: 1,
+                duration: 1000,
+                useNativeDriver: true,
+            }),
+            Animated.delay(500),
+            Animated.timing(subtitleOpacity, {
+                toValue: 1,
+                duration: 1000,
+                useNativeDriver: true,
+            })
+        ]).start(({ finished }) => {
             if (finished) {
-                runOnJS(setIntroComplete)(true);
+                setIntroComplete(true);
             }
-        }));
+        });
     }, []);
     
-    // 3. Exit Animation (Zoom Out/Fade)
-    // Trigger only when intro is done AND data is ready
+    // 3. Exit Animation
     useEffect(() => {
         if (introComplete && dataReady) {
-             containerOpacity.value = withTiming(0, { duration: 2000 }, (finished) => {
+            Animated.parallel([
+                Animated.timing(containerOpacity, {
+                    toValue: 0,
+                    duration: 2000,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(containerScale, {
+                    toValue: 1.5,
+                    duration: 2000,
+                    useNativeDriver: true,
+                })
+            ]).start(({ finished }) => {
                 if (finished) {
-                    runOnJS(onFinish)();
+                    onFinish();
                 }
             });
-            containerScale.value = withTiming(1.5, { duration: 2000 });
         }
     }, [introComplete, dataReady]);
 
-    // Safety Timeout: If animation hangs or introComplete never sets, force exit
+    // Safety Timeout
     useEffect(() => {
         if (dataReady) {
             const timer = setTimeout(() => {
                 console.error('Splash screen safety timeout triggered - Forcing Exit');
-                onFinish(); // Force unmount
-            }, 4500);
+                onFinish(); 
+            }, 5000);
             return () => clearTimeout(timer);
         }
     }, [dataReady]);
 
-    const circleStyle = useAnimatedStyle(() => ({
-        transform: [{ scale: circleScale.value }],
-    }));
+    const circleStyle = {
+        transform: [{ scale: circleScale }],
+    };
 
-    const titleStyle = useAnimatedStyle(() => ({
-        opacity: titleOpacity.value,
-        transform: [{ translateY: (1 - titleOpacity.value) * 20 }]
-    }));
+    const titleStyle = {
+        opacity: titleOpacity,
+        transform: [{ 
+            translateY: titleOpacity.interpolate({
+                inputRange: [0, 1],
+                outputRange: [20, 0]
+            })
+        }]
+    };
 
-    const subtitleStyle = useAnimatedStyle(() => ({
-        opacity: subtitleOpacity.value,
-        transform: [{ translateY: (1 - subtitleOpacity.value) * 20 }]
-    }));
+    const subtitleStyle = {
+        opacity: subtitleOpacity,
+        transform: [{ 
+            translateY: subtitleOpacity.interpolate({
+                inputRange: [0, 1],
+                outputRange: [20, 0]
+            })
+        }]
+    };
 
-    const containerStyle = useAnimatedStyle(() => ({
-        opacity: containerOpacity.value,
-        transform: [{ scale: containerScale.value }]
-    }));
+    const containerStyle = {
+        opacity: containerOpacity,
+        transform: [{ scale: containerScale }]
+    };
 
     return (
         <Animated.View style={[styles.container, containerStyle]}>
@@ -104,7 +130,7 @@ const SplashScreen = ({ onFinish, dataReady }) => {
 const styles = StyleSheet.create({
     container: {
         ...StyleSheet.absoluteFillObject,
-        zIndex: 999, // Ensure on top
+        zIndex: 999, 
         alignItems: 'center',
         justifyContent: 'center',
     },
