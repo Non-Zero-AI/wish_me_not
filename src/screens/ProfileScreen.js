@@ -13,10 +13,19 @@ import { useTheme } from '../theme/ThemeContext';
 import { getItems, addItem, getUser, deleteItem, saveItems, saveUser, getFriends } from '../services/storage';
 import { addProduct, deleteProduct, getUserWishlist, addManualProduct, updateUserProfile } from '../services/api';
 
-const ProfileScreen = ({ navigation }) => {
+const ProfileScreen = ({ navigation, route }) => {
     const { theme } = useTheme();
     const insets = useSafeAreaInsets();
     
+    // Handle Add Tab Press
+    React.useEffect(() => {
+        if (route?.params?.openModal) {
+            setModalVisible(true);
+            // Clear the param so it doesn't reopen on re-renders or back nav
+            navigation.setParams({ openModal: undefined });
+        }
+    }, [route?.params?.openModal]);
+
     // User & Profile State
     const [user, setUser] = useState(null);
     const [friendsCount, setFriendsCount] = useState(0);
@@ -317,6 +326,7 @@ const ProfileScreen = ({ navigation }) => {
                         <SwipeableRow renderRightActions={(p, d) => renderRightActions(p, d, item)}>
                             <ProductCard 
                                 item={item} 
+                                user={user}
                                 shouldShowWished={showLocalSurprises}
                             />
                         </SwipeableRow>

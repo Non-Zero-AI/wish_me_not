@@ -136,6 +136,43 @@ function MainTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Home' }} />
       <Tab.Screen name="FriendsStack" component={FriendsStackScreen} options={{ title: 'Friends' }} />
+      
+      <Tab.Screen 
+        name="Add" 
+        component={View} 
+        listeners={({ navigation }) => ({
+            tabPress: (e) => {
+                e.preventDefault();
+                navigation.navigate('ProfileStack', { 
+                    screen: 'ProfileScreen', 
+                    params: { openModal: true } 
+                });
+            },
+        })}
+        options={{
+            tabBarIcon: ({ focused }) => (
+                <View style={{
+                    width: 56, 
+                    height: 56, 
+                    borderRadius: 28, 
+                    backgroundColor: theme.colors.primary, 
+                    justifyContent: 'center', 
+                    alignItems: 'center',
+                    marginBottom: Platform.OS === 'ios' ? 30 : 20,
+                    shadowColor: '#000',
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 5,
+                    borderWidth: 4,
+                    borderColor: theme.colors.surface
+                }}>
+                    <Ionicons name="add" size={32} color="#fff" />
+                </View>
+            ),
+            tabBarLabel: () => null,
+        }}
+      />
+
       <Tab.Screen name="ProfileStack" component={ProfileStackScreen} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );

@@ -191,6 +191,7 @@ const FriendWishlistScreen = ({ route, navigation }) => {
                             <SwipeableRow renderRightActions={(p, d) => renderRightActions(p, d, item)}>
                                 <ProductCard 
                                     item={item} 
+                                    user={friendData}
                                     shouldShowWished={true}
                                     onWish={Platform.OS === 'web' ? () => handleWishItem(item) : undefined}
                                 />
