@@ -1,5 +1,4 @@
 import 'react-native-gesture-handler';
-import 'react-native-reanimated'; // Required for Drawer Navigator
 import React, { useState, useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { initLogger } from './src/services/logger';
@@ -199,7 +198,6 @@ function DrawerNavigator() {
     <Drawer.Navigator 
         drawerContent={props => <CustomDrawerContent {...props} />}
         screenOptions={{ headerShown: false }}
-        useLegacyImplementation={true}
     >
        <Drawer.Screen name="Tabs" component={MainTabs} />
     </Drawer.Navigator>
