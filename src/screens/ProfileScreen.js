@@ -1,12 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, RefreshControl, Platform, Image, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
+import SwipeableRow from '../components/SwipeableRow';
 import ProductCard from '../components/ProductCard';
 import AppHeader from '../components/AppHeader';
 import { useTheme } from '../theme/ThemeContext';
@@ -292,15 +292,6 @@ const ProfileScreen = ({ navigation }) => {
         </TouchableOpacity>
     );
 
-    const SwipeableWrapper = ({ children, renderRightActions }) => {
-        if (Platform.OS === 'web') return children;
-        return (
-            <Swipeable renderRightActions={renderRightActions}>
-                {children}
-            </Swipeable>
-        );
-    };
-
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <AppHeader 
@@ -323,12 +314,12 @@ const ProfileScreen = ({ navigation }) => {
                 ListHeaderComponent={renderHeader}
                 renderItem={({ item }) => (
                     <View style={styles.itemContainer}>
-                        <SwipeableWrapper renderRightActions={(p, d) => renderRightActions(p, d, item)}>
+                        <SwipeableRow renderRightActions={(p, d) => renderRightActions(p, d, item)}>
                             <ProductCard 
                                 item={item} 
                                 shouldShowWished={showLocalSurprises}
                             />
-                        </SwipeableWrapper>
+                        </SwipeableRow>
                     </View>
                 )}
                 keyExtractor={(item) => item.id}

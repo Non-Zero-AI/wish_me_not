@@ -3,11 +3,11 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../theme/ThemeContext';
 import { getUserWishlist, claimGift } from '../services/api';
 import { getFriends, getUser } from '../services/storage';
+import SwipeableRow from '../components/SwipeableRow';
 import AppHeader from '../components/AppHeader';
 import ProductCard from '../components/ProductCard';
 
@@ -166,15 +166,6 @@ const HomeScreen = ({ navigation }) => {
         );
     };
 
-    const SwipeableWrapper = ({ children, renderRightActions }) => {
-        if (Platform.OS === 'web') return children;
-        return (
-            <Swipeable renderRightActions={renderRightActions}>
-                {children}
-            </Swipeable>
-        );
-    };
-
     const renderFeedItem = ({ item }) => (
         <View style={styles.feedItemContainer}>
             <View style={styles.feedHeader}>
@@ -192,13 +183,13 @@ const HomeScreen = ({ navigation }) => {
                     <Text style={[styles.feedTimestamp, { color: theme.colors.textSecondary }]}>Added an item</Text>
                 </View>
             </View>
-            <SwipeableWrapper renderRightActions={(p, d) => renderRightActions(p, d, item)}>
+            <SwipeableRow renderRightActions={(p, d) => renderRightActions(p, d, item)}>
                 <ProductCard 
                     item={item} 
                     shouldShowWished={true} 
                     onWish={Platform.OS === 'web' ? () => handleWishItem(item) : undefined}
                 />
-            </SwipeableWrapper>
+            </SwipeableRow>
         </View>
     );
 

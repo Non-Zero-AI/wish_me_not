@@ -3,11 +3,11 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, A
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../theme/ThemeContext';
 import { getUserWishlist, getUserFriends, deleteFriend } from '../services/api';
 import { getFriends, saveFriends, getUser } from '../services/storage';
+import SwipeableRow from '../components/SwipeableRow';
 import AppHeader from '../components/AppHeader';
 
 const FriendsScreen = ({ navigation }) => {
@@ -124,17 +124,8 @@ const FriendsScreen = ({ navigation }) => {
         setRefreshing(false);
     };
 
-    const SwipeableWrapper = ({ children, renderRightActions }) => {
-        if (Platform.OS === 'web') return children;
-        return (
-            <Swipeable renderRightActions={renderRightActions}>
-                {children}
-            </Swipeable>
-        );
-    };
-
     const renderFriend = ({ item }) => (
-        <SwipeableWrapper
+        <SwipeableRow
             renderRightActions={() => (
                 <TouchableOpacity
                     style={[styles.deleteAction, { backgroundColor: theme.colors.error }]}
@@ -164,7 +155,7 @@ const FriendsScreen = ({ navigation }) => {
                 </View>
                 <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
             </TouchableOpacity>
-        </SwipeableWrapper>
+        </SwipeableRow>
     );
 
     return (

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import SwipeableRow from '../components/SwipeableRow';
 import ProductCard from '../components/ProductCard';
 import { getUser, addLocalFriend } from '../services/storage';
 import { getUserWishlist, claimGift } from '../services/api';
@@ -157,15 +157,6 @@ const FriendWishlistScreen = ({ route, navigation }) => {
         );
     };
 
-    const SwipeableWrapper = ({ children, renderRightActions }) => {
-        if (Platform.OS === 'web') return children;
-        return (
-            <Swipeable renderRightActions={renderRightActions}>
-                {children}
-            </Swipeable>
-        );
-    };
-
     return (
         <View style={[
             styles.container, 
@@ -197,13 +188,13 @@ const FriendWishlistScreen = ({ route, navigation }) => {
                     data={items}
                     renderItem={({ item }) => (
                         <View style={{ marginBottom: 16 }}>
-                            <SwipeableWrapper renderRightActions={(p, d) => renderRightActions(p, d, item)}>
+                            <SwipeableRow renderRightActions={(p, d) => renderRightActions(p, d, item)}>
                                 <ProductCard 
                                     item={item} 
                                     shouldShowWished={true}
                                     onWish={Platform.OS === 'web' ? () => handleWishItem(item) : undefined}
                                 />
-                            </SwipeableWrapper>
+                            </SwipeableRow>
                         </View>
                     )}
                     keyExtractor={item => item.id}
