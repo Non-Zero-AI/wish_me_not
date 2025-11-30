@@ -426,7 +426,11 @@ const ProfileScreen = ({ navigation, route }) => {
                                 placeholderTextColor={theme.colors.textSecondary}
                                 multiline
                                 maxLength={180}
-                                style={[styles.composerInput, { color: theme.colors.text }]}
+                                style={[
+                                    styles.composerInput, 
+                                    { color: theme.colors.text },
+                                    Platform.OS === 'web' && { outlineStyle: 'none' }
+                                ]}
                                 value={manualName}
                                 onChangeText={setManualName}
                                 autoFocus
@@ -440,7 +444,10 @@ const ProfileScreen = ({ navigation, route }) => {
                                     placeholderTextColor={theme.colors.textSecondary}
                                     value={url}
                                     onChangeText={setUrl}
-                                    style={{ flex: 1, marginLeft: 8, color: theme.colors.primary, fontSize: 14 }}
+                                    style={[
+                                        { flex: 1, marginLeft: 8, color: theme.colors.primary, fontSize: 16 },
+                                        Platform.OS === 'web' && { outlineStyle: 'none' }
+                                    ]}
                                     autoCapitalize="none"
                                 />
                             </View>
