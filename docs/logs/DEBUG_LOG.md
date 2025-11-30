@@ -48,3 +48,4 @@ Fix persistent `TypeError: Failed to set an indexed property [0] on 'CSSStyleDec
 - **Theme:** `NavigationContainer` uses default theme; App components use custom `ThemeContext`.
 - **Consistency:** `OnboardingScreen` updated to use `SafeAreaView` from `react-native-safe-area-context` to match other screens and ensure background color extends correctly.
 - **Layout:** Added `flex: 1` to `SafeAreaProvider` in `App.js` to ensure background color fills the entire viewport on Web.
+- **PWA/Web:** Disabled `linking` prop in `NavigationContainer` to prevent URL history updates. This stops Safari from treating in-app navigation as new page loads, keeping browser bars hidden in PWA mode.

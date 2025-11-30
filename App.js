@@ -276,7 +276,7 @@ function AppNavigator() {
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
         <NavigationContainer 
-          linking={linking} 
+          // linking={linking} // Disabling linking to prevent URL updates and browser bar appearance
           // theme={theme} // Disabling theme prop to fix Web crash
           documentTitle={{
             formatter: () => 'Wish Me Not',
