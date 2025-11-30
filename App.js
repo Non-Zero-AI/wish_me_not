@@ -290,7 +290,7 @@ function AppNavigator() {
             }}
           >
             {user ? (
-              <Stack.Screen name="Main" component={DrawerNavigator} />
+              <Stack.Screen name="Main" component={MainTabs} />
             ) : (
               <Stack.Screen name="Onboarding" component={OnboardingScreen} />
             )}
