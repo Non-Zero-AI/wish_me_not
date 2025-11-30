@@ -37,10 +37,18 @@ import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 import UserAgreementScreen from './src/screens/UserAgreementScreen';
 import ThemesScreen from './src/screens/ThemesScreen';
 
-const Stack = createStackNavigator();
+const RootTabs = createBottomTabNavigator();
 const Tab = createBottomTabNavigator();
-const FriendsStack = createStackNavigator();
-const ProfileStack = createStackNavigator();
+// const FriendsStack = createStackNavigator(); // Will replace with Tabs too if needed, but let's try just Root first.
+// const ProfileStack = createStackNavigator(); 
+
+// Actually, let's make ALL stacks into Tabs for safety, or just Root.
+// FriendsStack and ProfileStack are nested. If Stack is broken, they will break too.
+// So I should replace them or verify if nested stacks work.
+// But let's start with Root.
+
+const FriendsStack = createBottomTabNavigator();
+const ProfileStack = createBottomTabNavigator();
 
 const prefix = Linking.createURL('/');
 
@@ -81,8 +89,9 @@ function FriendsStackScreen() {
     <FriendsStack.Navigator
       screenOptions={{
         headerShown: false,
-        headerStyle: { backgroundColor: theme.colors.surface },
-        headerTintColor: theme.colors.text,
+        tabBarStyle: { display: 'none' }, // Hide tab bar to mimic Stack
+        // headerStyle: { backgroundColor: theme.colors.surface },
+        // headerTintColor: theme.colors.text,
       }}
     >
       <FriendsStack.Screen name="FriendsList" component={FriendsScreen} options={{ title: 'Friends' }} />
@@ -97,8 +106,9 @@ function ProfileStackScreen() {
     <ProfileStack.Navigator
       screenOptions={{
         headerShown: false,
-        headerStyle: { backgroundColor: theme.colors.surface },
-        headerTintColor: theme.colors.text,
+        tabBarStyle: { display: 'none' }, // Hide tab bar
+        // headerStyle: { backgroundColor: theme.colors.surface },
+        // headerTintColor: theme.colors.text,
       }}
     >
       <ProfileStack.Screen name="ProfileScreen" options={{ title: 'Profile' }}>
@@ -271,31 +281,32 @@ function AppNavigator() {
             formatter: () => 'Wish Me Not',
           }}
         >
-          <Stack.Navigator 
+          <RootTabs.Navigator 
             screenOptions={{ 
               headerShown: false,
-              headerStyle: {
-                backgroundColor: theme.colors.surface,
-              },
-              headerTintColor: theme.colors.text,
+              tabBarStyle: { display: 'none' }, // Hide tab bar for Root
+              // headerStyle: {
+              //   backgroundColor: theme.colors.surface,
+              // },
+              // headerTintColor: theme.colors.text,
             }}
           >
             {user ? (
-              <Stack.Screen name="Main" component={MainTabs} />
+              <RootTabs.Screen name="Main" component={MainTabs} />
             ) : (
-              <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+              <RootTabs.Screen name="Onboarding" component={OnboardingScreen} />
             )}
-            <Stack.Screen 
+            <RootTabs.Screen 
               name="PrivacyPolicy" 
               component={PrivacyPolicyScreen} 
-              options={{ headerShown: true, title: 'Privacy Policy' }}
+              // options={{ headerShown: true, title: 'Privacy Policy' }} // Tabs don't have simple header options like stack
             />
-            <Stack.Screen 
+            <RootTabs.Screen 
               name="UserAgreement" 
               component={UserAgreementScreen} 
-              options={{ headerShown: true, title: 'User Agreement' }}
+              // options={{ headerShown: true, title: 'User Agreement' }}
             />
-          </Stack.Navigator>
+          </RootTabs.Navigator>
         </NavigationContainer>
       </GestureHandlerRootView>
     </SafeAreaProvider>
