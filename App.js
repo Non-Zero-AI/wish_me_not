@@ -272,7 +272,7 @@ function AppNavigator() {
   return (
     <SafeAreaProvider style={{ backgroundColor: theme.colors.background }}>
       {showSplash && <SplashScreen dataReady={dataReady} onFinish={() => setShowSplash(false)} />}
-      <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
         <NavigationContainer 
           linking={linking} 
@@ -308,7 +308,7 @@ function AppNavigator() {
             />
           </RootTabs.Navigator>
         </NavigationContainer>
-      </GestureHandlerRootView>
+      </View>
     </SafeAreaProvider>
   );
 }
