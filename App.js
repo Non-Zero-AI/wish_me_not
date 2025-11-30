@@ -257,6 +257,25 @@ function AppNavigator() {
     );
   }
 
+  // ULTIMATE DEBUG: Test Native Stack Isolation
+  return (
+    <SafeAreaProvider style={{ backgroundColor: theme.colors.background }}>
+        <NavigationContainer linking={linking} theme={theme}>
+            <Stack.Navigator>
+                <Stack.Screen 
+                    name="DebugNativeStack" 
+                    component={() => (
+                        <View style={{ flex: 1, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' }}>
+                            <Text style={{ fontSize: 24, color: 'black' }}>Native Stack is Active</Text>
+                        </View>
+                    )} 
+                />
+            </Stack.Navigator>
+        </NavigationContainer>
+    </SafeAreaProvider>
+  );
+
+  /*
   return (
     <SafeAreaProvider style={{ backgroundColor: theme.colors.background }}>
       {showSplash && <SplashScreen dataReady={dataReady} onFinish={() => setShowSplash(false)} />}
@@ -298,6 +317,7 @@ function AppNavigator() {
       </View>
     </SafeAreaProvider>
   );
+  */
 }
 
 export default function App() {
