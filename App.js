@@ -276,7 +276,7 @@ function AppNavigator() {
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
         <NavigationContainer 
           linking={linking} 
-          theme={theme}
+          // theme={theme} // Disabling theme prop to fix Web crash
           documentTitle={{
             formatter: () => 'Wish Me Not',
           }}
