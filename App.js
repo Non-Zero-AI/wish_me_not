@@ -9,7 +9,7 @@ enableScreens(false);
 initLogger();
 
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 // import { createDrawerNavigator } from '@react-navigation/drawer';
 import { ActivityIndicator, View, Text, StyleSheet, StatusBar, Platform } from 'react-native';
@@ -35,10 +35,10 @@ import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 import UserAgreementScreen from './src/screens/UserAgreementScreen';
 import ThemesScreen from './src/screens/ThemesScreen';
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-const FriendsStack = createStackNavigator();
-const ProfileStack = createStackNavigator();
+const FriendsStack = createNativeStackNavigator();
+const ProfileStack = createNativeStackNavigator();
 
 const prefix = Linking.createURL('/');
 
@@ -112,21 +112,85 @@ function MainTabs() {
   
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerShown: false,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'FriendsStack') {
+            iconName = focused ? 'people' : 'people-outline';
+          } else if (route.name === 'ProfileStack') {
+            iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'DMs') {
+            iconName = focused ? 'mail' : 'mail-outline';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textSecondary,
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
-        }
-      }}
+          borderTopColor: theme.colors.border,
+          height: Platform.OS === 'ios' ? 90 : 60,
+          paddingBottom: Platform.OS === 'ios' ? 25 : 5,
+          paddingTop: 5,
+        },
+      })}
     >
+      <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Home' }} />
+      <Tab.Screen name="FriendsStack" component={FriendsStackScreen} options={{ title: 'Friends' }} />
+      
       <Tab.Screen 
-        name="Test" 
-        component={() => (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ color: theme.colors.text }}>Test Screen</Text>
-          </View>
-        )} 
+        name="Add" 
+        component={View} 
+        listeners={({ navigation }) => ({
+            tabPress: (e) => {
+                e.preventDefault();
+                navigation.navigate('ProfileStack', { 
+                    screen: 'ProfileScreen', 
+                    params: { openModal: true } 
+                });
+            },
+        })}
+        options={{
+            tabBarIcon: ({ focused }) => (
+                <View style={{
+                    width: 56, 
+                    height: 56, 
+                    borderRadius: 28, 
+                    backgroundColor: theme.colors.primary, 
+                    justifyContent: 'center', 
+                    alignItems: 'center',
+                    marginBottom: Platform.OS === 'ios' ? 30 : 20,
+                    shadowColor: '#000',
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 5,
+                    borderWidth: 4,
+                    borderColor: theme.colors.surface
+                }}>
+                    <Ionicons name="add" size={32} color="#fff" />
+                </View>
+            ),
+            tabBarLabel: () => null,
+        }}
       />
+
+      <Tab.Screen 
+        name="DMs" 
+        component={View} 
+        options={{ 
+            title: 'Messages',
+            tabBarIcon: ({ focused, color, size }) => (
+                <Ionicons name={focused ? "mail" : "mail-outline"} size={size} color={color} />
+            )
+        }} 
+      />
+
+      <Tab.Screen name="ProfileStack" component={ProfileStackScreen} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );
 }
@@ -193,26 +257,6 @@ function AppNavigator() {
     );
   }
 
-  // ULTIMATE DEBUG: Bypass everything
-  return (
-    <SafeAreaProvider style={{ backgroundColor: theme.colors.background }}>
-        <NavigationContainer>
-            <Tab.Navigator>
-                <Tab.Screen 
-                    name="DebugNav" 
-                    component={() => (
-                        <View style={{ flex: 1, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' }}>
-                            <Text style={{ fontSize: 24, color: 'black' }}>Navigation is Active</Text>
-                            <Text style={{ fontSize: 16, color: 'black' }}>Tab Navigator is working</Text>
-                        </View>
-                    )} 
-                />
-            </Tab.Navigator>
-        </NavigationContainer>
-    </SafeAreaProvider>
-  );
-
-  /*
   return (
     <SafeAreaProvider style={{ backgroundColor: theme.colors.background }}>
       {showSplash && <SplashScreen dataReady={dataReady} onFinish={() => setShowSplash(false)} />}
@@ -254,7 +298,6 @@ function AppNavigator() {
       </View>
     </SafeAreaProvider>
   );
-  */
 }
 
 export default function App() {
