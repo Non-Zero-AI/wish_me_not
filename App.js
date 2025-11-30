@@ -1,6 +1,8 @@
+import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { initLogger } from './src/services/logger';
 import { enableScreens } from 'react-native-screens';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Disable native screens for now to avoid Web crashes
 enableScreens(false);
@@ -9,7 +11,7 @@ enableScreens(false);
 initLogger();
 
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 // import { createDrawerNavigator } from '@react-navigation/drawer';
 import { ActivityIndicator, View, Text, StyleSheet, StatusBar, Platform } from 'react-native';
@@ -35,10 +37,10 @@ import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 import UserAgreementScreen from './src/screens/UserAgreementScreen';
 import ThemesScreen from './src/screens/ThemesScreen';
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
-const FriendsStack = createNativeStackNavigator();
-const ProfileStack = createNativeStackNavigator();
+const FriendsStack = createStackNavigator();
+const ProfileStack = createStackNavigator();
 
 const prefix = Linking.createURL('/');
 
@@ -257,29 +259,10 @@ function AppNavigator() {
     );
   }
 
-  // ULTIMATE DEBUG: Test Native Stack Isolation
-  return (
-    <SafeAreaProvider style={{ backgroundColor: theme.colors.background }}>
-        <NavigationContainer linking={linking} theme={theme}>
-            <Stack.Navigator>
-                <Stack.Screen 
-                    name="DebugNativeStack" 
-                    component={() => (
-                        <View style={{ flex: 1, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' }}>
-                            <Text style={{ fontSize: 24, color: 'black' }}>Native Stack is Active</Text>
-                        </View>
-                    )} 
-                />
-            </Stack.Navigator>
-        </NavigationContainer>
-    </SafeAreaProvider>
-  );
-
-  /*
   return (
     <SafeAreaProvider style={{ backgroundColor: theme.colors.background }}>
       {showSplash && <SplashScreen dataReady={dataReady} onFinish={() => setShowSplash(false)} />}
-      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.colors.background }}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
         <NavigationContainer 
           linking={linking} 
@@ -314,10 +297,9 @@ function AppNavigator() {
             />
           </Stack.Navigator>
         </NavigationContainer>
-      </View>
+      </GestureHandlerRootView>
     </SafeAreaProvider>
   );
-  */
 }
 
 export default function App() {
