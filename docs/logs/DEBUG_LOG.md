@@ -46,3 +46,4 @@ Fix persistent `TypeError: Failed to set an indexed property [0] on 'CSSStyleDec
 - **Navigators:** All `Tab.Navigator`.
 - **Wrapper:** `SafeAreaProvider` -> `View` -> `NavigationContainer`.
 - **Theme:** `NavigationContainer` uses default theme; App components use custom `ThemeContext`.
+- **Consistency:** `OnboardingScreen` updated to use `SafeAreaView` from `react-native-safe-area-context` to match other screens and ensure background color extends correctly.
