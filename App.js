@@ -196,18 +196,18 @@ function AppNavigator() {
   // ULTIMATE DEBUG: Bypass everything
   return (
     <SafeAreaProvider style={{ backgroundColor: theme.colors.background }}>
-        <NavigationContainer theme={theme} linking={linking}>
-            <Stack.Navigator>
-                <Stack.Screen 
+        <NavigationContainer>
+            <Tab.Navigator>
+                <Tab.Screen 
                     name="DebugNav" 
                     component={() => (
                         <View style={{ flex: 1, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' }}>
                             <Text style={{ fontSize: 24, color: 'black' }}>Navigation is Active</Text>
-                            <Text style={{ fontSize: 16, color: 'black' }}>Stack Navigator is working</Text>
+                            <Text style={{ fontSize: 16, color: 'black' }}>Tab Navigator is working</Text>
                         </View>
                     )} 
                 />
-            </Stack.Navigator>
+            </Tab.Navigator>
         </NavigationContainer>
     </SafeAreaProvider>
   );
