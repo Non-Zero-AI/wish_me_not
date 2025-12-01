@@ -12,6 +12,12 @@ const WebSidebar = () => {
     const { user, logout } = useAuth();
     const { setAddModalVisible } = useModal();
 
+    // Safe access to user properties (handle both Supabase raw user and enriched profile)
+    const firstName = user?.firstName || user?.user_metadata?.first_name || 'User';
+    const lastName = user?.lastName || user?.user_metadata?.last_name || '';
+    const username = user?.username || user?.user_metadata?.username || user?.email?.split('@')[0] || 'user';
+    const userImage = user?.image || user?.user_metadata?.avatar_url || null;
+
     // Helper to check active route - simplified
     const isFocused = (name) => {
         // This is a basic check, might need more robust state if available
@@ -74,18 +80,18 @@ const WebSidebar = () => {
 
             <View style={[styles.footer, { borderTopColor: theme.colors.border }]}>
                  <TouchableOpacity style={styles.profileSection} onPress={() => navigation.navigate('Main', { screen: 'ProfileStack' })}>
-                    {user?.image ? (
-                        <Image source={{ uri: user.image }} style={styles.profileImage} />
+                    {userImage ? (
+                        <Image source={{ uri: userImage }} style={styles.profileImage} />
                     ) : (
                         <View style={[styles.profilePlaceholder, { backgroundColor: theme.colors.primary }]}>
                             <Text style={styles.profileInitials}>
-                                {user?.firstName?.[0]}{user?.lastName?.[0]}
+                                {firstName?.[0]}{lastName?.[0]}
                             </Text>
                         </View>
                     )}
                     <View style={styles.profileInfo}>
-                        <Text style={[styles.profileName, { color: theme.colors.text }]}>{user?.firstName} {user?.lastName}</Text>
-                        <Text style={[styles.profileHandle, { color: theme.colors.textSecondary }]}>@{user?.username || 'user'}</Text>
+                        <Text style={[styles.profileName, { color: theme.colors.text }]}>{firstName} {lastName}</Text>
+                        <Text style={[styles.profileHandle, { color: theme.colors.textSecondary }]}>@{username}</Text>
                     </View>
                  </TouchableOpacity>
                  

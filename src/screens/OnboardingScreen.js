@@ -16,7 +16,11 @@ const OnboardingScreen = ({ navigation }) => {
 
     // ... existing useEffect ...
 
-    const handleLogin = async () => {
+    const handleLogin = async (e) => {
+        if (e && e.preventDefault) {
+            e.preventDefault();
+        }
+        
         // DEBUG: Immediate feedback
         console.log('LOGIN BUTTON PRESSED'); 
 
@@ -28,18 +32,24 @@ const OnboardingScreen = ({ navigation }) => {
         setLoading(true);
         try {
             console.log('Attempting login...');
-            const { user } = await signIn({ email, password });
+            const { user, error } = await signIn({ email, password });
             
+            if (error) throw error;
+
             if (user) {
                 console.log('Login successful');
                 if (pendingFriendEmail) {
-                    await addLocalFriend(pendingFriendEmail);
+                    try {
+                        await addLocalFriend(pendingFriendEmail);
+                    } catch (e) {
+                        console.warn('Failed to add pending friend', e);
+                    }
                 }
                 // AuthContext subscription handles state update
             }
         } catch (error) {
             console.error('Login Critical Error:', error);
-            // Alert handled in AuthContext
+            // Alert handled in AuthContext but we ensure loading is stopped
         } finally {
             setLoading(false);
         }
