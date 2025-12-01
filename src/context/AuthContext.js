@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getUser, saveUser as saveUserToStorage } from '../services/storage';
+import { getUser, saveUser as saveUserToStorage, clearUser } from '../services/storage';
 
 const AuthContext = createContext({
   user: null,
@@ -42,8 +42,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     setIsLoading(true);
     try {
-      // clear storage logic if needed, for now just state
-      // await clearUserFromStorage(); 
+      await clearUser();
       setUser(null);
     } finally {
       setIsLoading(false);

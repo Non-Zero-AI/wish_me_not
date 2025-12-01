@@ -10,13 +10,18 @@ const SideMenu = () => {
     const { theme, toggleTheme, isDark } = useTheme();
     const { isSideMenuVisible, setSideMenuVisible } = useModal();
     const navigation = useNavigation();
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
 
     if (!isSideMenuVisible) return null;
 
     const handleNavigation = (screen) => {
         setSideMenuVisible(false);
         navigation.navigate(screen);
+    };
+
+    const handleLogout = () => {
+        setSideMenuVisible(false);
+        logout();
     };
 
     const menuItems = [
@@ -71,6 +76,13 @@ const SideMenu = () => {
                                 <Ionicons name={isDark ? "moon" : "sunny"} size={24} color={theme.colors.text} />
                                 <Text style={[styles.menuText, { color: theme.colors.text }]}>{isDark ? "Dark Mode" : "Light Mode"}</Text>
                                 <Ionicons name={isDark ? "toggle" : "toggle-outline"} size={24} color={theme.colors.primary} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={[styles.section, { borderBottomWidth: 0 }]}>
+                             <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+                                <Ionicons name="log-out-outline" size={24} color={theme.colors.error} />
+                                <Text style={[styles.menuText, { color: theme.colors.error }]}>Log Out</Text>
                             </TouchableOpacity>
                         </View>
 

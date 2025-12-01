@@ -22,6 +22,14 @@ export const getUser = async () => {
   }
 };
 
+export const clearUser = async () => {
+  try {
+    await AsyncStorage.removeItem(USER_KEY);
+  } catch (e) {
+    console.error('Failed to clear user', e);
+  }
+};
+
 export const saveFriends = async (friends) => {
   try {
     await AsyncStorage.setItem(FRIENDS_KEY, JSON.stringify(friends));
