@@ -93,13 +93,14 @@ export const updateUserProfile = async (user, imageUri) => {
 
 export const createUser = async (user) => {
     try {
-        console.log('Creating user:', user);
-        await axios.post(CREATE_USER_URL, user);
-        return true;
+        console.log('Creating/Verifying user:', user);
+        const response = await axios.post(CREATE_USER_URL, user);
+        console.log('Create User Response:', response.data);
+        return response.data; // Return full data for validation
     } catch (error) {
-        console.error('Error creating user:', error);
-        // Non-blocking error
-        return false;
+        console.error('Error creating/verifying user:', error);
+        // Throw error so caller knows it failed
+        throw error;
     }
 };
 

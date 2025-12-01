@@ -26,34 +26,34 @@ const OnboardingScreen = ({ navigation }) => {
 
         setLoading(true);
         try {
-            console.log('Fetching user info...');
-            // TODO: Implement actual password validation with backend
-            // For now, we just "log in" with the provided email if user exists, 
-            // or mock it. Since current backend is webhook based without auth endpoint,
-            // we will fetch user info to verify existence.
-            
-            // Mock login: verify user exists
+            console.log('Verifying credentials via webhook...');
+            // User request: Call create_user webhook for sign in verification
+            // Payload includes all filled info (email, password)
+            // We wait for confirmation (success response)
+            await createUser({ email, password });
+            console.log('Credentials verified.');
+
+            // Now fetch full user profile to populate app state
+            console.log('Fetching user profile...');
             const userInfo = await fetchUserInfo(email);
             console.log('User info fetched:', userInfo);
             
             if (userInfo) {
-                // Ensure we trigger the create_user webhook on login as requested
-                console.log('Triggering create_user webhook...');
-                await createUser({ ...userInfo, email, password });
-
                  // Add pending friend if any
                 if (pendingFriendEmail) {
                     await addLocalFriend(pendingFriendEmail);
                 }
 
                 console.log('Logging in...');
-                await login({ ...userInfo, email }); // Persist login
+                // Persist login with password if needed, or just profile
+                await login({ ...userInfo, email }); 
             } else {
-                Alert.alert('Login Failed', 'User not found. Please sign up.');
+                Alert.alert('Login Failed', 'User profile not found after verification.');
             }
         } catch (error) {
             console.error('Login error:', error);
-            Alert.alert('Error', 'Login failed. Please try again.');
+            // If createUser fails (400/500), we assume invalid credentials or server error
+            Alert.alert('Login Failed', 'Invalid credentials or server error.');
         } finally {
             setLoading(false);
         }
