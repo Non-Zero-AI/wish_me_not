@@ -50,3 +50,6 @@ Fix persistent `TypeError: Failed to set an indexed property [0] on 'CSSStyleDec
 - **Layout:** Added `flex: 1` to `SafeAreaProvider` in `App.js` to ensure background color fills the entire viewport on Web.
 - **PWA/Web:** Disabled `linking` prop in `NavigationContainer` to prevent URL history updates. This stops Safari from treating in-app navigation as new page loads, keeping browser bars hidden in PWA mode.
 - **Navigation:** Extracted `AddWishModal` to a global context (`ModalProvider`). The "Add" tab now opens this global modal instead of navigating to `ProfileScreen`. This ensures "Cancel" returns the user to the current screen.
+- **UI Redesign:** Streamlined `AppHeader` to feature a centered logo and a left hamburger menu (replacing avatar/title).
+- **Side Menu:** Implemented a custom `SideMenu` component controlled by `ModalContext` to replace the Profile features and provide navigation to new screens (Settings, Lists, Communities).
+- **Assets:** Updated `app.config.js` to use the new `Wish Me Not Logo.png` for icons and favicon.

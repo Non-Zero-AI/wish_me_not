@@ -28,6 +28,7 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { ModalProvider, useModal } from './src/context/ModalContext';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import AddWishModal from './src/components/AddWishModal';
+import SideMenu from './src/components/SideMenu';
 
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import SplashScreen from './src/screens/SplashScreen';
@@ -39,6 +40,9 @@ import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 import UserAgreementScreen from './src/screens/UserAgreementScreen';
 import ThemesScreen from './src/screens/ThemesScreen';
 import DMScreen from './src/screens/DMScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
+import ListsScreen from './src/screens/ListsScreen';
+import CommunitiesScreen from './src/screens/CommunitiesScreen';
 
 const RootTabs = createBottomTabNavigator();
 const Tab = createBottomTabNavigator();
@@ -308,14 +312,20 @@ function AppNavigator() {
               component={UserAgreementScreen} 
               // options={{ headerShown: true, title: 'User Agreement' }}
             />
+            <RootTabs.Screen name="Settings" component={SettingsScreen} />
+            <RootTabs.Screen name="Lists" component={ListsScreen} />
+            <RootTabs.Screen name="Communities" component={CommunitiesScreen} />
           </RootTabs.Navigator>
         </NavigationContainer>
         {user && (
-            <AddWishModal 
-                visible={isAddModalVisible} 
-                onClose={() => setAddModalVisible(false)}
-                user={user}
-            />
+            <>
+                <AddWishModal 
+                    visible={isAddModalVisible} 
+                    onClose={() => setAddModalVisible(false)}
+                    user={user}
+                />
+                <SideMenu />
+            </>
         )}
       </View>
     </SafeAreaProvider>

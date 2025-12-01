@@ -1,79 +1,88 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
+import { useModal } from '../context/ModalContext';
 
 const AppHeader = ({ title, showBack, rightAction, leftAction, subTitle }) => {
   const { theme } = useTheme();
   const navigation = useNavigation();
+  const { setSideMenuVisible } = useModal();
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
-      <View style={styles.brandingRow}>
-         <View style={styles.logoContainer}>
-            <Ionicons name="gift" size={20} color={theme.colors.primary} />
-            <Text style={[styles.appName, { color: theme.colors.primary, fontFamily: theme.fonts.bold }]}>Wish Me Not</Text>
-         </View>
-      </View>
       
-      <View style={styles.titleRow}>
-        <View style={styles.leftContainer}>
-            {leftAction}
-            {showBack && (
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
-                </TouchableOpacity>
-            )}
-            <View>
-                <Text style={[styles.title, { color: theme.colors.text, fontFamily: theme.fonts.bold }]}>{title}</Text>
-                {subTitle && <Text style={[styles.subTitle, { color: theme.colors.textSecondary }]}>{subTitle}</Text>}
-            </View>
-        </View>
-        {rightAction && <View style={styles.rightContainer}>{rightAction}</View>}
+      {/* Left Section */}
+      <View style={styles.leftContainer}>
+        {showBack ? (
+             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
+                 <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+             </TouchableOpacity>
+        ) : (
+             <TouchableOpacity onPress={() => setSideMenuVisible(true)} style={styles.iconButton}>
+                 <Ionicons name="menu" size={28} color={theme.colors.primary} />
+             </TouchableOpacity>
+        )}
       </View>
+
+      {/* Center Section */}
+      <View style={styles.centerContainer}>
+          {showBack ? (
+              <Text style={[styles.title, { color: theme.colors.text, fontFamily: theme.fonts.bold }]}>{title}</Text>
+          ) : (
+              <Image 
+                  source={require('../../assets/Wish Me Not Logo.png')} 
+                  style={styles.logo}
+                  resizeMode="contain"
+              />
+          )}
+      </View>
+
+      {/* Right Section */}
+      <View style={styles.rightContainer}>
+          {rightAction}
+      </View>
+
     </View>
   );
 };
 
 const styles = StyleSheet.create({
     container: {
-        paddingTop: 10, // Status bar spacing fix if not using SafeAreaView header (which we are usually inside SafeAreaView)
-        paddingBottom: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingTop: 10, 
+        paddingBottom: 10,
         paddingHorizontal: 16,
         borderBottomWidth: 1,
+        height: 60,
     },
-    brandingRow: {
-        flexDirection: 'row',
+    leftContainer: {
+        width: 50,
+        alignItems: 'flex-start',
+    },
+    centerContainer: {
+        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 8,
-    },
-    logoContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    appName: {
-        fontSize: 16,
-        fontWeight: '800',
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-        // fontFamily: theme.fonts.bold // Need to use useTheme inside component, this is styles object.
-        // So I will apply it in inline style inside render
-    },
-    // ...
-    title: {
-        fontSize: 22,
-        fontWeight: 'bold',
-    },
-    subTitle: {
-        fontSize: 12,
-        marginTop: 2,
     },
     rightContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        width: 50,
+        alignItems: 'flex-end',
+    },
+    iconButton: {
+        padding: 4,
+    },
+    logo: {
+        width: 120, 
+        height: 40, 
+    },
+    title: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
 });
 

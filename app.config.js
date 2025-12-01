@@ -4,7 +4,7 @@ export default {
     slug: "wish-me-not",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/icon.png",
+    icon: "./assets/Wish Me Not Logo.png",
     userInterfaceStyle: "light",
     newArchEnabled: true,
     splash: {
@@ -18,14 +18,14 @@ export default {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: "./assets/adaptive-icon.png",
+        foregroundImage: "./assets/Wish Me Not Logo.png",
         backgroundColor: "#1a2332"
       },
       package: "com.wishmenot.app",
       edgeToEdgeEnabled: true
     },
     web: {
-      favicon: "./assets/favicon.png",
+      favicon: "./assets/Wish Me Not Logo.png",
       name: "Wish Me Not",
       shortName: "WishMeNot",
       description: "The wishlist app you actually want.",
