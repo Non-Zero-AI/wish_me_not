@@ -13,6 +13,7 @@ const SignUpScreen = ({ navigation }) => {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -28,7 +29,7 @@ const SignUpScreen = ({ navigation }) => {
     };
 
     const handleSignUp = async () => {
-        if (!firstName || !lastName || !username || !password || !confirmPassword) {
+        if (!firstName || !lastName || !username || !email || !password || !confirmPassword) {
             Alert.alert('Missing Information', 'Please fill in all fields.');
             return;
         }
@@ -49,21 +50,10 @@ const SignUpScreen = ({ navigation }) => {
                 firstName,
                 lastName,
                 username,
-                email: `${username}@placeholder.com`, // Ideally we'd capture email too, or use username as ID. 
-                // User request didn't specify email for sign up, but we likely need it. 
-                // I'll assume we should ask for it or generate a placeholder if not asked.
-                // Wait, standard onboarding usually implies Email. The prompt said "First name, last name, prefered username, and chosen password".
-                // I will add Email to be safe or just use username if the backend supports it.
-                // Let's stick to the requested fields strictly first, but 'createUser' might need email.
-                // Existing Onboarding used email. I'll check `createUser` service next.
+                email, 
             };
 
-            // Re-reading prompt: "captures the users First name, last name, prefered username, and chosen password"
-            // It didn't say Email. But Login has Email. So User probably needs Email to sign up too?
-            // "email & password in the login area" implies Email is the identifier.
-            // So I SHOULD ask for Email in Sign Up. I will add it.
-
-            await createUser(user); // This likely needs updating to handle password/auth
+            await createUser(user); 
             
             // For now, we simulate a login with this new user
             await login(user); 
@@ -132,8 +122,7 @@ const SignUpScreen = ({ navigation }) => {
                             autoCapitalize="none"
                         />
 
-                        {/* Adding Email because Login requires it */}
-                        {/* Text style={[styles.label, { color: theme.colors.text }]}>Email</Text>
+                        <Text style={[styles.label, { color: theme.colors.text }]}>Email</Text>
                         <TextInput
                             style={[styles.input, { 
                                 backgroundColor: theme.colors.surface, 
@@ -145,7 +134,7 @@ const SignUpScreen = ({ navigation }) => {
                             onChangeText={setEmail}
                             keyboardType="email-address"
                             autoCapitalize="none"
-                        /> */}
+                        />
 
                         <Text style={[styles.label, { color: theme.colors.text }]}>Password</Text>
                         <TextInput
