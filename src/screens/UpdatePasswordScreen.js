@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 
 const UpdatePasswordScreen = ({ navigation }) => {
     const { theme } = useTheme();
+    const { resetPasswordRecoveryState } = useAuth();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -29,8 +31,9 @@ const UpdatePasswordScreen = ({ navigation }) => {
 
             if (error) throw error;
 
+            resetPasswordRecoveryState();
             Alert.alert('Success', 'Your password has been updated.', [
-                { text: 'OK', onPress: () => resetPasswordRecoveryState() } 
+                { text: 'OK', onPress: () => navigation.goBack() }
             ]);
         } catch (error) {
             console.error('Update Password Error:', error.message);
