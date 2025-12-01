@@ -233,7 +233,7 @@ function MainTabs() {
 }
 
 function AppNavigator() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, passwordRecovery } = useAuth();
   const { theme, isDark } = useTheme();
   const { isAddModalVisible, setAddModalVisible } = useModal();
   const [showSplash, setShowSplash] = useState(false);
