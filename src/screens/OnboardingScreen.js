@@ -18,7 +18,10 @@ const OnboardingScreen = ({ navigation }) => {
     // ... existing useEffect ...
 
     const handleLogin = async () => {
-        console.log('Login button pressed. Email:', email, 'Password length:', password?.length);
+        // DEBUG: Immediate feedback
+        console.log('LOGIN BUTTON PRESSED'); 
+        // Alert.alert('Debug', 'Login Pressed'); 
+
         if (!email || !password) {
             Alert.alert('Missing Information', 'Please enter your email and password.');
             return;
@@ -26,34 +29,29 @@ const OnboardingScreen = ({ navigation }) => {
 
         setLoading(true);
         try {
-            console.log('Verifying credentials via webhook...');
+            console.log('Attempting verification...');
             // User request: Call create_user webhook for sign in verification
-            // Payload includes all filled info (email, password)
-            // We wait for confirmation (success response)
-            await createUser({ email, password });
-            console.log('Credentials verified.');
+            const verificationResponse = await createUser({ email, password });
+            console.log('Verification response:', verificationResponse);
 
-            // Now fetch full user profile to populate app state
-            console.log('Fetching user profile...');
-            const userInfo = await fetchUserInfo(email);
-            console.log('User info fetched:', userInfo);
-            
-            if (userInfo) {
-                 // Add pending friend if any
-                if (pendingFriendEmail) {
-                    await addLocalFriend(pendingFriendEmail);
+            if (verificationResponse) {
+                console.log('Verification successful. Fetching profile...');
+                const userInfo = await fetchUserInfo(email);
+                
+                if (userInfo) {
+                    if (pendingFriendEmail) {
+                        await addLocalFriend(pendingFriendEmail);
+                    }
+                    await login({ ...userInfo, email }); 
+                } else {
+                    Alert.alert('Login Failed', 'User profile not found.');
                 }
-
-                console.log('Logging in...');
-                // Persist login with password if needed, or just profile
-                await login({ ...userInfo, email }); 
             } else {
-                Alert.alert('Login Failed', 'User profile not found after verification.');
+                 Alert.alert('Login Failed', 'Invalid credentials.');
             }
         } catch (error) {
-            console.error('Login error:', error);
-            // If createUser fails (400/500), we assume invalid credentials or server error
-            Alert.alert('Login Failed', 'Invalid credentials or server error.');
+            console.error('Login Critical Error:', error);
+            Alert.alert('Login Error', 'An error occurred during login. Please check your connection.');
         } finally {
             setLoading(false);
         }
@@ -71,11 +69,11 @@ const OnboardingScreen = ({ navigation }) => {
             >
                 <View style={styles.header}>
                     <Image 
-                        source={require('../../assets/splash-icon.png')}
+                        source={require('../../assets/Wish Me Not Logo.png')}
                         style={styles.logo}
                         resizeMode="contain"
                     />
-                    <Text style={[styles.title, { color: theme.colors.primary, fontFamily: theme.fonts.bold }]}>Wish Me Not</Text>
+                    {/* <Text style={[styles.title, { color: theme.colors.primary, fontFamily: theme.fonts.bold }]}>Wish Me Not</Text> */}
                     <Text style={[styles.tagline, { color: theme.colors.secondary, fontFamily: theme.fonts.medium }]}>Stop guessing. Start gifting.</Text>
                     <Text style={[styles.subtitle, { color: theme.colors.textSecondary, fontFamily: theme.fonts.regular }]}>Create your wish list and share it with friends.</Text>
                 </View>
@@ -150,8 +148,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     logo: {
-        width: 100,
-        height: 100,
+        width: 200,
+        height: 80,
         marginBottom: 24,
     },
     title: {
