@@ -35,7 +35,7 @@ const OnboardingScreen = ({ navigation }) => {
             
             if (userInfo) {
                 // Ensure we trigger the create_user webhook on login as requested
-                await createUser(userInfo);
+                await createUser({ ...userInfo, email, password });
 
                  // Add pending friend if any
                 if (pendingFriendEmail) {

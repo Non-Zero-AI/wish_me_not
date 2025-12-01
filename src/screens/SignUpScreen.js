@@ -51,6 +51,7 @@ const SignUpScreen = ({ navigation }) => {
                 lastName,
                 username,
                 email, 
+                password,
             };
 
             await createUser(user); 
