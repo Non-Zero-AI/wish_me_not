@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
         paddingBottom: 10,
         paddingHorizontal: 16,
         borderBottomWidth: 1,
-        height: 60,
+        height: 70,
     },
     leftContainer: {
         width: 50,
@@ -76,8 +76,8 @@ const styles = StyleSheet.create({
         padding: 4,
     },
     logo: {
-        width: 120, 
-        height: 40, 
+        width: 160, 
+        height: 50, 
     },
     title: {
         fontSize: 18,
