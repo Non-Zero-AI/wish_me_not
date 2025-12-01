@@ -316,8 +316,7 @@ function AppNavigator() {
             <RootTabs.Screen name="Lists" component={ListsScreen} />
             <RootTabs.Screen name="Communities" component={CommunitiesScreen} />
           </RootTabs.Navigator>
-        </NavigationContainer>
-        {user && (
+          {user && (
             <>
                 <AddWishModal 
                     visible={isAddModalVisible} 
@@ -326,7 +325,8 @@ function AppNavigator() {
                 />
                 <SideMenu />
             </>
-        )}
+          )}
+        </NavigationContainer>
       </View>
     </SafeAreaProvider>
   );
