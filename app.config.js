@@ -25,7 +25,7 @@ export default {
       edgeToEdgeEnabled: true
     },
     web: {
-      favicon: "./assets/Wish Me Not Logo.png",
+      favicon: "./assets/splash-icon.png",
       name: "Wish Me Not",
       shortName: "WishMeNot",
       description: "The wishlist app you actually want.",

@@ -31,11 +31,14 @@ const AppHeader = ({ title, showBack, rightAction, leftAction, subTitle }) => {
           {showBack ? (
               <Text style={[styles.title, { color: theme.colors.text, fontFamily: theme.fonts.bold }]}>{title}</Text>
           ) : (
-              <Image 
-                  source={require('../../assets/Wish Me Not Logo.png')} 
-                  style={styles.logo}
-                  resizeMode="contain"
-              />
+              <View style={styles.brandContainer}>
+                  <Image 
+                      source={require('../../assets/splash-icon.png')} 
+                      style={styles.logoIcon}
+                      resizeMode="contain"
+                  />
+                  <Text style={[styles.brandText, { color: theme.colors.primary, fontFamily: theme.fonts.bold }]}>Wish Me Not</Text>
+              </View>
           )}
       </View>
 
@@ -75,9 +78,18 @@ const styles = StyleSheet.create({
     iconButton: {
         padding: 4,
     },
-    logo: {
-        width: 160, 
-        height: 50, 
+    brandContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    logoIcon: {
+        width: 40, 
+        height: 40,
+        marginRight: 8,
+    },
+    brandText: {
+        fontSize: 20,
+        fontWeight: 'bold',
     },
     title: {
         fontSize: 18,

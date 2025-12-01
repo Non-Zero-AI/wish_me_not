@@ -42,7 +42,7 @@ const SideMenu = () => {
                 <SafeAreaView style={[styles.menuContainer, { backgroundColor: theme.colors.surface }]}>
                     <View style={styles.header}>
                         <Image 
-                            source={require('../../assets/Wish Me Not Logo.png')} 
+                            source={require('../../assets/splash-icon.png')} 
                             style={styles.logo}
                             resizeMode="contain"
                         />
