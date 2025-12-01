@@ -13,9 +13,6 @@ import AppHeader from '../components/AppHeader';
 const FriendsScreen = ({ navigation }) => {
     const { theme } = useTheme();
     const [friends, setFriends] = useState([]);
-    const [modalVisible, setModalVisible] = useState(false);
-    const [newFriendEmail, setNewFriendEmail] = useState('');
-    const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [user, setUser] = useState(null);
 
@@ -176,7 +173,7 @@ const FriendsScreen = ({ navigation }) => {
                         <TouchableOpacity onPress={onRefresh} style={styles.addButton}>
                             <Ionicons name="refresh" size={24} color={theme.colors.primary} />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.addButton}>
+                        <TouchableOpacity onPress={handleAddFriend} style={styles.addButton}>
                             <Ionicons name="person-add" size={24} color={theme.colors.primary} />
                         </TouchableOpacity>
                     </View>
@@ -202,59 +199,12 @@ const FriendsScreen = ({ navigation }) => {
                         <Text style={[styles.emptyText, { color: theme.colors.textSecondary, textAlign: 'center', paddingHorizontal: 32 }]}>
                             Gifting is better with Friends; add Friends to start seeing what they have on their Wishlists
                         </Text>
-                        <TouchableOpacity onPress={() => setModalVisible(true)} style={{marginTop: 20, padding: 10, backgroundColor: theme.colors.surface, borderRadius: 8}}>
-                            <Text style={{color: theme.colors.primary}}>Add Your First Friend</Text>
+                        <TouchableOpacity onPress={handleAddFriend} style={{marginTop: 20, padding: 10, backgroundColor: theme.colors.surface, borderRadius: 8}}>
+                            <Text style={{color: theme.colors.primary}}>Find Friends</Text>
                         </TouchableOpacity>
                     </View>
                 }
             />
-
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
-                        <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Add Friend</Text>
-                        <TextInput
-                            style={[styles.input, { 
-                                backgroundColor: theme.colors.background, 
-                                color: theme.colors.text,
-                                borderColor: theme.colors.border 
-                            }]}
-                            placeholder="Friend's Email"
-                            placeholderTextColor={theme.colors.textSecondary}
-                            value={newFriendEmail}
-                            onChangeText={setNewFriendEmail}
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                            editable={!loading}
-                        />
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.cancelButton, { backgroundColor: theme.colors.background }]}
-                                onPress={() => setModalVisible(false)}
-                                disabled={loading}
-                            >
-                                <Text style={[styles.cancelButtonText, { color: theme.colors.text }]}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.saveButton, { backgroundColor: theme.colors.primary }]}
-                                onPress={handleAddFriend}
-                                disabled={loading}
-                            >
-                                {loading ? (
-                                    <ActivityIndicator color={theme.colors.textInverse} size="small" />
-                                ) : (
-                                    <Text style={[styles.saveButtonText, { color: theme.colors.textInverse }]}>Find & Add</Text>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
         </SafeAreaView>
     );
 };

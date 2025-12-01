@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 const SignUpScreen = ({ navigation }) => {
     const { theme } = useTheme();
-    const { login } = useAuth();
+    const { signUp } = useAuth();
     
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -46,21 +46,18 @@ const SignUpScreen = ({ navigation }) => {
 
         setLoading(true);
         try {
-            const user = {
-                firstName,
-                lastName,
-                username,
+            await signUp({
                 email, 
                 password,
-            };
-
-            await createUser(user); 
+                firstName,
+                lastName,
+                username
+            });
             
-            // For now, we simulate a login with this new user
-            await login(user); 
+            // Supabase auto-login usually happens or we can let auth state listener handle navigation
         } catch (error) {
             console.error('Sign up error:', error);
-            Alert.alert('Error', 'Could not create account.');
+            // Alert is already handled in AuthContext
         } finally {
             setLoading(false);
         }

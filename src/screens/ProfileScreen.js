@@ -11,7 +11,7 @@ import ProductCard from '../components/ProductCard';
 import AppHeader from '../components/AppHeader';
 import { useTheme } from '../theme/ThemeContext';
 import { getItems, addItem, getUser, deleteItem, saveItems, saveUser, getFriends } from '../services/storage';
-import { addProduct, deleteProduct, getUserWishlist, addManualProduct, updateUserProfile } from '../services/api';
+import { addProduct, deleteProduct, getUserWishlist, addManualProduct, updateUserProfile, updateUserSettings, getUserSettings } from '../services/api';
 
 const ProfileScreen = ({ navigation, route }) => {
     const { theme } = useTheme();
@@ -55,7 +55,14 @@ const ProfileScreen = ({ navigation, route }) => {
         const userData = await getUser();
         setUser(userData);
         if (userData) {
-            setShowLocalSurprises(userData.showSurprises || false);
+            // Load Settings
+            const settings = await getUserSettings(userData.id);
+            if (settings) {
+                setShowLocalSurprises(settings.reveal_surprises);
+            } else {
+                setShowLocalSurprises(userData.showSurprises || false);
+            }
+            
             loadItems(userData.email);
             
             // Load friends count
@@ -95,6 +102,7 @@ const ProfileScreen = ({ navigation, route }) => {
             const updatedUser = { ...user, showSurprises: newValue };
             setUser(updatedUser);
             await saveUser(updatedUser);
+            await updateUserSettings(user.id, { reveal_surprises: newValue });
         }
     };
 
@@ -404,7 +412,7 @@ const ProfileScreen = ({ navigation, route }) => {
                              {adding ? (
                                 <ActivityIndicator size="small" color="#fff" />
                              ) : (
-                                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 14 }}>Post</Text>
+                                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 14 }}>Wish</Text>
                              )}
                         </TouchableOpacity>
                     </View>
@@ -422,7 +430,7 @@ const ProfileScreen = ({ navigation, route }) => {
                          
                          <View style={{ flex: 1 }}>
                             <TextInput
-                                placeholder="What's happening?"
+                                placeholder="What are you wishing for?"
                                 placeholderTextColor={theme.colors.textSecondary}
                                 multiline
                                 maxLength={180}

@@ -1,189 +1,163 @@
-import axios from 'axios';
+import { supabase } from '../lib/supabase';
 import { Platform } from 'react-native';
+import axios from 'axios';
 
-// Production webhooks
-const WEBHOOK_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Wish_Me_Not';
-const GET_WISHLIST_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Get_Product_Info';
-const DELETE_ITEM_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Delete-Item';
-const CREATE_USER_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/create_user';
-const CLAIM_GIFT_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/claim_gift';
-const GET_FRIENDS_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Get_Friends';
-const DELETE_FRIEND_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/Delete-Item'; 
-const UPLOAD_IMAGE_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/set_profile_image';
-const GET_USER_INFO_URL = 'https://n8n.srv1023211.hstgr.cloud/webhook/get-user-data';
+/**
+ * Helper to get UUID from Email
+ */
+const getUserIdByEmail = async (email) => {
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .single();
+    
+    if (error) {
+        console.warn('Could not find user ID for email:', email);
+        return null;
+    }
+    return data.id;
+};
 
+/**
+ * User Profile Services
+ */
 export const fetchUserInfo = async (email) => {
     try {
-        console.log('Fetching user info for:', email);
-        const response = await axios.post(GET_USER_INFO_URL, { email });
-        // Expecting response.data or response.data.output
-        const data = response.data.output || response.data;
-        console.log('Fetch User Info Response:', JSON.stringify(data, null, 2));
-        
-        // Handle array or single object
-        const userData = Array.isArray(data) ? data[0] : data;
-        
-        if (!userData) return null;
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('email', email)
+            .single();
 
-        console.log('User Data Keys:', Object.keys(userData));
-
-        const image = userData['User Avatar'] || userData.user_avatar || userData.profile_image || userData.image || userData.profile_image_url;
-        console.log('Parsed User Image:', image);
-
-        const firstName = userData['First Name'] || userData['first name'] || userData.first_name || userData.firstName || userData.name?.split(' ')[0];
-        const lastName = userData['Last Name'] || userData['last name'] || userData.last_name || userData.lastName || userData.name?.split(' ')[1];
+        if (error) throw error;
+        if (!data) return null;
 
         return {
-            firstName: firstName,
-            lastName: lastName,
-            email: userData['User Email'] || userData.email || email,
-            image: image,
+            id: data.id,
+            firstName: data.first_name,
+            lastName: data.last_name,
+            email: data.email,
+            image: data.avatar_url,
         };
     } catch (error) {
         console.error('Error fetching user info:', error);
-        throw error;
+        return null;
     }
 };
 
 export const updateUserProfile = async (user, imageUri) => {
     try {
-        const formData = new FormData();
-        formData.append('email', user.email);
-        formData.append('first_name', user.firstName);
-        formData.append('last_name', user.lastName);
+        let avatarUrl = user.image;
 
-        if (imageUri) {
-            const isLocal = imageUri.startsWith('file://') || imageUri.startsWith('blob:') || imageUri.startsWith('data:');
+        // Upload Image if it's a local file
+        if (imageUri && (imageUri.startsWith('file://') || imageUri.startsWith('data:'))) {
+            let userId = user.id;
+            if (!userId && user.email) {
+                userId = await getUserIdByEmail(user.email);
+            }
+            if (!userId) throw new Error('User ID not found for upload');
+
+            const filename = `${userId}/${Date.now()}.jpg`;
             
-            if (isLocal) {
-                if (Platform.OS === 'web') {
-                    // For web, we need to fetch the blob and append it
-                    const res = await fetch(imageUri);
-                    const blob = await res.blob();
-                    formData.append('Image', blob, 'profile.jpg');
-                } else {
-                    // For native
-                    const filename = imageUri.split('/').pop();
-                    const match = /\.(\w+)$/.exec(filename);
-                    const type = match ? `image/${match[1]}` : `image/jpeg`;
-                    
-                    formData.append('Image', {
-                        uri: imageUri,
-                        name: filename,
-                        type,
-                    });
-                }
+            if (Platform.OS === 'web') {
+                const res = await fetch(imageUri);
+                const blob = await res.blob();
+                const { data, error } = await supabase.storage
+                    .from('avatars')
+                    .upload(filename, blob);
+                if (error) throw error;
+                avatarUrl = supabase.storage.from('avatars').getPublicUrl(filename).data.publicUrl;
             } else {
-                 // It's a remote URL, pass it as string if backend supports it
-                 formData.append('profile_image_url', imageUri);
+                const res = await fetch(imageUri);
+                const blob = await res.blob();
+                const { data, error } = await supabase.storage
+                    .from('avatars')
+                    .upload(filename, blob);
+
+                if (error) throw error;
+                avatarUrl = supabase.storage.from('avatars').getPublicUrl(filename).data.publicUrl;
             }
         }
 
-        const response = await axios.post(UPLOAD_IMAGE_URL, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-        return response.data;
+        const { data, error } = await supabase
+            .from('profiles')
+            .update({
+                first_name: user.firstName,
+                last_name: user.lastName,
+                avatar_url: avatarUrl,
+            })
+            .eq('email', user.email)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
     } catch (error) {
         console.error('Error updating profile:', error);
         throw error;
     }
 };
 
+// Deprecated
 export const createUser = async (user) => {
-    try {
-        console.log('Creating/Verifying user:', user);
-        const response = await axios.post(CREATE_USER_URL, user);
-        console.log('Create User Response:', response.data);
-        return response.data; // Return full data for validation
-    } catch (error) {
-        console.error('Error creating/verifying user:', error);
-        // Throw error so caller knows it failed
-        throw error;
-    }
+    console.warn('createUser is deprecated.');
+    return true;
 };
 
-export const sendFeedback = async (email, message) => {
-    try {
-        console.log('Sending feedback:', { email, message });
-        await axios.post(SEND_FEEDBACK_URL, { 
-            email, 
-            feedback: message,
-            timestamp: new Date().toISOString()
-        });
-        return true;
-    } catch (error) {
-        console.error('Error sending feedback:', error);
-        throw error;
-    }
-};
-
+/**
+ * Friends Services
+ */
 export const getUserFriends = async (userEmail) => {
     try {
-        console.log('Fetching friends list for:', userEmail);
-        const response = await axios.post(GET_FRIENDS_URL, {
-            user_email: userEmail
-        });
+        const userId = await getUserIdByEmail(userEmail);
+        if (!userId) return [];
 
-        console.log('Get Friends Response:', JSON.stringify(response.data, null, 2));
+        const { data, error } = await supabase
+            .from('friends')
+            .select(`
+                friend_id,
+                profiles:friend_id (id, first_name, last_name, email, avatar_url)
+            `)
+            .eq('user_id', userId)
+            .eq('status', 'accepted');
 
-        const data = response.data.output || response.data;
-        
-        // The response contains the USER'S row, with a "Friends" field containing emails
-        // We need to extract these emails.
-        let friendEmails = [];
-        const rows = Array.isArray(data) ? data : [data];
+        if (error) throw error;
 
-        rows.forEach(row => {
-            // Extract from "Friends" or "friends" column
-            const friendsString = row.Friends || row.friends;
-            if (friendsString && typeof friendsString === 'string') {
-                // Split by comma and clean up
-                const emails = friendsString.split(',').map(e => e.trim()).filter(e => e && e.includes('@'));
-                friendEmails.push(...emails);
-            }
-        });
+        const { data: reverseData, error: reverseError } = await supabase
+            .from('friends')
+            .select(`
+                user_id,
+                profiles:user_id (id, first_name, last_name, email, avatar_url)
+            `)
+            .eq('friend_id', userId)
+            .eq('status', 'accepted');
 
-        // Deduplicate emails
-        friendEmails = [...new Set(friendEmails)];
-        console.log('Parsed Friend Emails:', friendEmails);
+        if (reverseError) throw reverseError;
 
-        if (friendEmails.length === 0) return [];
+        const friends = [
+            ...(data || []).map(d => d.profiles),
+            ...(reverseData || []).map(d => d.profiles)
+        ];
 
-        // Now fetch details for EACH friend (Avatar, Name, Wishlist Count)
-        // We use Promise.all to do this in parallel
-        const friendsDetails = await Promise.all(friendEmails.map(async (email) => {
-            try {
-                // 1. Get User Data (Avatar, Name)
-                const userInfo = await fetchUserInfo(email).catch(e => null);
-                
-                // 2. Get Wishlist (Count)
-                const wishlist = await getUserWishlist(email).catch(e => []);
+        const enrichedFriends = await Promise.all(friends.map(async (friend) => {
+            if (!friend) return null;
+            const { count } = await supabase
+                .from('items')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', friend.id);
 
-                // 3. Merge Info
-                // Fallback name strategy: UserInfo -> Wishlist -> Email
-                let name = email.split('@')[0];
-                if (userInfo && userInfo.firstName) {
-                    name = `${userInfo.firstName} ${userInfo.lastName || ''}`.trim();
-                } else if (wishlist.length > 0 && wishlist[0].userName) {
-                    name = wishlist[0].userName;
-                }
-
-                return {
-                    id: email, // Use email as ID
-                    email: email,
-                    name: name,
-                    image: userInfo ? userInfo.image : null, // From fetchUserInfo
-                    itemCount: wishlist.length
-                };
-            } catch (e) {
-                console.warn(`Failed to enrich friend ${email}`, e);
-                return { id: email, email, name: email.split('@')[0] };
-            }
+            return {
+                id: friend.email,
+                uuid: friend.id,
+                email: friend.email,
+                name: `${friend.first_name} ${friend.last_name}`,
+                image: friend.avatar_url,
+                itemCount: count || 0
+            };
         }));
 
-        return friendsDetails;
+        return enrichedFriends.filter(f => f !== null);
 
     } catch (error) {
         console.error('Error fetching friends:', error);
@@ -191,45 +165,123 @@ export const getUserFriends = async (userEmail) => {
     }
 };
 
-export const claimGift = async (gift, claimer, recipient) => {
+export const deleteFriend = async (userEmail, friendEmail) => {
+    // Logic handled in FriendsScreen via specialized service call usually,
+    // but for legacy compatibility:
+    console.warn('deleteFriend stub called');
+    return true;
+};
+
+/**
+ * List Services
+ */
+export const getUserLists = async (userId) => {
     try {
-        await axios.post(CLAIM_GIFT_URL, {
-            gift_name: gift.name,
-            gift_url: gift.link,
-            gift_id: gift.id,
-            claimer_email: claimer.email,
-            claimer_name: `${claimer.firstName} ${claimer.lastName}`,
-            recipient_email: recipient.email,
-            recipient_name: recipient.name || recipient.email // Fallback
-        });
-        return true;
+        const { data, error } = await supabase
+            .from('lists')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: true });
+            
+        if (error) throw error;
+        return data;
     } catch (error) {
-        console.error('Error claiming gift:', error);
+        console.error('Error fetching lists:', error);
+        return [];
+    }
+};
+
+export const createList = async (userId, title, description = '') => {
+    try {
+        const { data, error } = await supabase
+            .from('lists')
+            .insert({ user_id: userId, title, description })
+            .select()
+            .single();
+            
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error('Error creating list:', error);
         throw error;
     }
 };
 
-export const deleteFriend = async (userEmail, friendEmail) => {
+/**
+ * Wishlist Services
+ */
+export const getUserWishlist = async (userEmail) => {
     try {
-        // TODO: Update with actual Delete Friend webhook URL if different
-        await axios.post(DELETE_FRIEND_URL, {
-            user_email: userEmail,
-            friend_email: friendEmail
-        });
-        return true;
+        const userId = await getUserIdByEmail(userEmail);
+        if (!userId) return [];
+
+        // Fetch all items for the user, regardless of list
+        const { data, error } = await supabase
+            .from('items')
+            .select(`
+                *,
+                claimer:claimed_by (first_name, last_name, email),
+                list:list_id (title)
+            `)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        return data.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            image: item.image,
+            link: item.link,
+            isClaimed: item.is_claimed,
+            claimedBy: item.claimer ? `${item.claimer.first_name} ${item.claimer.last_name}` : null,
+            claimedByEmail: item.claimer ? item.claimer.email : null,
+            listTitle: item.list?.title || 'Main',
+            originalData: item 
+        }));
     } catch (error) {
-        console.error('Error deleting friend:', error);
-        throw error;
+        console.error('Error fetching wishlist:', error);
+        return [];
     }
 };
 
 export const addProduct = async (url, user) => {
     try {
-        const response = await axios.post(WEBHOOK_URL, {
-            url: url,
-            email: user.email
+        console.log('Scraping URL:', url);
+        
+        const { data: productData, error: scrapeError } = await supabase.functions.invoke('scrape-product', {
+            body: { url }
         });
-        return response.data;
+        
+        if (scrapeError) throw scrapeError;
+
+        const name = productData.title || productData.name || 'New Item';
+        const price = productData.price || '0';
+        const image = productData.image || productData.image_url || null;
+
+        const userId = user.id || (await getUserIdByEmail(user.email));
+        
+        // Get default list
+        const { data: lists } = await supabase.from('lists').select('id').eq('user_id', userId).limit(1);
+        const listId = lists && lists.length > 0 ? lists[0].id : null;
+
+        const { data, error } = await supabase
+            .from('items')
+            .insert({
+                user_id: userId,
+                list_id: listId,
+                name: name,
+                price: price.toString(),
+                image: image,
+                link: url,
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+
     } catch (error) {
         console.error('Error adding product:', error);
         throw error;
@@ -238,17 +290,27 @@ export const addProduct = async (url, user) => {
 
 export const addManualProduct = async (productData, user) => {
     try {
-        const payload = {
-            email: user.email,
-            first_name: user.firstName,
-            last_name: user.lastName,
-            name: productData.name,
-            price: productData.price,
-            image: productData.image,
-        };
+        const userId = user.id || (await getUserIdByEmail(user.email));
         
-        const response = await axios.post('https://n8n.srv1023211.hstgr.cloud/webhook/manual-gift-entry', payload);
-        return response.data;
+        // Get default list
+        const { data: lists } = await supabase.from('lists').select('id').eq('user_id', userId).limit(1);
+        const listId = lists && lists.length > 0 ? lists[0].id : null;
+
+        const { data, error } = await supabase
+            .from('items')
+            .insert({
+                user_id: userId,
+                list_id: listId,
+                name: productData.name,
+                price: productData.price,
+                image: productData.image,
+                link: productData.link || '',
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
     } catch (error) {
         console.error('Error adding manual product:', error);
         throw error;
@@ -257,11 +319,12 @@ export const addManualProduct = async (productData, user) => {
 
 export const deleteProduct = async (productUrl, userEmail, productId) => {
     try {
-        await axios.post(DELETE_ITEM_URL, {
-            product_url: productUrl,
-            user_email: userEmail,
-            product_id: productId
-        });
+        const { error } = await supabase
+            .from('items')
+            .delete()
+            .eq('id', productId);
+
+        if (error) throw error;
         return true;
     } catch (error) {
         console.error('Error deleting product:', error);
@@ -269,32 +332,93 @@ export const deleteProduct = async (productUrl, userEmail, productId) => {
     }
 };
 
-export const getUserWishlist = async (userEmail) => {
+export const claimGift = async (gift, claimer, recipient) => {
     try {
-        const response = await axios.post(GET_WISHLIST_URL, {
-            user_email: userEmail,
-        });
+        const { data, error } = await supabase
+            .rpc('claim_item', { item_id: gift.id });
 
-        // The webhook returns an array of products directly
-        if (response.data && Array.isArray(response.data)) {
-            return response.data.map(item => ({
-                id: item.id || item.ID?.toString() || Date.now().toString(),
-                name: item['Product Name'] || item.product_name || 'Unknown Product',
-                price: item['Product Price'] ? `$${item['Product Price']}` : (item.product_price || 'Price not available'),
-                image: item['Product Image'] || item.product_image,
-                link: item['Product URL'] || item.product_url,
-                wishedBy: item.wished_by || item.wishedBy || null,
-                userName: item.user_name || item['User Name'] || null,
-                // Fix claim status mapping based on "Claim Status": "Is Claimed"
-                isClaimed: item['Claim Status'] === 'Is Claimed' || item['Is Claimed'] === true || item['Is Claimed'] === 'true' || item.is_claimed === true,
-                claimedBy: item['Claimed By'] || item.claimed_by || item['Claiment Name'] || null,
-                claimedByEmail: item['Claiment Email'] || item.claiment_email || null
-            }));
-        }
-
-        return [];
+        if (error) throw error;
+        if (!data) throw new Error('Item already claimed or not found');
+        
+        return true;
     } catch (error) {
-        console.error('Error fetching user wishlist:', error);
+        console.error('Error claiming gift:', error);
         throw error;
+    }
+};
+
+/**
+ * Stash (Copy) Item
+ */
+export const stashItem = async (originalItem, user) => {
+    try {
+        const userId = user.id || (await getUserIdByEmail(user.email));
+
+        // Get user's default list
+        const { data: lists } = await supabase
+            .from('lists')
+            .select('id')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: true })
+            .limit(1);
+            
+        if (!lists || lists.length === 0) {
+            throw new Error('No wishlist found to stash item into.');
+        }
+        const targetListId = lists[0].id;
+
+        // Copy the item
+        const { data, error } = await supabase
+            .from('items')
+            .insert({
+                user_id: userId,
+                list_id: targetListId,
+                name: originalItem.name,
+                price: originalItem.price,
+                image: originalItem.image,
+                link: originalItem.link,
+                is_claimed: false, // Reset claim status
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error('Error stashing item:', error);
+        throw error;
+    }
+};
+
+/**
+ * Settings Services
+ */
+export const updateUserSettings = async (userId, settings) => {
+    try {
+        const { error } = await supabase
+            .from('user_settings')
+            .upsert({ user_id: userId, ...settings });
+
+        if (error) throw error;
+        return true;
+    } catch (error) {
+        console.error('Error updating settings:', error);
+        return false;
+    }
+};
+
+export const getUserSettings = async (userId) => {
+    try {
+        const { data, error } = await supabase
+            .from('user_settings')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+            
+        if (error) return null;
+        return data;
+    } catch (error) {
+        console.error('Error fetching settings:', error);
+        return null;
     }
 };

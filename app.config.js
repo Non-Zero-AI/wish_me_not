@@ -3,6 +3,7 @@ export default {
     name: "Wish Me Not",
     slug: "wish-me-not",
     version: "1.0.0",
+    scheme: "wishmenot",
     orientation: "portrait",
     icon: "./assets/splash-icon.png",
     userInterfaceStyle: "light",

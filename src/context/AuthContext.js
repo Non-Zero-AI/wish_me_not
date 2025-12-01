@@ -1,56 +1,112 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getUser, saveUser as saveUserToStorage, clearUser } from '../services/storage';
+import { supabase } from '../lib/supabase';
+import { Alert } from 'react-native';
+import { registerForPushNotificationsAsync } from '../services/notifications';
 
 const AuthContext = createContext({
   user: null,
   isLoading: true,
-  login: () => {},
-  logout: () => {},
+  passwordRecovery: false,
+  signUp: async () => {},
+  signIn: async () => {},
+  signOut: async () => {},
+  resetPasswordRecoveryState: () => {},
 });
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
 
   useEffect(() => {
-    checkUser();
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    // Listen for changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      setIsLoading(false);
+
+      if (event === 'PASSWORD_RECOVERY') {
+        setPasswordRecovery(true);
+      }
+
+      // Register for push notifications if logged in
+      if (currentUser) {
+        registerForPushNotificationsAsync(currentUser.id).catch(console.error);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const checkUser = async () => {
+  const resetPasswordRecoveryState = () => {
+    setPasswordRecovery(false);
+  };
+
+  const signUp = async ({ email, password, firstName, lastName, username }) => {
+    setIsLoading(true);
     try {
-      const userData = await getUser();
-      setUser(userData);
-    } catch (e) {
-      console.error('Auth check failed', e);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            username: username,
+          },
+        },
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Sign Up Error:', error.message);
+      Alert.alert('Sign Up Failed', error.message);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const login = async (userData) => {
+  const signIn = async ({ email, password }) => {
     setIsLoading(true);
     try {
-      await saveUserToStorage(userData);
-      setUser(userData);
-    } catch (e) {
-      console.error('Login failed', e);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Login Error:', error.message);
+      Alert.alert('Login Failed', error.message);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = async () => {
+  const signOut = async () => {
     setIsLoading(true);
     try {
-      await clearUser();
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Logout Error:', error.message);
+    } finally {
       setUser(null);
-    } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

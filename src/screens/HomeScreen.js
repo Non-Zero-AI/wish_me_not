@@ -5,7 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../theme/ThemeContext';
-import { getUserWishlist, claimGift } from '../services/api';
+import { getUserWishlist, claimGift, stashItem } from '../services/api';
 import { getFriends, getUser } from '../services/storage';
 import SwipeableRow from '../components/SwipeableRow';
 import AppHeader from '../components/AppHeader';
@@ -118,7 +118,7 @@ const HomeScreen = ({ navigation }) => {
             return;
         }
 
-        const message = `Mark ${item.name} as wished for ${item.friendName}? This claims the gift!`;
+        const message = `Mark ${item.name} as claimed for ${item.friendName}? This lets others know you are getting it!`;
 
         if (Platform.OS === 'web') {
             if (window.confirm(message)) {
@@ -126,7 +126,7 @@ const HomeScreen = ({ navigation }) => {
             }
         } else {
             Alert.alert(
-                "Wish Item",
+                "Claim Gift",
                 message,
                 [
                     { text: "Cancel", style: "cancel" },
@@ -136,6 +136,16 @@ const HomeScreen = ({ navigation }) => {
                     }
                 ]
             );
+        }
+    };
+
+    const handleStash = async (item) => {
+        try {
+            await stashItem(item, user);
+            Alert.alert('Success', 'Item stashed to your wishlist!');
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } catch (error) {
+            Alert.alert('Error', 'Could not stash item.');
         }
     };
 
@@ -172,7 +182,8 @@ const HomeScreen = ({ navigation }) => {
                 <ProductCard 
                     item={item} 
                     shouldShowWished={true} 
-                    onWish={Platform.OS === 'web' ? () => handleWishItem(item) : undefined}
+                    onWish={() => handleWishItem(item)}
+                    onStash={() => handleStash(item)}
                 />
             </SwipeableRow>
         </View>

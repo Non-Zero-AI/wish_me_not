@@ -4,12 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Linking from 'expo-linking';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
-import { createUser } from '../services/api';
 import { addLocalFriend } from '../services/storage';
 
 const OnboardingScreen = ({ navigation }) => {
     const { theme } = useTheme();
-    const { login } = useAuth();
+    const { signIn } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -20,7 +19,6 @@ const OnboardingScreen = ({ navigation }) => {
     const handleLogin = async () => {
         // DEBUG: Immediate feedback
         console.log('LOGIN BUTTON PRESSED'); 
-        // Alert.alert('Debug', 'Login Pressed'); 
 
         if (!email || !password) {
             Alert.alert('Missing Information', 'Please enter your email and password.');
@@ -29,29 +27,19 @@ const OnboardingScreen = ({ navigation }) => {
 
         setLoading(true);
         try {
-            console.log('Attempting verification...');
-            // User request: Call create_user webhook for sign in verification
-            const verificationResponse = await createUser({ email, password });
-            console.log('Verification response:', verificationResponse);
-
-            if (verificationResponse) {
-                console.log('Verification successful. Fetching profile...');
-                const userInfo = await fetchUserInfo(email);
-                
-                if (userInfo) {
-                    if (pendingFriendEmail) {
-                        await addLocalFriend(pendingFriendEmail);
-                    }
-                    await login({ ...userInfo, email }); 
-                } else {
-                    Alert.alert('Login Failed', 'User profile not found.');
+            console.log('Attempting login...');
+            const { user } = await signIn({ email, password });
+            
+            if (user) {
+                console.log('Login successful');
+                if (pendingFriendEmail) {
+                    await addLocalFriend(pendingFriendEmail);
                 }
-            } else {
-                 Alert.alert('Login Failed', 'Invalid credentials.');
+                // AuthContext subscription handles state update
             }
         } catch (error) {
             console.error('Login Critical Error:', error);
-            Alert.alert('Login Error', 'An error occurred during login. Please check your connection.');
+            // Alert handled in AuthContext
         } finally {
             setLoading(false);
         }
@@ -107,6 +95,9 @@ const OnboardingScreen = ({ navigation }) => {
                         secureTextEntry
                         autoCapitalize="none"
                     />
+                    <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} style={styles.forgotPasswordButton}>
+                        <Text style={[styles.forgotPasswordText, { color: theme.colors.primary }]}>Forgot Password?</Text>
+                    </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity

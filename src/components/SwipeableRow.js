@@ -12,14 +12,17 @@ try {
   console.warn("Swipeable import failed", e);
 }
 
-const SwipeableRow = ({ children, renderRightActions }) => {
+const SwipeableRow = ({ children, renderRightActions, renderLeftActions }) => {
   // If we are on web, OR if the Swipeable module failed to load, just render children
   if (Platform.OS === 'web' || !Swipeable) {
     return <View>{children}</View>;
   }
   
   return (
-    <Swipeable renderRightActions={renderRightActions}>
+    <Swipeable 
+      renderRightActions={renderRightActions}
+      renderLeftActions={renderLeftActions}
+    >
       {children}
     </Swipeable>
   );

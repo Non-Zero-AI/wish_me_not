@@ -120,7 +120,7 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
                          {adding ? (
                             <ActivityIndicator size="small" color="#fff" />
                          ) : (
-                            <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 14 }}>Post</Text>
+                            <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 14 }}>Wish</Text>
                          )}
                     </TouchableOpacity>
                 </View>
@@ -138,7 +138,7 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
                      
                      <View style={{ flex: 1 }}>
                         <TextInput
-                            placeholder="What's happening?"
+                            placeholder="What are you wishing for?"
                             placeholderTextColor={theme.colors.textSecondary}
                             multiline
                             maxLength={180}

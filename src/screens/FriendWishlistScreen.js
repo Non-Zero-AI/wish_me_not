@@ -3,10 +3,11 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndi
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import SwipeableRow from '../components/SwipeableRow';
 import ProductCard from '../components/ProductCard';
 import { getUser, addLocalFriend } from '../services/storage';
-import { getUserWishlist, claimGift } from '../services/api';
+import { getUserWishlist, claimGift, stashItem } from '../services/api';
 import { useTheme } from '../theme/ThemeContext';
 import AppHeader from '../components/AppHeader';
 
@@ -105,7 +106,7 @@ const FriendWishlistScreen = ({ route, navigation }) => {
             return;
         }
 
-        const message = `You have marked ${item.name} as wished for ${friendData.name}. This claims the gift!`;
+        const message = `You have marked ${item.name} as claimed for ${friendData.name}. This lets others know you are getting it!`;
 
         if (Platform.OS === 'web') {
             if (window.confirm(message)) {
@@ -113,7 +114,7 @@ const FriendWishlistScreen = ({ route, navigation }) => {
             }
         } else {
             Alert.alert(
-                "Wish Item",
+                "Claim Gift",
                 message,
                 [
                     { text: "Cancel", style: "cancel" },
@@ -124,6 +125,41 @@ const FriendWishlistScreen = ({ route, navigation }) => {
                 ]
             );
         }
+    };
+
+    const handleStash = async (item) => {
+        try {
+            await stashItem(item, currentUser);
+            Alert.alert('Success', 'Item stashed to your wishlist!');
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } catch (error) {
+            Alert.alert('Error', 'Could not stash item.');
+        }
+    };
+
+    const renderLeftActions = (progress, dragX, item) => {
+        return (
+            <TouchableOpacity
+                style={{
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    width: 80,
+                    height: '100%',
+                }}
+                onPress={() => handleStash(item)}
+            >
+                 <View style={{ 
+                    backgroundColor: theme.colors.secondary, 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    width: 60, 
+                    height: 60, 
+                    borderRadius: 30 
+                }}>
+                    <Ionicons name="copy" size={24} color="#fff" />
+                </View>
+            </TouchableOpacity>
+        );
     };
 
     const renderRightActions = (progress, dragX, item) => {
@@ -188,12 +224,16 @@ const FriendWishlistScreen = ({ route, navigation }) => {
                     data={items}
                     renderItem={({ item }) => (
                         <View style={{ marginBottom: 16 }}>
-                            <SwipeableRow renderRightActions={(p, d) => renderRightActions(p, d, item)}>
-                                <ProductCard 
+                            <SwipeableRow 
+                                renderRightActions={(p, d) => renderRightActions(p, d, item)}
+                                renderLeftActions={(p, d) => renderLeftActions(p, d, item)}
+                            >
+                                <ProductCard  
                                     item={item} 
                                     user={friendData}
                                     shouldShowWished={true}
-                                    onWish={Platform.OS === 'web' ? () => handleWishItem(item) : undefined}
+                                    onWish={() => handleWishItem(item)}
+                                    onStash={() => handleStash(item)}
                                 />
                             </SwipeableRow>
                         </View>

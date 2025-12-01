@@ -33,10 +33,13 @@ import WebSidebar from './src/components/WebSidebar';
 
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import SignUpScreen from './src/screens/SignUpScreen';
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
+import UpdatePasswordScreen from './src/screens/UpdatePasswordScreen';
 import SplashScreen from './src/screens/SplashScreen';
 import HomeScreen from './src/screens/HomeScreen'; 
 import FriendsScreen from './src/screens/FriendsScreen';
 import FriendWishlistScreen from './src/screens/FriendWishlistScreen';
+import FriendRequestsScreen from './src/screens/FriendRequestsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 import UserAgreementScreen from './src/screens/UserAgreementScreen';
@@ -105,6 +108,7 @@ function FriendsStackScreen() {
       }}
     >
       <FriendsStack.Screen name="FriendsList" component={FriendsScreen} options={{ title: 'Friends' }} />
+      <FriendsStack.Screen name="FriendRequests" component={FriendRequestsScreen} options={{ title: 'Requests' }} />
       <FriendsStack.Screen name="FriendWishlist" component={FriendWishlistScreen} />
     </FriendsStack.Navigator>
   );
@@ -134,6 +138,7 @@ function AuthNavigator() {
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Onboarding" component={OnboardingScreen} />
       <AuthStack.Screen name="SignUp" component={SignUpScreen} />
+      <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     </AuthStack.Navigator>
   );
 }
@@ -313,7 +318,9 @@ function AppNavigator() {
                     tabBarStyle: { display: 'none' }, // Hide tab bar for Root
                   }}
                 >
-                  {user ? (
+                  {passwordRecovery ? (
+                    <RootTabs.Screen name="UpdatePassword" component={UpdatePasswordScreen} />
+                  ) : user ? (
                     <RootTabs.Screen name="Main" component={MainTabs} />
                   ) : (
                     <RootTabs.Screen name="Auth" component={AuthNavigator} />
@@ -329,6 +336,7 @@ function AppNavigator() {
                   <RootTabs.Screen name="Settings" component={SettingsScreen} />
                   <RootTabs.Screen name="Lists" component={ListsScreen} />
                   <RootTabs.Screen name="Communities" component={CommunitiesScreen} />
+                  <RootTabs.Screen name="UpdatePassword" component={UpdatePasswordScreen} />
                 </RootTabs.Navigator>
              </View>
           </View>

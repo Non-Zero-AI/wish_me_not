@@ -1,27 +1,37 @@
 import React, { useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Linking, ActivityIndicator, Platform, Share, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../theme/ThemeContext';
 
-const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish }) => {
+const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, onStash }) => {
     const { theme } = useTheme();
     const { width } = useWindowDimensions();
     const isDesktop = Platform.OS === 'web' && width > 768;
     
-    // Mock Social Stats
-    const [likes, setLikes] = useState(Math.floor(Math.random() * 50) + 5);
+    const [likes, setLikes] = useState(Math.floor(Math.random() * 10)); 
     const [isLiked, setIsLiked] = useState(false);
-    const [comments] = useState(Math.floor(Math.random() * 10));
+    
+    // Card Theme Colors
+    const cardThemes = [
+        { name: 'green', primary: '#01c3a8', gradient: ['#107667ed', '#151419'] },
+        { name: 'blue', primary: '#1890ff', gradient: ['#00458f8f', '#151419'] },
+        { name: 'orange', primary: '#ffb741', gradient: ['#ffb74194', '#151419'] },
+        { name: 'red', primary: '#a63d2a', gradient: ['#a63d2a82', '#151419'] }
+    ];
+
+    const themeIndex = (item.id ? item.id.toString().charCodeAt(0) : 0) % cardThemes.length;
+    const currentTheme = cardThemes[themeIndex];
+    const isPopular = likes >= 5;
     
     const handleLike = () => {
-        setIsLiked(!isLiked);
-        setLikes(prev => isLiked ? prev - 1 : prev + 1);
+        const newLiked = !isLiked;
+        setIsLiked(newLiked);
+        setLikes(prev => newLiked ? prev + 1 : prev - 1);
     };
 
     const handlePress = () => {
-        if (item.link) {
-            Linking.openURL(item.link);
-        }
+        if (item.link) Linking.openURL(item.link);
     };
     
     const handleShare = async () => {
@@ -35,194 +45,261 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish })
         }
     };
 
-    // Determine User Info (Feed vs Profile)
-    // Profile passes 'user' prop. Feed items have friendName/friendImage in 'item'.
     const avatarUri = user?.image || item.friendImage;
     const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}` : (item.friendName || 'Friend');
-    const timestamp = "2h"; // Mock time
+    const dateObj = item.created_at ? new Date(item.created_at) : new Date();
+    const dateString = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
     if (item.loading) {
         return (
-            <View style={[styles.card, styles.loadingCard, { backgroundColor: theme.colors.surface }]}>
+            <View style={[styles.cardContainer, styles.loadingCard, { backgroundColor: theme.colors.surface }]}>
                 <ActivityIndicator size="large" color={theme.colors.primary} />
-                <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Fetching product details...</Text>
             </View>
         );
     }
 
     return (
         <View style={[
-            styles.card, 
-            { backgroundColor: theme.colors.surface },
-            isDesktop && { maxWidth: 600, alignSelf: 'center', width: '100%', borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border }
+            styles.cardContainer,
+            isDesktop && { maxWidth: 400, alignSelf: 'center' }
         ]}>
-            {/* Header */}
-            <View style={styles.header}>
-                <View style={[styles.avatarContainer, { backgroundColor: theme.colors.secondary }]}>
-                    {avatarUri ? (
-                        <Image source={{ uri: avatarUri }} style={styles.avatar} />
-                    ) : (
-                        <Text style={[styles.avatarText, { color: theme.colors.textInverse }]}>
-                            {displayName.charAt(0).toUpperCase()}
-                        </Text>
-                    )}
-                </View>
-                <View style={styles.headerText}>
-                    <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
-                        <Text style={[styles.userName, { color: theme.colors.text }]}>{displayName}</Text>
-                        {/* Verified Badge Mock */}
-                        {/* <Ionicons name="checkmark-circle" size={14} color={theme.colors.primary} /> */}
-                    </View>
-                    <Text style={[styles.handle, { color: theme.colors.textSecondary }]}>@{displayName.replace(/\s+/g, '').toLowerCase()} • {timestamp}</Text>
-                </View>
-                
-                {onDelete && (
-                    <TouchableOpacity onPress={onDelete} style={{ padding: 4 }}>
-                        {Platform.OS === 'web' ? <Text>🗑️</Text> : <Ionicons name="trash-outline" size={20} color={theme.colors.error} />}
+            {isPopular && (
+                <View style={[
+                    styles.electricGlow, 
+                    { borderColor: currentTheme.primary, shadowColor: currentTheme.primary }
+                ]} />
+            )}
+
+            <LinearGradient
+                colors={currentTheme.gradient}
+                start={{ x: 1, y: 0 }}
+                end={{ x: 0.5, y: 1 }}
+                style={styles.card}
+            >
+                {/* 1. Big Product Image Area (Top 55%) */}
+                <View style={styles.imageArea}>
+                    <TouchableOpacity onPress={handlePress} activeOpacity={0.9} style={{flex:1}}>
+                        {item.image ? (
+                            <Image 
+                                source={{ uri: item.image }} 
+                                style={styles.mainImage} 
+                                resizeMode="cover" 
+                            />
+                        ) : (
+                            <View style={[styles.mainImage, { backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }]}>
+                                <Ionicons name="image-outline" size={48} color="rgba(255,255,255,0.2)" />
+                            </View>
+                        )}
+                        
+                        {/* Header Overlay (Date & Share) */}
+                        <View style={styles.headerOverlay}>
+                            <View style={styles.dateBadge}>
+                                <Text style={styles.dateText}>{dateString}</Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', gap: 8 }}>
+                                {onDelete && (
+                                    <TouchableOpacity onPress={onDelete} style={styles.iconBadge}>
+                                        <Ionicons name="trash-outline" size={18} color="#fff" />
+                                    </TouchableOpacity>
+                                )}
+                                <TouchableOpacity onPress={handleShare} style={styles.iconBadge}>
+                                    <Ionicons name="share-social-outline" size={18} color="#fff" />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
                     </TouchableOpacity>
-                )}
-            </View>
+                </View>
 
-            {/* Content */}
-            <View style={styles.content}>
-                <Text style={[styles.title, { color: theme.colors.text }]}>{item.name || 'Unknown Product'}</Text>
-                <Text style={[styles.price, { color: theme.colors.primary }]}>{item.price || 'Price not available'}</Text>
-            </View>
+                {/* 2. Content Area (Bottom 45%) */}
+                <View style={styles.contentArea}>
+                    <View style={styles.titleRow}>
+                        <Text style={styles.itemTitle} numberOfLines={2}>{item.name || 'Unknown Item'}</Text>
+                        <Text style={[styles.itemPrice, { color: currentTheme.primary }]}>{item.price || ''}</Text>
+                    </View>
 
-            {/* Image Area */}
-            <TouchableOpacity onPress={handlePress} activeOpacity={0.9}>
-                {item.image ? (
-                    <Image source={{ uri: item.image }} style={styles.postImage} resizeMode="cover" />
-                ) : (
-                    <View style={[styles.postImage, styles.placeholder, { backgroundColor: theme.colors.background }]} />
-                )}
-                
-                {/* Claimed Overlay */}
-                {shouldShowWished && (item.isClaimed || item.wishedBy) && (
-                    <View style={styles.claimedOverlay}>
-                        <View style={[styles.claimedBadge, { backgroundColor: theme.colors.success }]}>
-                            <Ionicons name="checkmark-circle" size={16} color="#fff" />
-                            <Text style={styles.claimedText}>Claimed by {item.claimedBy || item.wishedBy || 'Someone'}</Text>
+                    {/* Footer: Avatars & Actions */}
+                    <View style={styles.footer}>
+                        <View style={styles.userSection}>
+                            {avatarUri ? (
+                                <Image source={{ uri: avatarUri }} style={styles.userAvatar} />
+                            ) : (
+                                <View style={[styles.userAvatar, { backgroundColor: '#555', justifyContent: 'center', alignItems: 'center' }]}>
+                                    <Text style={{color:'#fff', fontSize:12, fontWeight:'bold'}}>{displayName.charAt(0)}</Text>
+                                </View>
+                            )}
+                            <Text style={styles.userName} numberOfLines={1}>{displayName}</Text>
+                        </View>
+
+                        <View style={styles.actionsRow}>
+                            <TouchableOpacity style={[styles.actionBtn, { backgroundColor: isLiked ? '#ff4757' : 'rgba(255,255,255,0.1)' }]} onPress={handleLike}>
+                                <Ionicons name={isLiked ? "heart" : "heart-outline"} size={20} color="#fff" />
+                            </TouchableOpacity>
+                            
+                            {onStash && (
+                                <TouchableOpacity style={[styles.actionBtn, { backgroundColor: 'rgba(255,255,255,0.1)' }]} onPress={onStash}>
+                                    <Ionicons name="copy-outline" size={20} color="#fff" />
+                                </TouchableOpacity>
+                            )}
+
+                            <TouchableOpacity 
+                                style={[styles.mainActionBtn, { backgroundColor: currentTheme.primary }]}
+                                onPress={onWish || handlePress}
+                            >
+                                <Text style={styles.mainActionText}>{item.isClaimed ? 'Claimed' : (onWish ? 'Claim' : 'View')}</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
-                )}
-            </TouchableOpacity>
-
-            {/* Action Footer */}
-            <View style={[styles.footer, { borderTopColor: theme.colors.border }]}>
-                <TouchableOpacity style={styles.actionButton} onPress={handleLike}>
-                    <Ionicons name={isLiked ? "heart" : "heart-outline"} size={24} color={isLiked ? theme.colors.error : theme.colors.textSecondary} />
-                    <Text style={[styles.actionText, { color: theme.colors.textSecondary }]}>{likes}</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={styles.actionButton}>
-                    <Ionicons name="chatbubble-outline" size={22} color={theme.colors.textSecondary} />
-                    <Text style={[styles.actionText, { color: theme.colors.textSecondary }]}>{comments}</Text>
-                </TouchableOpacity>
-
-                {/* Gift/Claim Action */}
-                <TouchableOpacity style={styles.actionButton} onPress={onWish || handlePress}>
-                    <Ionicons 
-                        name={item.isClaimed ? "gift" : "gift-outline"} 
-                        size={24} 
-                        color={item.isClaimed ? theme.colors.success : theme.colors.textSecondary} 
-                    />
-                    <Text style={[styles.actionText, { color: theme.colors.textSecondary }]}>
-                        {item.isClaimed ? 'Claimed' : 'Gift'}
-                    </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-                    <Ionicons name="share-social-outline" size={22} color={theme.colors.textSecondary} />
-                </TouchableOpacity>
-            </View>
+                </View>
+            </LinearGradient>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    card: {
-        borderRadius: 0, // More like a feed
-        marginBottom: 12,
-        // Shadow is less prominent in modern feeds, but we can keep a subtle one or remove for flat look
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+    cardContainer: {
+        width: '90%',
+        maxWidth: 380,
+        height: 420, // Fixed height for consistency
+        alignSelf: 'center',
+        marginVertical: 16,
+        position: 'relative',
     },
     loadingCard: {
-        height: 200,
         justifyContent: 'center',
         alignItems: 'center',
-        margin: 16,
-        borderRadius: 12
+        borderRadius: 24,
+        height: 200
     },
-    loadingText: { marginTop: 12 },
+    card: {
+        flex: 1,
+        borderRadius: 24,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+    },
+    electricGlow: {
+        position: 'absolute',
+        top: -2, left: -2, right: -2, bottom: -2,
+        borderRadius: 26,
+        borderWidth: 2,
+        opacity: 0.8,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 1,
+        shadowRadius: 10,
+        elevation: 10,
+    },
     
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 12,
-    },
-    avatarContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        marginRight: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'hidden'
-    },
-    avatar: { width: '100%', height: '100%' },
-    avatarText: { fontSize: 18, fontWeight: 'bold' },
-    headerText: { flex: 1 },
-    userName: { fontWeight: 'bold', fontSize: 15 },
-    handle: { fontSize: 12 },
-    
-    content: {
-        paddingHorizontal: 12,
-        paddingBottom: 8,
-    },
-    title: { fontSize: 16, lineHeight: 22 },
-    price: { fontSize: 15, fontWeight: '600', marginTop: 4 },
-    
-    postImage: {
+    // Image Area
+    imageArea: {
+        height: '55%',
         width: '100%',
-        height: 300, // Taller social style image
-        backgroundColor: '#f0f0f0'
+        position: 'relative',
     },
-    placeholder: { height: 200 },
+    mainImage: {
+        width: '100%',
+        height: '100%',
+    },
+    headerOverlay: {
+        position: 'absolute',
+        top: 16,
+        left: 16,
+        right: 16,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    dateBadge: {
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    dateText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    iconBadge: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    // Content Area
+    contentArea: {
+        flex: 1,
+        padding: 20,
+        justifyContent: 'space-between',
+    },
+    titleRow: {
+        marginBottom: 8,
+    },
+    itemTitle: {
+        color: '#fff',
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 4,
+        textTransform: 'capitalize',
+    },
+    itemPrice: {
+        fontSize: 18,
+        fontWeight: '600',
+    },
     
+    // Footer
     footer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        padding: 12,
-        paddingHorizontal: 24,
+        alignItems: 'center',
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(255,255,255,0.1)',
     },
-    actionButton: {
+    userSection: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6
+        flex: 1,
     },
-    actionText: { fontSize: 13, fontWeight: '500' },
-    
-    claimedOverlay: {
-        position: 'absolute',
-        bottom: 16,
-        left: 16,
+    userAvatar: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        marginRight: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
     },
-    claimedBadge: {
+    userName: {
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '600',
+        maxWidth: 80,
+    },
+    actionsRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 20,
-        gap: 6,
-        shadowColor: '#000',
-        shadowOpacity: 0.2,
-        shadowOffset: {width:0, height:2},
-        shadowRadius: 4,
-        elevation: 4
+        gap: 8,
     },
-    claimedText: { color: '#fff', fontWeight: 'bold', fontSize: 12 }
+    actionBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    mainActionBtn: {
+        paddingHorizontal: 16,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    mainActionText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 13,
+    },
 });
 
 export default ProductCard;
