@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Linking from 'expo-linking';
 import { useAuth } from '../context/AuthContext';
@@ -18,6 +18,7 @@ const OnboardingScreen = ({ navigation }) => {
     // ... existing useEffect ...
 
     const handleLogin = async () => {
+        console.log('Login button pressed. Email:', email, 'Password length:', password?.length);
         if (!email || !password) {
             Alert.alert('Missing Information', 'Please enter your email and password.');
             return;
@@ -25,6 +26,7 @@ const OnboardingScreen = ({ navigation }) => {
 
         setLoading(true);
         try {
+            console.log('Fetching user info...');
             // TODO: Implement actual password validation with backend
             // For now, we just "log in" with the provided email if user exists, 
             // or mock it. Since current backend is webhook based without auth endpoint,
@@ -32,9 +34,11 @@ const OnboardingScreen = ({ navigation }) => {
             
             // Mock login: verify user exists
             const userInfo = await fetchUserInfo(email);
+            console.log('User info fetched:', userInfo);
             
             if (userInfo) {
                 // Ensure we trigger the create_user webhook on login as requested
+                console.log('Triggering create_user webhook...');
                 await createUser({ ...userInfo, email, password });
 
                  // Add pending friend if any
@@ -42,6 +46,7 @@ const OnboardingScreen = ({ navigation }) => {
                     await addLocalFriend(pendingFriendEmail);
                 }
 
+                console.log('Logging in...');
                 await login({ ...userInfo, email }); // Persist login
             } else {
                 Alert.alert('Login Failed', 'User not found. Please sign up.');
@@ -65,6 +70,11 @@ const OnboardingScreen = ({ navigation }) => {
                 style={styles.content}
             >
                 <View style={styles.header}>
+                    <Image 
+                        source={require('../../assets/splash-icon.png')}
+                        style={styles.logo}
+                        resizeMode="contain"
+                    />
                     <Text style={[styles.title, { color: theme.colors.primary, fontFamily: theme.fonts.bold }]}>Wish Me Not</Text>
                     <Text style={[styles.tagline, { color: theme.colors.secondary, fontFamily: theme.fonts.medium }]}>Stop guessing. Start gifting.</Text>
                     <Text style={[styles.subtitle, { color: theme.colors.textSecondary, fontFamily: theme.fonts.regular }]}>Create your wish list and share it with friends.</Text>
@@ -138,6 +148,11 @@ const styles = StyleSheet.create({
     header: {
         marginBottom: 48,
         alignItems: 'center',
+    },
+    logo: {
+        width: 100,
+        height: 100,
+        marginBottom: 24,
     },
     title: {
         fontSize: 28,

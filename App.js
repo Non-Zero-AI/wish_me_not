@@ -14,7 +14,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 // import { createDrawerNavigator } from '@react-navigation/drawer';
-import { ActivityIndicator, View, Text, StyleSheet, StatusBar, Platform } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, StatusBar, Platform, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import * as Font from 'expo-font';
@@ -29,6 +29,7 @@ import { ModalProvider, useModal } from './src/context/ModalContext';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import AddWishModal from './src/components/AddWishModal';
 import SideMenu from './src/components/SideMenu';
+import WebSidebar from './src/components/WebSidebar';
 
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import SignUpScreen from './src/screens/SignUpScreen';
@@ -140,6 +141,8 @@ function AuthNavigator() {
 function MainTabs() {
   const { theme } = useTheme();
   const { setAddModalVisible } = useModal();
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width > 768;
   
   return (
     <Tab.Navigator
@@ -163,6 +166,7 @@ function MainTabs() {
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textSecondary,
         tabBarStyle: {
+          display: isDesktop ? 'none' : 'flex',
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.border,
           height: Platform.OS === 'ios' ? 90 : 60,
@@ -230,6 +234,8 @@ function AppNavigator() {
   const [showSplash, setShowSplash] = useState(false);
   const [splashShown, setSplashShown] = useState(false);
   const [dataReady, setDataReady] = useState(false);
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width > 768;
   
   const [fontsLoaded] = useFonts({
     'Inter-Regular': Inter_400Regular,
@@ -298,36 +304,36 @@ function AppNavigator() {
             formatter: () => 'Wish Me Not',
           }}
         >
-          <RootTabs.Navigator 
-            screenOptions={{ 
-              headerShown: false,
-              tabBarStyle: { display: 'none' }, // Hide tab bar for Root
-              // headerStyle: {
-              //   backgroundColor: theme.colors.surface,
-              // },
-              // headerTintColor: theme.colors.text,
-            }}
-          >
-            {user ? (
-              <RootTabs.Screen name="Main" component={MainTabs} />
-            ) : (
-              <RootTabs.Screen name="Auth" component={AuthNavigator} />
-            )}
-            <RootTabs.Screen 
-              name="PrivacyPolicy" 
-              component={PrivacyPolicyScreen} 
-              // options={{ headerShown: true, title: 'Privacy Policy' }} // Tabs don't have simple header options like stack
-            />
-            <RootTabs.Screen 
-              name="UserAgreement" 
-              component={UserAgreementScreen} 
-              // options={{ headerShown: true, title: 'User Agreement' }}
-            />
-            <RootTabs.Screen name="Settings" component={SettingsScreen} />
-            <RootTabs.Screen name="Lists" component={ListsScreen} />
-            <RootTabs.Screen name="Communities" component={CommunitiesScreen} />
-          </RootTabs.Navigator>
-          {user && (
+          <View style={{ flex: 1, flexDirection: isDesktop ? 'row' : 'column' }}>
+             {isDesktop && user && <WebSidebar />}
+             <View style={{ flex: 1 }}>
+                <RootTabs.Navigator 
+                  screenOptions={{ 
+                    headerShown: false,
+                    tabBarStyle: { display: 'none' }, // Hide tab bar for Root
+                  }}
+                >
+                  {user ? (
+                    <RootTabs.Screen name="Main" component={MainTabs} />
+                  ) : (
+                    <RootTabs.Screen name="Auth" component={AuthNavigator} />
+                  )}
+                  <RootTabs.Screen 
+                    name="PrivacyPolicy" 
+                    component={PrivacyPolicyScreen} 
+                  />
+                  <RootTabs.Screen 
+                    name="UserAgreement" 
+                    component={UserAgreementScreen} 
+                  />
+                  <RootTabs.Screen name="Settings" component={SettingsScreen} />
+                  <RootTabs.Screen name="Lists" component={ListsScreen} />
+                  <RootTabs.Screen name="Communities" component={CommunitiesScreen} />
+                </RootTabs.Navigator>
+             </View>
+          </View>
+
+          {user && !isDesktop && (
             <>
                 <AddWishModal 
                     visible={isAddModalVisible} 
@@ -336,6 +342,14 @@ function AppNavigator() {
                 />
                 <SideMenu />
             </>
+          )}
+          
+          {user && isDesktop && (
+               <AddWishModal 
+                    visible={isAddModalVisible} 
+                    onClose={() => setAddModalVisible(false)}
+                    user={user}
+                />
           )}
         </NavigationContainer>
       </View>

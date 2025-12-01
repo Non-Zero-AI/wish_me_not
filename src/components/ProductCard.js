@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Linking, ActivityIndicator, Platform, Share } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Linking, ActivityIndicator, Platform, Share, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 
 const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish }) => {
     const { theme } = useTheme();
+    const { width } = useWindowDimensions();
+    const isDesktop = Platform.OS === 'web' && width > 768;
     
     // Mock Social Stats
     const [likes, setLikes] = useState(Math.floor(Math.random() * 50) + 5);
@@ -49,7 +51,11 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish })
     }
 
     return (
-        <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+        <View style={[
+            styles.card, 
+            { backgroundColor: theme.colors.surface },
+            isDesktop && { maxWidth: 600, alignSelf: 'center', width: '100%', borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border }
+        ]}>
             {/* Header */}
             <View style={styles.header}>
                 <View style={[styles.avatarContainer, { backgroundColor: theme.colors.secondary }]}>
