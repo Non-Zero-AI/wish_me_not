@@ -31,6 +31,7 @@ import AddWishModal from './src/components/AddWishModal';
 import SideMenu from './src/components/SideMenu';
 
 import OnboardingScreen from './src/screens/OnboardingScreen';
+import SignUpScreen from './src/screens/SignUpScreen';
 import SplashScreen from './src/screens/SplashScreen';
 import HomeScreen from './src/screens/HomeScreen'; 
 import FriendsScreen from './src/screens/FriendsScreen';
@@ -46,6 +47,7 @@ import CommunitiesScreen from './src/screens/CommunitiesScreen';
 
 const RootTabs = createBottomTabNavigator();
 const Tab = createBottomTabNavigator();
+const AuthStack = createStackNavigator();
 // const FriendsStack = createStackNavigator(); // Will replace with Tabs too if needed, but let's try just Root first.
 // const ProfileStack = createStackNavigator(); 
 
@@ -123,6 +125,15 @@ function ProfileStackScreen() {
       </ProfileStack.Screen>
       <ProfileStack.Screen name="Themes" component={ThemesScreen} />
     </ProfileStack.Navigator>
+  );
+}
+
+function AuthNavigator() {
+  return (
+    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+      <AuthStack.Screen name="Onboarding" component={OnboardingScreen} />
+      <AuthStack.Screen name="SignUp" component={SignUpScreen} />
+    </AuthStack.Navigator>
   );
 }
 
@@ -300,7 +311,7 @@ function AppNavigator() {
             {user ? (
               <RootTabs.Screen name="Main" component={MainTabs} />
             ) : (
-              <RootTabs.Screen name="Onboarding" component={OnboardingScreen} />
+              <RootTabs.Screen name="Auth" component={AuthNavigator} />
             )}
             <RootTabs.Screen 
               name="PrivacyPolicy" 

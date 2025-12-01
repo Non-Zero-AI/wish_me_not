@@ -4,7 +4,7 @@ export default {
     slug: "wish-me-not",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/Wish Me Not Logo.png",
+    icon: "./assets/splash-icon.png",
     userInterfaceStyle: "light",
     newArchEnabled: true,
     splash: {
@@ -18,7 +18,7 @@ export default {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: "./assets/Wish Me Not Logo.png",
+        foregroundImage: "./assets/splash-icon.png",
         backgroundColor: "#1a2332"
       },
       package: "com.wishmenot.app",
