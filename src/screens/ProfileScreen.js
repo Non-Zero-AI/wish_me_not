@@ -94,7 +94,12 @@ const ProfileScreen = ({ navigation, route }) => {
     const onRefresh = async () => {
         setRefreshing(true);
         if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        const start = Date.now();
         await loadData();
+        const elapsed = Date.now() - start;
+        if (elapsed < 500) {
+            await new Promise(resolve => setTimeout(resolve, 500 - elapsed));
+        }
         setRefreshing(false);
     };
 
