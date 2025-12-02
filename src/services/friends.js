@@ -122,7 +122,7 @@ export const getFriendRequests = async (userId) => {
       .select(`
         user_id,
         created_at,
-        profiles:user_id (id, first_name, last_name, email, avatar_url)
+        profiles:user_id (id, first_name, last_name, email)
       `)
       .eq('friend_id', userId)
       .eq('status', 'pending');

@@ -1,13 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 
 const WebSidebar = () => {
-    const { theme, isDark, toggleTheme } = useTheme();
+    const { theme } = useTheme();
     const navigation = useNavigation();
     const { user, signOut } = useAuth();
     const { setAddModalVisible } = useModal();
@@ -16,12 +16,6 @@ const WebSidebar = () => {
     const firstName = user?.firstName || user?.user_metadata?.first_name || 'User';
     const lastName = user?.lastName || user?.user_metadata?.last_name || '';
     const username = user?.username || user?.user_metadata?.username || user?.email?.split('@')[0] || 'user';
-
-    // Helper to check active route - simplified
-    const isFocused = (name) => {
-        // This is a basic check, might need more robust state if available
-        return false; 
-    };
 
     const menuItems = [
         { icon: 'home', label: 'Home', screen: 'Home' },

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, SafeAreaView, Image, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, SafeAreaView, Image, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
@@ -10,7 +10,7 @@ const SideMenu = () => {
     const { theme, toggleTheme, isDark } = useTheme();
     const { isSideMenuVisible, setSideMenuVisible } = useModal();
     const navigation = useNavigation();
-    const { user, signOut } = useAuth();
+    const { signOut } = useAuth();
 
     if (!isSideMenuVisible) return null;
 

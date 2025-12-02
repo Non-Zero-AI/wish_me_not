@@ -45,41 +45,9 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
         onClose();
     };
 
-    const handleAddManual = async () => {
-        if (!manualName && !manualPrice && !url) return; // Should be handled by disabled button but safety check
-        
-        // If only URL is present, treat as link add
-        if (url && !manualName) {
-             handleAddItem();
-             return;
-        }
-
-        setAdding(true);
-        try {
-             const product = await addManualProduct({
-                 name: manualName,
-                 price: manualPrice || '0',
-                 image: manualImage,
-                 url: url // Optional link
-             }, user);
-             
-             const newItem = await addItem(product);
-             if (onAdded) onAdded(newItem);
-             handleClose();
-        } catch (e) {
-             Alert.alert("Error", "Failed to add manual item.");
-        } finally {
-             setAdding(false);
-        }
-    };
-
     const handleAddItem = async () => {
-        if (manualName) {
-            handleAddManual();
-            return;
-        }
-
-        if (!url) return;
+        // Safety: require at least some input
+        if (!url && !manualName && !manualPrice && !manualImage) return;
 
         setAdding(true);
         try {
@@ -88,13 +56,30 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
                 return;
             }
 
-            const productData = await addProduct(url, user);
+            let productData;
+
+            if (url) {
+                // Primary path: scrape product info from URL
+                productData = await addProduct(url, user);
+            } else {
+                // Fallback: manual item with no URL
+                productData = await addManualProduct(
+                    {
+                        name: manualName || 'New Item',
+                        price: manualPrice || '0',
+                        image: manualImage,
+                        link: '',
+                    },
+                    user
+                );
+            }
+
             const newItem = await addItem(productData);
             if (onAdded) onAdded(newItem);
             handleClose();
-
         } catch (error) {
-            Alert.alert('Error', 'Failed to fetch product details.');
+            console.error('Error adding wish:', error);
+            Alert.alert('Error', url ? 'Failed to fetch product details.' : 'Failed to add manual item.');
         } finally {
             setAdding(false);
         }
@@ -134,7 +119,7 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
                      
                      <View style={{ flex: 1 }}>
                         <TextInput
-                            placeholder="What are you wishing for?"
+                            placeholder="What are you wishing for? (optional message)"
                             placeholderTextColor={theme.colors.textSecondary}
                             multiline
                             maxLength={180}

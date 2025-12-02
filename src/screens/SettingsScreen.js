@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Switch, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, Switch, TouchableOpacity, ScrollView, Alert, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
@@ -154,14 +154,21 @@ const SettingsScreen = ({ navigation }) => {
                             </View>
                             <Text style={[styles.itemLabel, { color: theme.colors.text }]}>Username</Text>
                         </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
                             <Text style={{ color: theme.colors.textSecondary, marginRight: 4 }}>@</Text>
-                            <Text
-                                onPress={() => {}}
-                                style={{ color: theme.colors.text, minWidth: 80 }}
-                            >
-                                {username || '...'}
-                            </Text>
+                            <TextInput
+                                value={username}
+                                onChangeText={setUsername}
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                style={{
+                                    color: theme.colors.text,
+                                    minWidth: 80,
+                                    paddingVertical: 0,
+                                    borderBottomWidth: StyleSheet.hairlineWidth,
+                                    borderBottomColor: theme.colors.border,
+                                }}
+                            />
                             <TouchableOpacity onPress={handleChangeUsername} disabled={updatingUsername} style={{ marginLeft: 12 }}>
                                 <Text style={{ color: theme.colors.primary }}>
                                     {updatingUsername ? 'Saving...' : 'Save'}
