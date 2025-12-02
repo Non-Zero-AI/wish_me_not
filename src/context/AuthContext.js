@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Alert, Platform } from 'react-native';
 import { registerForPushNotificationsAsync } from '../services/notifications';
+import { clearUser } from '../services/storage';
 
 // Helper to show alerts that works on both web and native
 const showAlert = (title, message) => {
@@ -28,11 +29,59 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [passwordRecovery, setPasswordRecovery] = useState(false);
 
+  const upsertProfileFromAuthUser = async (authUser) => {
+    if (!authUser) return;
+
+    try {
+      const { id, email, user_metadata } = authUser;
+      const firstName =
+        user_metadata?.first_name ||
+        user_metadata?.given_name ||
+        user_metadata?.name?.split(' ')[0] ||
+        '';
+      const lastName =
+        user_metadata?.last_name ||
+        user_metadata?.family_name ||
+        (user_metadata?.name ? user_metadata.name.split(' ').slice(1).join(' ') : '') ||
+        '';
+      const username =
+        user_metadata?.username ||
+        (email ? email.split('@')[0] : '') ||
+        undefined;
+      const avatarUrl = user_metadata?.avatar_url || null;
+
+      const { error } = await supabase
+        .from('profiles')
+        .upsert(
+          {
+            id,
+            email,
+            first_name: firstName,
+            last_name: lastName,
+            username,
+            avatar_url: avatarUrl,
+          },
+          { onConflict: 'id' }
+        );
+
+      if (error) {
+        console.error('Profile upsert from auth user failed:', error);
+      }
+    } catch (err) {
+      console.error('Unexpected error syncing profile from auth user:', err);
+    }
+  };
+
   useEffect(() => {
     // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
       setIsLoading(false);
+
+      if (currentUser) {
+        upsertProfileFromAuthUser(currentUser).catch(console.error);
+      }
     });
 
     // Listen for changes
@@ -43,6 +92,11 @@ export const AuthProvider = ({ children }) => {
 
       if (event === 'PASSWORD_RECOVERY') {
         setPasswordRecovery(true);
+      }
+
+      // Keep profile table in sync with auth user (email/password + Google)
+      if (currentUser && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED')) {
+        upsertProfileFromAuthUser(currentUser).catch(console.error);
       }
 
       // Register for push notifications if logged in

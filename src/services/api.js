@@ -39,6 +39,7 @@ export const fetchUserInfo = async (email) => {
             lastName: data.last_name,
             email: data.email,
             image: data.avatar_url,
+            username: data.username,
         };
     } catch (error) {
         console.error('Error fetching user info:', error);
