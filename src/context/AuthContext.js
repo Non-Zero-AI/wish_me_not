@@ -82,12 +82,17 @@ export const AuthProvider = ({ children }) => {
         password,
       });
 
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Login Error:', error.message);
-      Alert.alert('Login Failed', error.message);
-      throw error;
+      if (error) {
+        console.error('Login Error:', error.message);
+        Alert.alert('Login Failed', error.message);
+        return { user: null, error };
+      }
+
+      return { user: data?.user ?? null, error: null };
+    } catch (err) {
+      console.error('Login Error (unexpected):', err.message);
+      Alert.alert('Login Failed', 'An unexpected error occurred. Please try again.');
+      return { user: null, error: err };
     } finally {
       setIsLoading(false);
     }
