@@ -46,7 +46,7 @@ const SignUpScreen = ({ navigation }) => {
 
         setLoading(true);
         try {
-            await signUp({
+            const result = await signUp({
                 email,
                 password,
                 firstName,
@@ -54,11 +54,28 @@ const SignUpScreen = ({ navigation }) => {
                 username,
             });
 
-            Alert.alert(
-                'Check your email',
-                'We have sent a confirmation link to your email. Please confirm your account, then return here to log in.',
-                [{ text: 'OK', onPress: () => navigation.goBack() }]
-            );
+            console.log('SignUp result:', result);
+
+            // Check if auth succeeded (user object exists)
+            if (result?.user) {
+                console.log('Sign up succeeded, showing alert');
+                
+                if (Platform.OS === 'web') {
+                    // On web, window.alert is synchronous
+                    window.alert('Check your email: We have sent a confirmation link to your email. Please confirm your account, then return here to log in.');
+                    navigation.goBack();
+                } else {
+                    Alert.alert(
+                        'Check your email',
+                        'We have sent a confirmation link to your email. Please confirm your account, then return here to log in.',
+                        [{ text: 'OK', onPress: () => navigation.goBack() }]
+                    );
+                }
+            } else {
+                console.log('Sign up returned no user');
+                Alert.alert('Sign Up Issue', 'Account may have been created. Please check your email or try logging in.');
+                navigation.goBack();
+            }
         } catch (error) {
             console.error('Sign up error:', error);
             // Alert is already handled in AuthContext
