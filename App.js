@@ -17,7 +17,7 @@ import * as Font from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts, Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 
-import { getUser, saveUser, saveItems, saveFriends } from './src/services/storage';
+import { getUser, saveUser, saveItems, saveFriends, clearUser } from './src/services/storage';
 import { fetchUserInfo, getUserWishlist, getUserFriends } from './src/services/api';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -261,6 +261,11 @@ function AppNavigator() {
                         setTimeout(() => reject(new Error('Data load timeout')), 10000)
                     );
 
+                    // Clear any cached data from a previous user/session
+                    await clearUser();
+                    await saveItems([]);
+                    await saveFriends([]);
+
                     const fetchData = Promise.all([
                         fetchUserInfo(user.email).catch(() => null),
                         getUserWishlist(user.email).catch(() => []),
@@ -333,7 +338,6 @@ function AppNavigator() {
                   <RootTabs.Screen name="Settings" component={SettingsScreen} />
                   <RootTabs.Screen name="Lists" component={ListsScreen} />
                   <RootTabs.Screen name="Communities" component={CommunitiesScreen} />
-                  <RootTabs.Screen name="UpdatePassword" component={UpdatePasswordScreen} />
                 </RootTabs.Navigator>
              </View>
           </View>
