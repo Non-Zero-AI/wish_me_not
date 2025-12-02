@@ -10,7 +10,7 @@ const SideMenu = () => {
     const { theme, toggleTheme, isDark } = useTheme();
     const { isSideMenuVisible, setSideMenuVisible } = useModal();
     const navigation = useNavigation();
-    const { user, logout } = useAuth();
+    const { user, signOut } = useAuth();
 
     if (!isSideMenuVisible) return null;
 
@@ -21,7 +21,7 @@ const SideMenu = () => {
 
     const handleLogout = () => {
         setSideMenuVisible(false);
-        logout();
+        signOut();
     };
 
     const menuItems = [

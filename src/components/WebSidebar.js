@@ -9,7 +9,7 @@ import { useModal } from '../context/ModalContext';
 const WebSidebar = () => {
     const { theme, isDark, toggleTheme } = useTheme();
     const navigation = useNavigation();
-    const { user, logout } = useAuth();
+    const { user, signOut } = useAuth();
     const { setAddModalVisible } = useModal();
 
     // Safe access to user properties (handle both Supabase raw user and enriched profile)
@@ -95,7 +95,7 @@ const WebSidebar = () => {
                     </View>
                  </TouchableOpacity>
                  
-                 <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+                 <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
                     <Ionicons name="log-out-outline" size={24} color={theme.colors.textSecondary} />
                  </TouchableOpacity>
             </View>

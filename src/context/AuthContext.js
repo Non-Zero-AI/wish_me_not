@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Alert, Platform } from 'react-native';
 import { registerForPushNotificationsAsync } from '../services/notifications';
-import { clearUser } from '../services/storage';
+import { clearUser, saveItems, saveFriends } from '../services/storage';
 
 // Helper to show alerts that works on both web and native
 const showAlert = (title, message) => {
@@ -225,6 +225,9 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(true);
     try {
       await supabase.auth.signOut();
+      await clearUser();
+      await saveItems([]);
+      await saveFriends([]);
     } catch (error) {
       console.error('Logout Error:', error.message);
     } finally {
