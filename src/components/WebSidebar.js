@@ -16,7 +16,6 @@ const WebSidebar = () => {
     const firstName = user?.firstName || user?.user_metadata?.first_name || 'User';
     const lastName = user?.lastName || user?.user_metadata?.last_name || '';
     const username = user?.username || user?.user_metadata?.username || user?.email?.split('@')[0] || 'user';
-    const userImage = user?.image || user?.user_metadata?.avatar_url || null;
 
     // Helper to check active route - simplified
     const isFocused = (name) => {
@@ -80,15 +79,11 @@ const WebSidebar = () => {
 
             <View style={[styles.footer, { borderTopColor: theme.colors.border }]}>
                  <TouchableOpacity style={styles.profileSection} onPress={() => navigation.navigate('Main', { screen: 'ProfileStack' })}>
-                    {userImage ? (
-                        <Image source={{ uri: userImage }} style={styles.profileImage} />
-                    ) : (
-                        <View style={[styles.profilePlaceholder, { backgroundColor: theme.colors.primary }]}>
-                            <Text style={styles.profileInitials}>
-                                {firstName?.[0]}{lastName?.[0]}
-                            </Text>
-                        </View>
-                    )}
+                    <View style={[styles.profilePlaceholder, { backgroundColor: theme.colors.primary }]}>
+                        <Text style={styles.profileInitials}>
+                            {firstName?.[0]}{lastName?.[0]}
+                        </Text>
+                    </View>
                     <View style={styles.profileInfo}>
                         <Text style={[styles.profileName, { color: theme.colors.text }]}>{firstName} {lastName}</Text>
                         <Text style={[styles.profileHandle, { color: theme.colors.textSecondary }]}>@{username}</Text>

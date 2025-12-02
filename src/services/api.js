@@ -38,7 +38,6 @@ export const fetchUserInfo = async (email) => {
             firstName: data.first_name,
             lastName: data.last_name,
             email: data.email,
-            image: data.avatar_url,
             username: data.username,
         };
     } catch (error) {
@@ -47,46 +46,13 @@ export const fetchUserInfo = async (email) => {
     }
 };
 
-export const updateUserProfile = async (user, imageUri) => {
+export const updateUserProfile = async (user) => {
     try {
-        let avatarUrl = user.image;
-
-        // Upload Image if it's a local file
-        if (imageUri && (imageUri.startsWith('file://') || imageUri.startsWith('data:'))) {
-            let userId = user.id;
-            if (!userId && user.email) {
-                userId = await getUserIdByEmail(user.email);
-            }
-            if (!userId) throw new Error('User ID not found for upload');
-
-            const filename = `${userId}/${Date.now()}.jpg`;
-            
-            if (Platform.OS === 'web') {
-                const res = await fetch(imageUri);
-                const blob = await res.blob();
-                const { data, error } = await supabase.storage
-                    .from('avatars')
-                    .upload(filename, blob);
-                if (error) throw error;
-                avatarUrl = supabase.storage.from('avatars').getPublicUrl(filename).data.publicUrl;
-            } else {
-                const res = await fetch(imageUri);
-                const blob = await res.blob();
-                const { data, error } = await supabase.storage
-                    .from('avatars')
-                    .upload(filename, blob);
-
-                if (error) throw error;
-                avatarUrl = supabase.storage.from('avatars').getPublicUrl(filename).data.publicUrl;
-            }
-        }
-
         const { data, error } = await supabase
             .from('profiles')
             .update({
                 first_name: user.firstName,
                 last_name: user.lastName,
-                avatar_url: avatarUrl,
             })
             .eq('email', user.email)
             .select()
@@ -118,7 +84,7 @@ export const getUserFriends = async (userEmail) => {
             .from('friends')
             .select(`
                 friend_id,
-                profiles:friend_id (id, first_name, last_name, email, avatar_url)
+                profiles:friend_id (id, first_name, last_name, email)
             `)
             .eq('user_id', userId)
             .eq('status', 'accepted');
@@ -129,7 +95,7 @@ export const getUserFriends = async (userEmail) => {
             .from('friends')
             .select(`
                 user_id,
-                profiles:user_id (id, first_name, last_name, email, avatar_url)
+                profiles:user_id (id, first_name, last_name, email)
             `)
             .eq('friend_id', userId)
             .eq('status', 'accepted');
@@ -153,7 +119,6 @@ export const getUserFriends = async (userEmail) => {
                 uuid: friend.id,
                 email: friend.email,
                 name: `${friend.first_name} ${friend.last_name}`,
-                image: friend.avatar_url,
                 itemCount: count || 0
             };
         }));
@@ -421,5 +386,47 @@ export const getUserSettings = async (userId) => {
     } catch (error) {
         console.error('Error fetching settings:', error);
         return null;
+    }
+};
+
+/**
+ * Username helpers
+ */
+export const isUsernameAvailable = async (username, currentUserId) => {
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('username', username)
+            .neq('id', currentUserId)
+            .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+            // PGRST116 = no rows found for maybeSingle
+            throw error;
+        }
+
+        // Available if no other row found
+        return !data;
+    } catch (error) {
+        console.error('Error checking username availability:', error);
+        return false;
+    }
+};
+
+export const updateUsername = async (userId, username) => {
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .update({ username })
+            .eq('id', userId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error('Error updating username:', error);
+        throw error;
     }
 };

@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { getUserSettings, updateUserSettings } from '../services/api';
+import { getUserSettings, updateUserSettings, isUsernameAvailable, updateUsername } from '../services/api';
 import AppHeader from '../components/AppHeader';
 
 const SettingsScreen = ({ navigation }) => {
@@ -13,6 +13,8 @@ const SettingsScreen = ({ navigation }) => {
     
     const [revealSurprises, setRevealSurprises] = useState(false);
     const [notifyFriend, setNotifyFriend] = useState(true);
+    const [username, setUsername] = useState('');
+    const [updatingUsername, setUpdatingUsername] = useState(false);
 
     useEffect(() => {
         loadSettings();
@@ -25,6 +27,10 @@ const SettingsScreen = ({ navigation }) => {
                 setRevealSurprises(settings.reveal_surprises);
                 setNotifyFriend(settings.notify_new_friend);
             }
+
+            // Initial username from auth user metadata if available
+            const metaUsername = user.user_metadata?.username || '';
+            setUsername(metaUsername.replace(/^@/, ''));
         }
     };
 
@@ -47,6 +53,40 @@ const SettingsScreen = ({ navigation }) => {
                 { text: "Log Out", style: "destructive", onPress: signOut }
             ]
         );
+    };
+
+    const handleChangeUsername = async () => {
+        if (!user) return;
+
+        const raw = username.trim();
+        const normalized = raw.replace(/^@/, '');
+
+        if (!normalized) {
+            Alert.alert('Invalid Username', 'Please enter a username.');
+            return;
+        }
+
+        const valid = /^[A-Za-z0-9_]+$/.test(normalized);
+        if (!valid) {
+            Alert.alert('Invalid Username', 'Usernames can only contain letters, numbers, and underscores.');
+            return;
+        }
+
+        setUpdatingUsername(true);
+        try {
+            const available = await isUsernameAvailable(normalized, user.id);
+            if (!available) {
+                Alert.alert('Username Taken', 'That username is already in use. Please choose another.');
+                return;
+            }
+
+            await updateUsername(user.id, normalized);
+            Alert.alert('Username Updated', `Your username is now @${normalized}.`);
+        } catch (error) {
+            Alert.alert('Error', 'Could not update username. Please try again.');
+        } finally {
+            setUpdatingUsername(false);
+        }
     };
 
     const SettingItem = ({ icon, label, value, onValueChange, type = 'switch', onPress }) => (
@@ -106,6 +146,30 @@ const SettingsScreen = ({ navigation }) => {
                 <View style={styles.section}>
                     <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>Account</Text>
                     
+                    {/* Username editor */}
+                    <View style={styles.item}>
+                        <View style={styles.itemLeft}>
+                            <View style={[styles.iconContainer, { backgroundColor: theme.colors.surface }] }>
+                                <Ionicons name="at-outline" size={22} color={theme.colors.text} />
+                            </View>
+                            <Text style={[styles.itemLabel, { color: theme.colors.text }]}>Username</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Text style={{ color: theme.colors.textSecondary, marginRight: 4 }}>@</Text>
+                            <Text
+                                onPress={() => {}}
+                                style={{ color: theme.colors.text, minWidth: 80 }}
+                            >
+                                {username || '...'}
+                            </Text>
+                            <TouchableOpacity onPress={handleChangeUsername} disabled={updatingUsername} style={{ marginLeft: 12 }}>
+                                <Text style={{ color: theme.colors.primary }}>
+                                    {updatingUsername ? 'Saving...' : 'Save'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
                     <SettingItem 
                         type="link"
                         icon="key-outline"

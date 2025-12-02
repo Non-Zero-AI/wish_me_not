@@ -13,7 +13,6 @@ const SignUpScreen = ({ navigation }) => {
     
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
-    const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -31,7 +30,7 @@ const SignUpScreen = ({ navigation }) => {
     };
 
     const handleSignUp = async () => {
-        if (!firstName || !lastName || !username || !email || !password || !confirmPassword) {
+        if (!firstName || !lastName || !email || !password || !confirmPassword) {
             Alert.alert('Missing Information', 'Please fill in all fields.');
             return;
         }
@@ -53,7 +52,6 @@ const SignUpScreen = ({ navigation }) => {
                 password,
                 firstName,
                 lastName,
-                username,
             });
 
             console.log('SignUp result:', result);
@@ -166,19 +164,6 @@ const SignUpScreen = ({ navigation }) => {
                                 />
                             </View>
                         </View>
-
-                        <Text style={[styles.label, { color: theme.colors.text }]}>Username</Text>
-                        <TextInput
-                            style={[styles.input, { 
-                                backgroundColor: theme.colors.surface, 
-                                color: theme.colors.text,
-                                borderColor: theme.colors.border,
-                                fontFamily: theme.fonts.regular
-                            }]}
-                            value={username}
-                            onChangeText={setUsername}
-                            autoCapitalize="none"
-                        />
 
                         <Text style={[styles.label, { color: theme.colors.text }]}>Email</Text>
                         <TextInput

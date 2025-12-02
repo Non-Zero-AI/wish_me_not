@@ -252,17 +252,13 @@ const ProfileScreen = ({ navigation, route }) => {
             
             <View style={styles.profileContent}>
                 <View style={styles.headerTopRow}>
-                    {/* Avatar - Overlapping Banner */}
+                    {/* Avatar - Overlapping Banner (initials only) */}
                     <TouchableOpacity onPress={() => navigation.navigate('Themes')} activeOpacity={0.8}> 
-                         {user?.image ? (
-                            <Image source={{ uri: user.image }} style={[styles.avatar, { borderColor: theme.colors.background }]} />
-                         ) : (
-                            <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.secondary, borderColor: theme.colors.background }]}>
-                                <Text style={[styles.avatarText, { color: theme.colors.textInverse }]}>
-                                    {user?.firstName?.charAt(0).toUpperCase()}
-                                </Text>
-                            </View>
-                         )}
+                        <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.secondary, borderColor: theme.colors.background }]}>
+                            <Text style={[styles.avatarText, { color: theme.colors.textInverse }]}>
+                                {user?.firstName?.charAt(0).toUpperCase()}
+                            </Text>
+                        </View>
                     </TouchableOpacity>
                     
                     {/* Action Buttons (Right Side) */}
@@ -419,13 +415,9 @@ const ProfileScreen = ({ navigation, route }) => {
                     
                     <View style={styles.composerContent}>
                          <View style={{ marginRight: 12 }}>
-                             {user?.image ? (
-                                <Image source={{ uri: user.image }} style={styles.composerAvatar} />
-                             ) : (
-                                <View style={[styles.composerAvatar, { backgroundColor: theme.colors.secondary, justifyContent: 'center', alignItems: 'center' }]}>
-                                    <Text style={{ color: theme.colors.textInverse, fontWeight: 'bold', fontSize: 16 }}>{user?.firstName?.charAt(0)}</Text>
-                                </View>
-                             )}
+                            <View style={[styles.composerAvatar, { backgroundColor: theme.colors.secondary, justifyContent: 'center', alignItems: 'center' }]}>
+                                <Text style={{ color: theme.colors.textInverse, fontWeight: 'bold', fontSize: 16 }}>{user?.firstName?.charAt(0)}</Text>
+                            </View>
                          </View>
                          
                          <View style={{ flex: 1 }}>

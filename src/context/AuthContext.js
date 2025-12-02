@@ -24,6 +24,17 @@ const AuthContext = createContext({
   resetPasswordRecoveryState: () => {},
 });
 
+// Simple fun username generator like "Flying_Penguin83"
+const adjectives = ['Flying', 'Happy', 'Cosmic', 'Lucky', 'Bright', 'Silent', 'Swift', 'Golden'];
+const animals = ['Penguin', 'Tiger', 'Otter', 'Fox', 'Panda', 'Eagle', 'Dolphin', 'Koala'];
+
+const generateFunUsername = () => {
+  const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const animal = animals[Math.floor(Math.random() * animals.length)];
+  const num = Math.floor(10 + Math.random() * 90); // 2-digit number
+  return `${adj}_${animal}${num}`;
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,11 +55,14 @@ export const AuthProvider = ({ children }) => {
         user_metadata?.family_name ||
         (user_metadata?.name ? user_metadata.name.split(' ').slice(1).join(' ') : '') ||
         '';
-      const username =
+      let username =
         user_metadata?.username ||
         (email ? email.split('@')[0] : '') ||
         undefined;
-      const avatarUrl = user_metadata?.avatar_url || null;
+
+      if (!username) {
+        username = generateFunUsername();
+      }
 
       const { error } = await supabase
         .from('profiles')
@@ -59,7 +73,6 @@ export const AuthProvider = ({ children }) => {
             first_name: firstName,
             last_name: lastName,
             username,
-            avatar_url: avatarUrl,
           },
           { onConflict: 'id' }
         );
@@ -115,6 +128,7 @@ export const AuthProvider = ({ children }) => {
   const signUp = async ({ email, password, firstName, lastName, username }) => {
     setIsLoading(true);
     try {
+      const finalUsername = username && username.trim().length > 0 ? username.trim() : generateFunUsername();
       console.log('Starting sign up for:', email);
       
       const { data, error } = await supabase.auth.signUp({
@@ -124,7 +138,7 @@ export const AuthProvider = ({ children }) => {
           data: {
             first_name: firstName,
             last_name: lastName,
-            username: username,
+            username: finalUsername,
           },
         },
       });
@@ -147,7 +161,7 @@ export const AuthProvider = ({ children }) => {
             email: email,
             first_name: firstName,
             last_name: lastName,
-            username: username,
+            username: finalUsername,
           }, { onConflict: 'id' });
 
         if (profileError) {

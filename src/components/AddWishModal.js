@@ -127,13 +127,9 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
                 
                 <View style={styles.composerContent}>
                      <View style={{ marginRight: 12 }}>
-                         {user?.image ? (
-                            <Image source={{ uri: user.image }} style={styles.composerAvatar} />
-                         ) : (
-                            <View style={[styles.composerAvatar, { backgroundColor: theme.colors.secondary, justifyContent: 'center', alignItems: 'center' }]}>
-                                <Text style={{ color: theme.colors.textInverse, fontWeight: 'bold', fontSize: 16 }}>{user?.firstName?.charAt(0) || '?'}</Text>
-                            </View>
-                         )}
+                        <View style={[styles.composerAvatar, { backgroundColor: theme.colors.secondary, justifyContent: 'center', alignItems: 'center' }]}>
+                            <Text style={{ color: theme.colors.textInverse, fontWeight: 'bold', fontSize: 16 }}>{user?.firstName?.charAt(0) || '?'}</Text>
+                        </View>
                      </View>
                      
                      <View style={{ flex: 1 }}>
