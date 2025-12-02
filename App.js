@@ -1,14 +1,10 @@
 import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
-import { initLogger } from './src/services/logger';
 import { enableScreens } from 'react-native-screens';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Disable native screens for now to avoid Web crashes
 enableScreens(false);
-
-// Initialize remote logging
-initLogger();
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
