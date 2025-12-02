@@ -147,6 +147,7 @@ function MainTabs() {
   
   return (
     <Tab.Navigator
+      initialRouteName="ProfileStack"
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarIcon: ({ focused, color, size }) => {

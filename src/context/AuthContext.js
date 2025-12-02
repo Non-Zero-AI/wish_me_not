@@ -1,7 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { registerForPushNotificationsAsync } from '../services/notifications';
+
+// Helper to show alerts that works on both web and native
+const showAlert = (title, message) => {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}: ${message}`);
+  } else {
+    Alert.alert(title, message);
+  }
+};
 
 const AuthContext = createContext({
   user: null,
@@ -97,7 +106,7 @@ export const AuthProvider = ({ children }) => {
       return data;
     } catch (error) {
       console.error('Sign Up Error:', error.message);
-      Alert.alert('Sign Up Failed', error.message);
+      showAlert('Sign Up Failed', error.message);
       throw error;
     } finally {
       setIsLoading(false);
@@ -114,14 +123,14 @@ export const AuthProvider = ({ children }) => {
 
       if (error) {
         console.error('Login Error:', error.message);
-        Alert.alert('Login Failed', error.message);
+        showAlert('Login Failed', error.message);
         return { user: null, error };
       }
 
       return { user: data?.user ?? null, error: null };
     } catch (err) {
       console.error('Login Error (unexpected):', err.message);
-      Alert.alert('Login Failed', 'An unexpected error occurred. Please try again.');
+      showAlert('Login Failed', 'An unexpected error occurred. Please try again.');
       return { user: null, error: err };
     } finally {
       setIsLoading(false);
