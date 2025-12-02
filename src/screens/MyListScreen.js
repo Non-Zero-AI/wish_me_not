@@ -235,7 +235,7 @@ const HomeScreen = () => {
         try {
             if (!user) return;
             
-            const deepLink = `https://wish-me-not.vercel.app/wishlist/${encodeURIComponent(user.email)}`;
+            const deepLink = `https://wishmenot.app/wishlist/${encodeURIComponent(user.email)}`;
             const shareMessage = `Hey! Check out my wishlist on Wish Me Not.
 
 Tap the link below:

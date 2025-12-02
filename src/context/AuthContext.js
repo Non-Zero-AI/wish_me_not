@@ -141,7 +141,7 @@ export const AuthProvider = ({ children }) => {
   const signInWithGoogle = async () => {
     try {
       // Always use production URL for OAuth redirect
-      const PRODUCTION_URL = 'https://wish-me-not.vercel.app';
+      const PRODUCTION_URL = 'https://wishmenot.app';
       const redirectUrl = Platform.OS === 'web' 
         ? PRODUCTION_URL 
         : 'wishmenot://auth/callback';

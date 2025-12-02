@@ -109,7 +109,7 @@ const ProfileScreen = ({ navigation, route }) => {
     const handleShare = async () => {
         try {
             if (!user) return;
-            const deepLink = `https://wish-me-not.vercel.app/wishlist/${encodeURIComponent(user.email)}`;
+            const deepLink = `https://wishmenot.app/wishlist/${encodeURIComponent(user.email)}`;
             const shareMessage = `Check out my wishlist on Wish Me Not!\n\n${deepLink}`;
             await Share.share({
                 message: shareMessage,
