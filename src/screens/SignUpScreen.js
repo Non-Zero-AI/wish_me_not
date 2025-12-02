@@ -56,11 +56,9 @@ const SignUpScreen = ({ navigation }) => {
 
             Alert.alert(
                 'Check your email',
-                'We have sent a confirmation link to your email. Please confirm your account, then return here to log in.'
+                'We have sent a confirmation link to your email. Please confirm your account, then return here to log in.',
+                [{ text: 'OK', onPress: () => navigation.goBack() }]
             );
-
-            // Return user to the login screen
-            navigation.goBack();
         } catch (error) {
             console.error('Sign up error:', error);
             // Alert is already handled in AuthContext

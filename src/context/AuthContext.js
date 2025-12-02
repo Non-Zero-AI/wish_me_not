@@ -51,6 +51,8 @@ export const AuthProvider = ({ children }) => {
   const signUp = async ({ email, password, firstName, lastName, username }) => {
     setIsLoading(true);
     try {
+      console.log('Starting sign up for:', email);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -63,7 +65,35 @@ export const AuthProvider = ({ children }) => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase auth.signUp error:', error);
+        throw error;
+      }
+
+      console.log('Auth signUp response:', data);
+
+      // If we got a user back, manually create their profile row
+      // (in case the database trigger is missing)
+      if (data?.user?.id) {
+        console.log('Creating profile for user:', data.user.id);
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: data.user.id,
+            email: email,
+            first_name: firstName,
+            last_name: lastName,
+            username: username,
+          }, { onConflict: 'id' });
+
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          // Don't throw here - auth succeeded, profile can be created later
+        } else {
+          console.log('Profile created successfully');
+        }
+      }
+
       return data;
     } catch (error) {
       console.error('Sign Up Error:', error.message);
