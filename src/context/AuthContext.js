@@ -140,8 +140,10 @@ export const AuthProvider = ({ children }) => {
 
   const signInWithGoogle = async () => {
     try {
+      // Always use production URL for OAuth redirect
+      const PRODUCTION_URL = 'https://wish-me-not.vercel.app';
       const redirectUrl = Platform.OS === 'web' 
-        ? window.location.origin 
+        ? PRODUCTION_URL 
         : 'wishmenot://auth/callback';
       
       const { data, error } = await supabase.auth.signInWithOAuth({
