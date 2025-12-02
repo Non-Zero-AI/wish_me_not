@@ -47,14 +47,20 @@ const SignUpScreen = ({ navigation }) => {
         setLoading(true);
         try {
             await signUp({
-                email, 
+                email,
                 password,
                 firstName,
                 lastName,
-                username
+                username,
             });
-            
-            // Supabase auto-login usually happens or we can let auth state listener handle navigation
+
+            Alert.alert(
+                'Check your email',
+                'We have sent a confirmation link to your email. Please confirm your account, then return here to log in.'
+            );
+
+            // Return user to the login screen
+            navigation.goBack();
         } catch (error) {
             console.error('Sign up error:', error);
             // Alert is already handled in AuthContext

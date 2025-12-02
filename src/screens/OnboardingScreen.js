@@ -33,23 +33,38 @@ const OnboardingScreen = ({ navigation }) => {
         try {
             console.log('Attempting login...');
             const { user, error } = await signIn({ email, password });
-            
-            if (error) throw error;
 
-            if (user) {
-                console.log('Login successful');
-                if (pendingFriendEmail) {
-                    try {
-                        await addLocalFriend(pendingFriendEmail);
-                    } catch (e) {
-                        console.warn('Failed to add pending friend', e);
-                    }
-                }
-                // AuthContext subscription handles state update
+            if (error) {
+                console.log('Login failed with error object from AuthContext');
+                return; // Alert already shown in AuthContext
             }
+
+            if (!user) {
+                console.log('Login returned no user and no error');
+                Alert.alert(
+                    'Login Failed',
+                    'We could not log you in. Please double-check your email and password, or confirm your email if you just signed up.'
+                );
+                return;
+            }
+
+            console.log('Login successful, navigating to Main');
+            if (pendingFriendEmail) {
+                try {
+                    await addLocalFriend(pendingFriendEmail);
+                } catch (e) {
+                    console.warn('Failed to add pending friend', e);
+                }
+            }
+
+            // Explicitly navigate out of Auth stack to Main
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'Main' }],
+            });
         } catch (error) {
             console.error('Login Critical Error:', error);
-            // Alert handled in AuthContext but we ensure loading is stopped
+            Alert.alert('Login Failed', 'An unexpected error occurred. Please try again.');
         } finally {
             setLoading(false);
         }
