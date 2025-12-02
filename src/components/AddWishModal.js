@@ -67,8 +67,21 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
             let productData;
 
             if (url) {
-                // Primary path: scrape product info from URL
-                productData = await addProduct(url, user);
+                // Primary path: try to scrape product info from URL and store in DB
+                try {
+                    productData = await addProduct(url, user);
+                } catch (err) {
+                    console.error('addProduct failed, using local fallback item:', err);
+                    // Local-only fallback item so the wish still appears for the user
+                    productData = {
+                        id: Date.now(),
+                        name: manualName || 'Unknown Item',
+                        price: 'Unavailable',
+                        image: null,
+                        link: url,
+                        created_at: new Date().toISOString(),
+                    };
+                }
             } else {
                 // Fallback: manual item with no URL
                 productData = await addManualProduct(
@@ -86,8 +99,8 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
             if (onAdded) onAdded(newItem);
             handleClose();
         } catch (error) {
-            console.error('Error adding wish:', error);
-            showAlert('Error', url ? 'Failed to fetch product details.' : 'Failed to add manual item.');
+            console.error('Error adding wish (outer):', error);
+            showAlert('Error', 'Failed to add wish. Please try again.');
         } finally {
             setAdding(false);
         }
