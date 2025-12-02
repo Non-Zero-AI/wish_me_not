@@ -7,6 +7,14 @@ import { useTheme } from '../theme/ThemeContext';
 import { addProduct, addManualProduct } from '../services/api';
 import { addItem } from '../services/storage';
 
+const showAlert = (title, message) => {
+    if (Platform.OS === 'web') {
+        window.alert(`${title}: ${message}`);
+    } else {
+        Alert.alert(title, message);
+    }
+};
+
 const AddWishModal = ({ visible, onClose, user, onAdded }) => {
     const { theme } = useTheme();
     
@@ -52,7 +60,7 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
         setAdding(true);
         try {
             if (!user) {
-                Alert.alert('Error', 'User not found.');
+                showAlert('Error', 'User not found.');
                 return;
             }
 
@@ -79,7 +87,7 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
             handleClose();
         } catch (error) {
             console.error('Error adding wish:', error);
-            Alert.alert('Error', url ? 'Failed to fetch product details.' : 'Failed to add manual item.');
+            showAlert('Error', url ? 'Failed to fetch product details.' : 'Failed to add manual item.');
         } finally {
             setAdding(false);
         }

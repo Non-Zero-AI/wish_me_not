@@ -214,22 +214,38 @@ export const getUserWishlist = async (userEmail) => {
 
 export const addProduct = async (url, user) => {
     try {
-        console.log('Scraping URL:', url);
-        
-        const { data: productData, error: scrapeError } = await supabase.functions.invoke('scrape-product', {
-            body: { url }
-        });
-        
-        if (scrapeError) throw scrapeError;
+        console.log('addProduct called with URL:', url);
 
-        const name = productData.title || productData.name || 'New Item';
-        const price = productData.price || '0';
-        const image = productData.image || productData.image_url || null;
+        let productData = null;
+        try {
+            const { data, error: scrapeError } = await supabase.functions.invoke('scrape-product', {
+                body: { url },
+            });
+
+            if (scrapeError) {
+                console.warn('scrape-product function error, falling back to basic item:', scrapeError);
+            } else {
+                productData = data;
+            }
+        } catch (scrapeErr) {
+            console.warn('scrape-product invocation failed, falling back to basic item:', scrapeErr);
+        }
+
+        const name =
+            productData?.title ||
+            productData?.name ||
+            'New Item';
+        const price = productData?.price || '0';
+        const image = productData?.image || productData?.image_url || null;
 
         const userId = user.id || (await getUserIdByEmail(user.email));
-        
+
         // Get default list
-        const { data: lists } = await supabase.from('lists').select('id').eq('user_id', userId).limit(1);
+        const { data: lists } = await supabase
+            .from('lists')
+            .select('id')
+            .eq('user_id', userId)
+            .limit(1);
         const listId = lists && lists.length > 0 ? lists[0].id : null;
 
         const { data, error } = await supabase
@@ -237,9 +253,9 @@ export const addProduct = async (url, user) => {
             .insert({
                 user_id: userId,
                 list_id: listId,
-                name: name,
+                name,
                 price: price.toString(),
-                image: image,
+                image,
                 link: url,
             })
             .select()
@@ -247,7 +263,6 @@ export const addProduct = async (url, user) => {
 
         if (error) throw error;
         return data;
-
     } catch (error) {
         console.error('Error adding product:', error);
         throw error;
