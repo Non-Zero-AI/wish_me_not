@@ -121,13 +121,33 @@ const ProfileScreen = ({ navigation, route }) => {
             const shareMessage = `Check out my wishlist on Wish Me Not!\n\n${deepLink}`;
 
             if (Platform.OS === 'web') {
-                if (navigator.share) {
-                    await navigator.share({ title: 'My Wish List', text: shareMessage, url: deepLink });
-                } else if (navigator.clipboard?.writeText) {
-                    await navigator.clipboard.writeText(deepLink);
-                    if (window?.alert) window.alert('Wishlist link copied to clipboard');
-                } else if (window?.prompt) {
+                try {
+                    if (navigator.share) {
+                        await navigator.share({ title: 'My Wish List', text: shareMessage, url: deepLink });
+                        return;
+                    }
+                } catch (shareErr) {
+                    console.warn('navigator.share failed, falling back:', shareErr);
+                }
+
+                if (navigator.clipboard?.writeText) {
+                    try {
+                        await navigator.clipboard.writeText(deepLink);
+                        if (window?.alert) window.alert('Wishlist link copied to clipboard');
+                        return;
+                    } catch (clipErr) {
+                        console.warn('Clipboard write failed:', clipErr);
+                    }
+                }
+
+                if (window?.prompt) {
                     window.prompt('Copy this link:', deepLink);
+                    return;
+                }
+
+                // Last resort: open wishlist URL in a new tab/window
+                if (window?.open) {
+                    window.open(deepLink, '_blank');
                 }
             } else {
                 await Share.share({

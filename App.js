@@ -14,7 +14,7 @@ import { ActivityIndicator, View, Text, StyleSheet, StatusBar, Platform, useWind
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import * as Font from 'expo-font';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFonts, Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 
 import { getUser, saveUser, saveItems, saveFriends, clearUser } from './src/services/storage';
@@ -144,6 +144,7 @@ function MainTabs() {
   const { setAddModalVisible } = useModal();
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width > 768;
+  const insets = useSafeAreaInsets();
   
   return (
     <Tab.Navigator
@@ -171,9 +172,8 @@ function MainTabs() {
           display: isDesktop ? 'none' : 'flex',
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.border,
-          height: Platform.OS === 'ios' ? 90 : 60,
-          paddingBottom: Platform.OS === 'ios' ? 25 : 5,
-          paddingTop: 5,
+          paddingBottom: insets.bottom || 6,
+          paddingTop: 4,
         },
       })}
     >
@@ -199,7 +199,7 @@ function MainTabs() {
                       backgroundColor: theme.colors.primary, 
                       justifyContent: 'center', 
                       alignItems: 'center',
-                      marginBottom: Platform.OS === 'ios' ? 30 : 20,
+                      marginBottom: Platform.OS === 'ios' ? (insets.bottom || 10) : 16,
                       shadowColor: '#000',
                       shadowOpacity: 0.3,
                       shadowRadius: 4,
