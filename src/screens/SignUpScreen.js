@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
-import { createUser } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 
 const SignUpScreen = ({ navigation }) => {
     const { theme } = useTheme();
-    const { signUp } = useAuth();
+    const { signUp, signInWithGoogle } = useAuth();
+    const { width } = useWindowDimensions();
+    const isWeb = Platform.OS === 'web';
     
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -17,6 +18,7 @@ const SignUpScreen = ({ navigation }) => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [googleLoading, setGoogleLoading] = useState(false);
 
     const validatePassword = (pass) => {
         // Must contain letters, numbers, and at least one of !@#$%&*
@@ -84,21 +86,58 @@ const SignUpScreen = ({ navigation }) => {
         }
     };
 
+    const handleGoogleSignUp = async () => {
+        setGoogleLoading(true);
+        try {
+            await signInWithGoogle();
+        } finally {
+            setGoogleLoading(false);
+        }
+    };
+
+    // Responsive max width for web
+    const formMaxWidth = isWeb ? Math.min(400, width - 48) : '100%';
+
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
              <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardView}
             >
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
-                    </TouchableOpacity>
-                    <Text style={[styles.title, { color: theme.colors.primary, fontFamily: theme.fonts.bold }]}>Create Account</Text>
-                </View>
+                <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                    <View style={[styles.formWrapper, isWeb && { maxWidth: formMaxWidth, alignSelf: 'center', width: '100%' }]}>
+                        <View style={styles.header}>
+                            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                                <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+                            </TouchableOpacity>
+                            <Text style={[styles.title, { color: theme.colors.primary, fontFamily: theme.fonts.bold }]}>Create Account</Text>
+                        </View>
 
-                <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-                    <View style={styles.form}>
+                        {/* Google Sign Up Button */}
+                        <TouchableOpacity
+                            style={[styles.googleButton, { 
+                                backgroundColor: theme.colors.surface, 
+                                borderColor: theme.colors.border 
+                            }]}
+                            onPress={handleGoogleSignUp}
+                            disabled={googleLoading}
+                        >
+                            {googleLoading ? (
+                                <ActivityIndicator color={theme.colors.text} />
+                            ) : (
+                                <Text style={[styles.googleButtonText, { color: theme.colors.text, fontFamily: theme.fonts.medium }]}>
+                                    Sign up with Google
+                                </Text>
+                            )}
+                        </TouchableOpacity>
+
+                        <View style={styles.dividerContainer}>
+                            <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+                            <Text style={[styles.dividerText, { color: theme.colors.textSecondary }]}>or</Text>
+                            <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+                        </View>
+
+                        <View style={styles.form}>
                         <View style={styles.row}>
                             <View style={{ flex: 1, marginRight: 8 }}>
                                 <Text style={[styles.label, { color: theme.colors.text }]}>First Name</Text>
@@ -187,15 +226,29 @@ const SignUpScreen = ({ navigation }) => {
                         />
                     </View>
 
-                    <TouchableOpacity
-                        style={[styles.button, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]}
-                        onPress={handleSignUp}
-                        disabled={loading}
-                    >
-                        <Text style={[styles.buttonText, { color: theme.colors.textInverse, fontFamily: theme.fonts.bold }]}>
-                            {loading ? 'Creating...' : 'Sign Up'}
-                        </Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.button, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]}
+                            onPress={handleSignUp}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color={theme.colors.textInverse} />
+                            ) : (
+                                <Text style={[styles.buttonText, { color: theme.colors.textInverse, fontFamily: theme.fonts.bold }]}>
+                                    Sign Up
+                                </Text>
+                            )}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.secondaryButton}
+                            onPress={() => navigation.goBack()}
+                        >
+                            <Text style={{ color: theme.colors.text, fontSize: 14 }}>
+                                Already have an account? <Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>Log In</Text>
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>
@@ -209,58 +262,95 @@ const styles = StyleSheet.create({
     keyboardView: {
         flex: 1,
     },
-    header: {
+    scrollContent: {
+        flexGrow: 1,
         padding: 24,
-        paddingBottom: 0,
+        justifyContent: 'center',
+    },
+    formWrapper: {
+        width: '100%',
+    },
+    header: {
         flexDirection: 'row',
         alignItems: 'center',
+        marginBottom: 24,
     },
     backButton: {
-        marginRight: 16,
+        marginRight: 12,
     },
     title: {
-        fontSize: 28,
+        fontSize: 24,
         fontWeight: 'bold',
     },
-    content: {
-        padding: 24,
+    googleButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 10,
+        borderWidth: 1,
+        marginBottom: 16,
+    },
+    googleButtonText: {
+        fontSize: 15,
+        fontWeight: '500',
+    },
+    dividerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    divider: {
+        flex: 1,
+        height: 1,
+    },
+    dividerText: {
+        paddingHorizontal: 16,
+        fontSize: 13,
     },
     form: {
-        marginBottom: 32,
+        marginBottom: 16,
     },
     row: {
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
     label: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
-        marginBottom: 8,
+        marginBottom: 6,
     },
     input: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderRadius: 12,
-        marginBottom: 16,
-        fontSize: 16,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        borderRadius: 10,
+        marginBottom: 12,
+        fontSize: 15,
         borderWidth: 1,
     },
     helperText: {
-        fontSize: 12,
-        marginTop: -12,
+        fontSize: 11,
+        marginTop: -8,
+        marginBottom: 8,
     },
     button: {
-        paddingVertical: 16,
-        borderRadius: 12,
+        paddingVertical: 14,
+        borderRadius: 10,
         alignItems: 'center',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
     },
     buttonText: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
+    },
+    secondaryButton: {
+        alignItems: 'center',
+        padding: 12,
+        marginTop: 8,
     },
 });
 

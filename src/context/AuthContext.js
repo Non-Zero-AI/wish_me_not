@@ -18,6 +18,7 @@ const AuthContext = createContext({
   passwordRecovery: false,
   signUp: async () => {},
   signIn: async () => {},
+  signInWithGoogle: async () => {},
   signOut: async () => {},
   resetPasswordRecoveryState: () => {},
 });
@@ -137,6 +138,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const redirectUrl = Platform.OS === 'web' 
+        ? window.location.origin 
+        : 'wishmenot://auth/callback';
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+        },
+      });
+
+      if (error) {
+        console.error('Google Sign In Error:', error.message);
+        showAlert('Google Sign In Failed', error.message);
+        return { error };
+      }
+
+      return { data };
+    } catch (err) {
+      console.error('Google Sign In Error (unexpected):', err.message);
+      showAlert('Google Sign In Failed', 'An unexpected error occurred.');
+      return { error: err };
+    }
+  };
+
   const signOut = async () => {
     setIsLoading(true);
     try {
@@ -157,6 +185,7 @@ export const AuthProvider = ({ children }) => {
         passwordRecovery,
         signUp,
         signIn,
+        signInWithGoogle,
         signOut,
         resetPasswordRecoveryState,
       }}
