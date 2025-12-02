@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, RefreshControl, Platform, Image, ScrollView } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, RefreshControl, Platform, Image, ScrollView, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
@@ -16,6 +16,8 @@ import { addProduct, deleteProduct, getUserWishlist, addManualProduct, updateUse
 const ProfileScreen = ({ navigation, route }) => {
     const { theme } = useTheme();
     const insets = useSafeAreaInsets();
+    const { width } = useWindowDimensions();
+    const isDesktop = Platform.OS === 'web' && width > 768;
     
     // Handle Add Tab Press
     React.useEffect(() => {
@@ -35,6 +37,7 @@ const ProfileScreen = ({ navigation, route }) => {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    const [activeTab, setActiveTab] = useState('wishes'); // 'wishes' | 'claimed' | 'likes'
     
     // Manual Entry / Add Item State
     const [modalVisible, setModalVisible] = useState(false);
@@ -111,13 +114,25 @@ const ProfileScreen = ({ navigation, route }) => {
             if (!user) return;
             const deepLink = `https://wishmenot.app/wishlist/${encodeURIComponent(user.email)}`;
             const shareMessage = `Check out my wishlist on Wish Me Not!\n\n${deepLink}`;
-            await Share.share({
-                message: shareMessage,
-                title: 'My Wish List',
-                url: deepLink,
-            });
+
+            if (Platform.OS === 'web') {
+                if (navigator.share) {
+                    await navigator.share({ title: 'My Wish List', text: shareMessage, url: deepLink });
+                } else if (navigator.clipboard?.writeText) {
+                    await navigator.clipboard.writeText(deepLink);
+                    if (window?.alert) window.alert('Wishlist link copied to clipboard');
+                } else if (window?.prompt) {
+                    window.prompt('Copy this link:', deepLink);
+                }
+            } else {
+                await Share.share({
+                    message: shareMessage,
+                    title: 'My Wish List',
+                    url: deepLink,
+                });
+            }
         } catch (error) {
-            console.error(error);
+            console.error('Share error:', error);
         }
     };
 
@@ -306,17 +321,26 @@ const ProfileScreen = ({ navigation, route }) => {
                     </View>
                 </View>
 
-                {/* Tabs (Visual Only) */}
+                {/* Tabs */}
                 <View style={[styles.tabRow, { borderBottomColor: theme.colors.border }]}>
-                    <View style={[styles.activeTab, { borderBottomColor: theme.colors.primary }]}>
-                        <Text style={[styles.activeTabText, { color: theme.colors.text }]}>Wishes</Text>
-                    </View>
-                    <View style={styles.inactiveTab}>
-                        <Text style={[styles.inactiveTabText, { color: theme.colors.textSecondary }]}>Claimed</Text>
-                    </View>
-                    <View style={styles.inactiveTab}>
-                        <Text style={[styles.inactiveTabText, { color: theme.colors.textSecondary }]}>Likes</Text>
-                    </View>
+                    <TouchableOpacity
+                        style={[styles.activeTab, activeTab === 'wishes' && { borderBottomColor: theme.colors.primary }]}
+                        onPress={() => setActiveTab('wishes')}
+                    >
+                        <Text style={[activeTab === 'wishes' ? styles.activeTabText : styles.inactiveTabText, { color: theme.colors.text }]}>Wishes</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.inactiveTab, activeTab === 'claimed' && { borderBottomWidth: 3, borderBottomColor: theme.colors.primary }]}
+                        onPress={() => setActiveTab('claimed')}
+                    >
+                        <Text style={[activeTab === 'claimed' ? styles.activeTabText : styles.inactiveTabText, { color: theme.colors.textSecondary }]}>Claimed</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.inactiveTab, activeTab === 'likes' && { borderBottomWidth: 3, borderBottomColor: theme.colors.primary }]}
+                        onPress={() => setActiveTab('likes')}
+                    >
+                        <Text style={[activeTab === 'likes' ? styles.activeTabText : styles.inactiveTabText, { color: theme.colors.textSecondary }]}>Likes</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </View>
@@ -333,6 +357,14 @@ const ProfileScreen = ({ navigation, route }) => {
         </TouchableOpacity>
     );
 
+    const filteredItems = items.filter((item) => {
+        const isClaimed = item.isClaimed ?? item.is_claimed;
+        if (activeTab === 'claimed') return !!isClaimed;
+        if (activeTab === 'likes') return true; // placeholder until likes are persisted
+        // wishes tab: items not claimed
+        return !isClaimed;
+    });
+
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <AppHeader 
@@ -343,15 +375,19 @@ const ProfileScreen = ({ navigation, route }) => {
                     </TouchableOpacity>
                 }
                 rightAction={
-                    <TouchableOpacity onPress={onRefresh} style={styles.menuButton}>
-                         <Ionicons name="refresh" size={24} color={theme.colors.primary} />
+                    <TouchableOpacity onPress={onRefresh} style={styles.menuButton} disabled={refreshing}>
+                        {refreshing ? (
+                            <ActivityIndicator size="small" color={theme.colors.primary} />
+                        ) : (
+                            <Ionicons name="refresh" size={24} color={theme.colors.primary} />
+                        )}
                     </TouchableOpacity>
                 }
             />
 
             <FlatList
                 style={{ flex: 1 }}
-                data={items}
+                data={filteredItems}
                 ListHeaderComponent={renderHeader}
                 renderItem={({ item }) => (
                     <View style={styles.itemContainer}>
@@ -382,102 +418,106 @@ const ProfileScreen = ({ navigation, route }) => {
                 }
             />
 
-            <TouchableOpacity 
-                style={[styles.fab, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]} 
-                onPress={() => setModalVisible(true)}
-            >
-                <Ionicons name="add" size={32} color={theme.colors.textInverse} />
-            </TouchableOpacity>
+            {isDesktop && (
+                <>
+                    <TouchableOpacity 
+                        style={[styles.fab, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]} 
+                        onPress={() => setModalVisible(true)}
+                    >
+                        <Ionicons name="add" size={32} color={theme.colors.textInverse} />
+                    </TouchableOpacity>
 
-            <Modal
-                animationType="slide"
-                presentationStyle="pageSheet"
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-                    <View style={styles.composerHeader}>
-                        <TouchableOpacity onPress={() => setModalVisible(false)} style={{ padding: 8 }}>
-                            <Text style={{ fontSize: 16, color: theme.colors.text }}>Cancel</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity 
-                            style={[styles.postButton, { backgroundColor: theme.colors.primary, opacity: (!manualName && !url) ? 0.5 : 1 }]}
-                            onPress={handleAddItem}
-                            disabled={(!manualName && !url) || adding}
-                        >
-                             {adding ? (
-                                <ActivityIndicator size="small" color="#fff" />
-                             ) : (
-                                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 14 }}>Wish</Text>
-                             )}
-                        </TouchableOpacity>
-                    </View>
-                    
-                    <View style={styles.composerContent}>
-                         <View style={{ marginRight: 12 }}>
-                            <View style={[styles.composerAvatar, { backgroundColor: theme.colors.secondary, justifyContent: 'center', alignItems: 'center' }]}>
-                                <Text style={{ color: theme.colors.textInverse, fontWeight: 'bold', fontSize: 16 }}>{user?.firstName?.charAt(0)}</Text>
-                            </View>
-                         </View>
-                         
-                         <View style={{ flex: 1 }}>
-                            <TextInput
-                                placeholder="What are you wishing for?"
-                                placeholderTextColor={theme.colors.textSecondary}
-                                multiline
-                                maxLength={180}
-                                style={[
-                                    styles.composerInput, 
-                                    { color: theme.colors.text },
-                                    Platform.OS === 'web' && { outlineStyle: 'none' }
-                                ]}
-                                value={manualName}
-                                onChangeText={setManualName}
-                                autoFocus
-                            />
-                            
-                            {/* Link Input Area */}
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.colors.border }}>
-                                <Ionicons name="link-outline" size={20} color={theme.colors.primary} />
-                                <TextInput 
-                                    placeholder="Add a product link (optional)"
-                                    placeholderTextColor={theme.colors.textSecondary}
-                                    value={url}
-                                    onChangeText={setUrl}
-                                    style={[
-                                        { flex: 1, marginLeft: 8, color: theme.colors.primary, fontSize: 16 },
-                                        Platform.OS === 'web' && { outlineStyle: 'none' }
-                                    ]}
-                                    autoCapitalize="none"
-                                />
+                    <Modal
+                        animationType="slide"
+                        presentationStyle="pageSheet"
+                        visible={modalVisible}
+                        onRequestClose={() => setModalVisible(false)}
+                    >
+                        <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+                            <View style={styles.composerHeader}>
+                                <TouchableOpacity onPress={() => setModalVisible(false)} style={{ padding: 8 }}>
+                                    <Text style={{ fontSize: 16, color: theme.colors.text }}>Cancel</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    style={[styles.postButton, { backgroundColor: theme.colors.primary, opacity: (!manualName && !url) ? 0.5 : 1 }]}
+                                    onPress={handleAddItem}
+                                    disabled={(!manualName && !url) || adding}
+                                >
+                                     {adding ? (
+                                        <ActivityIndicator size="small" color="#fff" />
+                                     ) : (
+                                        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 14 }}>Wish</Text>
+                                     )}
+                                </TouchableOpacity>
                             </View>
                             
-                            {/* Image Preview */}
-                            {manualImage && (
-                                <View style={{ marginTop: 12, position: 'relative' }}>
-                                    <Image source={{ uri: manualImage }} style={styles.composerImagePreview} />
-                                    <TouchableOpacity 
-                                        style={styles.removeImageButton}
-                                        onPress={() => setManualImage(null)}
-                                    >
-                                        <Ionicons name="close" size={16} color="#fff" />
-                                    </TouchableOpacity>
-                                </View>
-                            )}
-                         </View>
-                    </View>
-                    
-                    {/* Toolbar */}
-                    <View style={[styles.composerToolbar, { borderTopColor: theme.colors.border }]}>
-                        <TouchableOpacity onPress={handlePickImage}>
-                            <Ionicons name="image-outline" size={24} color={theme.colors.primary} />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={{ marginLeft: 24 }}>
-                            <Ionicons name="camera-outline" size={24} color={theme.colors.primary} />
-                        </TouchableOpacity>
-                    </View>
-                </SafeAreaView>
-            </Modal>
+                            <View style={styles.composerContent}>
+                                 <View style={{ marginRight: 12 }}>
+                                    <View style={[styles.composerAvatar, { backgroundColor: theme.colors.secondary, justifyContent: 'center', alignItems: 'center' }]}>
+                                        <Text style={{ color: theme.colors.textInverse, fontWeight: 'bold', fontSize: 16 }}>{user?.firstName?.charAt(0)}</Text>
+                                    </View>
+                                 </View>
+                                 
+                                 <View style={{ flex: 1 }}>
+                                    <TextInput
+                                        placeholder="What are you wishing for?"
+                                        placeholderTextColor={theme.colors.textSecondary}
+                                        multiline
+                                        maxLength={180}
+                                        style={[
+                                            styles.composerInput, 
+                                            { color: theme.colors.text },
+                                            Platform.OS === 'web' && { outlineStyle: 'none' }
+                                        ]}
+                                        value={manualName}
+                                        onChangeText={setManualName}
+                                        autoFocus
+                                    />
+                                    
+                                    {/* Link Input Area */}
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.colors.border }}>
+                                        <Ionicons name="link-outline" size={20} color={theme.colors.primary} />
+                                        <TextInput 
+                                            placeholder="Add a product link (optional)"
+                                            placeholderTextColor={theme.colors.textSecondary}
+                                            value={url}
+                                            onChangeText={setUrl}
+                                            style={[
+                                                { flex: 1, marginLeft: 8, color: theme.colors.primary, fontSize: 16 },
+                                                Platform.OS === 'web' && { outlineStyle: 'none' }
+                                            ]}
+                                            autoCapitalize="none"
+                                        />
+                                    </View>
+                                    
+                                    {/* Image Preview */}
+                                    {manualImage && (
+                                        <View style={{ marginTop: 12, position: 'relative' }}>
+                                            <Image source={{ uri: manualImage }} style={styles.composerImagePreview} />
+                                            <TouchableOpacity 
+                                                style={styles.removeImageButton}
+                                                onPress={() => setManualImage(null)}
+                                            >
+                                                <Ionicons name="close" size={16} color="#fff" />
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
+                                 </View>
+                            </View>
+                            
+                            {/* Toolbar */}
+                            <View style={[styles.composerToolbar, { borderTopColor: theme.colors.border }]}>
+                                <TouchableOpacity onPress={handlePickImage}>
+                                    <Ionicons name="image-outline" size={24} color={theme.colors.primary} />
+                                </TouchableOpacity>
+                                <TouchableOpacity style={{ marginLeft: 24 }}>
+                                    <Ionicons name="camera-outline" size={24} color={theme.colors.primary} />
+                                </TouchableOpacity>
+                            </View>
+                        </SafeAreaView>
+                    </Modal>
+                </>
+            )}
         </SafeAreaView>
     );
 };

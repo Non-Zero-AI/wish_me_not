@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { getUserSettings, updateUserSettings, isUsernameAvailable, updateUsername } from '../services/api';
+import { getUser, saveUser } from '../services/storage';
 import AppHeader from '../components/AppHeader';
 
 const SettingsScreen = ({ navigation }) => {
@@ -81,6 +82,13 @@ const SettingsScreen = ({ navigation }) => {
             }
 
             await updateUsername(user.id, normalized);
+
+            // Update locally cached user so Profile screen picks up new username
+            const existing = await getUser();
+            if (existing && existing.id === user.id) {
+                await saveUser({ ...existing, username: normalized });
+            }
+
             Alert.alert('Username Updated', `Your username is now @${normalized}.`);
         } catch (error) {
             Alert.alert('Error', 'Could not update username. Please try again.');
