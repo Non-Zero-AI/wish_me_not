@@ -33,7 +33,7 @@ const AppHeader = ({ title, showBack, rightAction, leftAction, subTitle }) => {
           ) : (
               <View style={styles.brandContainer}>
                   <Image 
-                      source={require('../../assets/New Splash-Icon.png')} 
+                      source={require('../../assets/JustStarLogo.png')} 
                       style={styles.logoIcon}
                       resizeMode="contain"
                   />

@@ -212,35 +212,13 @@ export const getUserWishlist = async (userEmail) => {
     }
 };
 
-export const addProduct = async (url, user) => {
+export const addProduct = async (url, user, message) => {
     try {
-        console.log('addProduct called with URL:', url);
-
-        let productData = null;
-        try {
-            const { data, error: scrapeError } = await supabase.functions.invoke('scrape-product', {
-                body: { url },
-            });
-
-            if (scrapeError) {
-                console.warn('scrape-product function error, falling back to basic item:', scrapeError);
-            } else {
-                productData = data;
-            }
-        } catch (scrapeErr) {
-            console.warn('scrape-product invocation failed, falling back to basic item:', scrapeErr);
-        }
-
-        const name =
-            productData?.title ||
-            productData?.name ||
-            'New Item';
-        const price = productData?.price || '0';
-        const image = productData?.image || productData?.image_url || null;
+        console.log('addProduct (webhook) called with URL:', url);
 
         const userId = user.id || (await getUserIdByEmail(user.email));
 
-        // Get default list
+        // Get default list so the webhook can attach the item correctly in Supabase
         const { data: lists } = await supabase
             .from('lists')
             .select('id')
@@ -248,23 +226,45 @@ export const addProduct = async (url, user) => {
             .limit(1);
         const listId = lists && lists.length > 0 ? lists[0].id : null;
 
-        const { data, error } = await supabase
-            .from('items')
-            .insert({
-                user_id: userId,
-                list_id: listId,
-                name,
-                price: price.toString(),
-                image,
-                link: url,
-            })
-            .select()
-            .single();
+        const userProfile = {
+            id: userId,
+            email: user.email,
+            firstName: user.firstName || user.first_name || user.user_metadata?.first_name || null,
+            lastName: user.lastName || user.last_name || user.user_metadata?.last_name || null,
+            username:
+                user.username ||
+                user.user_metadata?.username ||
+                (user.email ? user.email.split('@')[0] : null),
+        };
 
-        if (error) throw error;
-        return data;
+        const payload = {
+            url,
+            user: userProfile,
+            listId,
+            message: message || null,
+            source: Platform.OS === 'web' ? 'web' : 'native',
+        };
+
+        try {
+            await axios.post('https://n8n.srv1023211.hstgr.cloud/webhook/Wish_Me_Not', payload);
+        } catch (webhookError) {
+            console.warn('Product webhook call failed:', webhookError?.message || webhookError);
+        }
+
+        // Return a minimal local item so the UI can show the text immediately
+        const now = new Date().toISOString();
+        return {
+            id: Date.now(),
+            user_id: userId,
+            list_id: listId,
+            name: message || 'New Item',
+            price: 'Fetching details…',
+            image: null,
+            link: url,
+            created_at: now,
+        };
     } catch (error) {
-        console.error('Error adding product:', error);
+        console.error('Error queuing product for webhook:', error);
         throw error;
     }
 };

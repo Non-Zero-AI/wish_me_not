@@ -117,6 +117,13 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
                         <Text style={[styles.itemPrice, { color: currentTheme.primary }]}>{item.price || ''}</Text>
                     </View>
 
+                    {item.price === 'Fetching details…' && (
+                        <View style={styles.fetchingBadge}>
+                            <ActivityIndicator size="small" color="#fff" style={{ marginRight: 6 }} />
+                            <Text style={styles.fetchingText}>Fetching product details…</Text>
+                        </View>
+                    )}
+
                     {/* Footer: Avatars & Actions */}
                     <View style={styles.footer}>
                         <View style={styles.userSection}>
@@ -257,6 +264,21 @@ const styles = StyleSheet.create({
         paddingTop: 12,
         borderTopWidth: 1,
         borderTopColor: 'rgba(255,255,255,0.1)',
+    },
+    fetchingBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        alignSelf: 'flex-start',
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 12,
+        marginTop: 4,
+    },
+    fetchingText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '500',
     },
     userSection: {
         flexDirection: 'row',

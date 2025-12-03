@@ -47,7 +47,7 @@ const SideMenu = () => {
                 <SafeAreaView style={[styles.menuContainer, { backgroundColor: theme.colors.surface }]}>
                     <View style={styles.header}>
                         <Image 
-                            source={require('../../assets/New Splash-Icon.png')} 
+                            source={require('../../assets/JustStarLogo.png')} 
                             style={styles.logo}
                             resizeMode="contain"
                         />

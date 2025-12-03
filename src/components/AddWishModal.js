@@ -67,11 +67,11 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
             let productData;
 
             if (url) {
-                // Primary path: try to scrape product info from URL and store in DB
+                // Primary path: queue product info fetch via webhook while posting the wish immediately
                 try {
-                    productData = await addProduct(url, user);
+                    productData = await addProduct(url, user, manualName);
                 } catch (err) {
-                    console.error('addProduct failed, using local fallback item:', err);
+                    console.error('addProduct (webhook) failed, using local fallback item:', err);
                     // Local-only fallback item so the wish still appears for the user
                     productData = {
                         id: Date.now(),
