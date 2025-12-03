@@ -71,7 +71,7 @@ export const darkTheme = {
     surface: palette.darkNavy,
     surfaceElevated: palette.borderNavy,
     text: palette.softCream,
-    textSecondary: palette.lightGray,
+    textSecondary: '#CED4DA',
     textInverse: palette.deepNavy,
     border: palette.borderNavy,
     error: palette.crimsonRed,

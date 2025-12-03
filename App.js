@@ -315,7 +315,10 @@ function AppNavigator() {
         >
           <View style={{ flex: 1, flexDirection: isDesktop ? 'row' : 'column' }}>
              {isDesktop && user && <WebSidebar />}
-             <View style={{ flex: 1 }}>
+             <View
+               style={{ flex: 1 }}
+               accessibilityRole={Platform.OS === 'web' ? 'main' : undefined}
+             >
                 <RootTabs.Navigator 
                   screenOptions={{ 
                     headerShown: false,
@@ -374,7 +377,7 @@ export default function App() {
       <AuthProvider>
         <ModalProvider>
           <ErrorBoundary>
-              <AppNavigator />
+            <AppNavigator />
           </ErrorBoundary>
         </ModalProvider>
       </AuthProvider>

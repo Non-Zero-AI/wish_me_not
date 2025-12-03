@@ -40,7 +40,10 @@ const WebSidebar = () => {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.surface, borderRightColor: theme.colors.border }]}>
+        <View
+            style={[styles.container, { backgroundColor: theme.colors.surface, borderRightColor: theme.colors.border }]}
+            accessibilityRole={Platform.OS === 'web' ? 'navigation' : undefined}
+        >
             <View style={styles.header}>
                 <Image 
                     source={require('../../assets/JustStarLogo.png')} 
