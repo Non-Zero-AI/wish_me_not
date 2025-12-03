@@ -5,11 +5,11 @@ export default {
     version: "1.0.0",
     scheme: "wishmenot",
     orientation: "portrait",
-    icon: "./assets/splash-icon.png",
+    icon: "./assets/New Splash-Icon.png",
     userInterfaceStyle: "light",
     newArchEnabled: true,
     splash: {
-      image: "./assets/splash-icon.png",
+      image: "./assets/New Splash-Icon.png",
       resizeMode: "contain",
       backgroundColor: "#1a2332"
     },
@@ -19,14 +19,14 @@ export default {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: "./assets/splash-icon.png",
+        foregroundImage: "./assets/New Splash-Icon.png",
         backgroundColor: "#1a2332"
       },
       package: "com.wishmenot.app",
       edgeToEdgeEnabled: true
     },
     web: {
-      favicon: "./assets/splash-icon.png",
+      favicon: "./assets/New Splash-Icon.png",
       name: "Wish Me Not",
       shortName: "WishMeNot",
       description: "The wishlist app you actually want.",

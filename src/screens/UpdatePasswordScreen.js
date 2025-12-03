@@ -37,7 +37,10 @@ const UpdatePasswordScreen = ({ navigation }) => {
             ]);
         } catch (error) {
             console.error('Update Password Error:', error.message);
-            Alert.alert('Error', error.message);
+            Alert.alert(
+                'Password Not Updated',
+                'We could not update your password. Please choose a new password that is different from your current one and meets all requirements.'
+            );
         } finally {
             setLoading(false);
         }

@@ -43,7 +43,7 @@ const WebSidebar = () => {
         <View style={[styles.container, { backgroundColor: theme.colors.surface, borderRightColor: theme.colors.border }]}>
             <View style={styles.header}>
                 <Image 
-                    source={require('../../assets/splash-icon.png')} 
+                    source={require('../../assets/New Splash-Icon.png')} 
                     style={styles.logo}
                     resizeMode="contain"
                 />

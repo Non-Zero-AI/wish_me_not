@@ -97,7 +97,7 @@ const OnboardingScreen = ({ navigation }) => {
                 <View style={[styles.formWrapper, isWeb && { maxWidth: formMaxWidth, alignSelf: 'center', width: '100%' }]}>
                     <View style={styles.header}>
                         <Image 
-                            source={require('../../assets/Wish Me Not Logo.png')}
+                            source={require('../../assets/New Wish Me Not Logo.png')}
                             style={styles.logo}
                             resizeMode="contain"
                         />

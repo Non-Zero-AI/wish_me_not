@@ -83,7 +83,7 @@ const FriendRequestsScreen = ({ navigation }) => {
     const renderRequestItem = ({ item }) => (
         <View style={[styles.requestItem, { backgroundColor: theme.colors.surface }]}>
             <Image 
-                source={item.avatar_url ? { uri: item.avatar_url } : require('../../assets/splash-icon.png')} 
+                source={item.avatar_url ? { uri: item.avatar_url } : require('../../assets/New Splash-Icon.png')} 
                 style={styles.avatar} 
             />
             <View style={styles.requestInfo}>
