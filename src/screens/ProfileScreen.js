@@ -443,7 +443,7 @@ const ProfileScreen = ({ navigation, route }) => {
                 }
             />
 
-            {isDesktop && (
+            {false && isDesktop && (
                 <>
                     <TouchableOpacity 
                         style={[styles.fab, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]} 

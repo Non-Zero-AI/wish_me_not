@@ -339,126 +339,14 @@ To view it:
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
                         <Text style={[styles.emptyText, { color: theme.colors.text }]}>Your wish list is empty.</Text>
-                        <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>Tap the + button to add items.</Text>
+                        <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>
+                            {Platform.OS === 'web'
+                                ? 'Use the Post Wish button to add items.'
+                                : 'Tap the + button to add items.'}
+                        </Text>
                     </View>
                 }
             />
-
-            <TouchableOpacity 
-                style={[styles.fab, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary, marginBottom: insets.bottom }]} 
-                onPress={() => setModalVisible(true)}
-            >
-                <Ionicons name="add" size={32} color={theme.colors.textInverse} />
-            </TouchableOpacity>
-
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
-                        <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Add Item</Text>
-                        
-                        {/* Entry Mode Toggle */}
-                        <View style={styles.tabContainer}>
-                            <TouchableOpacity 
-                                style={[styles.tab, entryMode === 'link' && styles.activeTab]} 
-                                onPress={() => setEntryMode('link')}
-                            >
-                                <Text style={[styles.tabText, entryMode === 'link' && styles.activeTabText]}>Link</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity 
-                                style={[styles.tab, entryMode === 'manual' && styles.activeTab]} 
-                                onPress={() => setEntryMode('manual')}
-                            >
-                                <Text style={[styles.tabText, entryMode === 'manual' && styles.activeTabText]}>Manual</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        {entryMode === 'link' ? (
-                            <>
-                                <Text style={[styles.modalSubtitle, { color: theme.colors.textSecondary }]}>Paste a product URL below</Text>
-                                <TextInput
-                                    style={[styles.input, { 
-                                        backgroundColor: theme.colors.background, 
-                                        color: theme.colors.text, 
-                                        borderColor: theme.colors.border 
-                                    }]}
-                                    placeholder="https://example.com/product"
-                                    placeholderTextColor={theme.colors.textSecondary}
-                                    value={url}
-                                    onChangeText={setUrl}
-                                    autoCapitalize="none"
-                                    autoCorrect={false}
-                                />
-                            </>
-                        ) : (
-                            <>
-                                <TouchableOpacity onPress={handlePickImage} style={styles.imagePreview}>
-                                    {manualImage ? (
-                                        <Image source={{ uri: manualImage }} style={styles.previewImage} resizeMode="cover" />
-                                    ) : (
-                                        <View style={{ alignItems: 'center' }}>
-                                            <Ionicons name="camera-outline" size={32} color={theme.colors.textSecondary} />
-                                            <Text style={{ color: theme.colors.textSecondary, marginTop: 4 }}>Add Image</Text>
-                                        </View>
-                                    )}
-                                </TouchableOpacity>
-
-                                <TextInput
-                                    style={[styles.input, { 
-                                        backgroundColor: theme.colors.background, 
-                                        color: theme.colors.text, 
-                                        borderColor: theme.colors.border,
-                                        marginBottom: 12
-                                    }]}
-                                    placeholder="Item Name"
-                                    placeholderTextColor={theme.colors.textSecondary}
-                                    value={manualName}
-                                    onChangeText={setManualName}
-                                />
-                                
-                                <TextInput
-                                    style={[styles.input, { 
-                                        backgroundColor: theme.colors.background, 
-                                        color: theme.colors.text, 
-                                        borderColor: theme.colors.border 
-                                    }]}
-                                    placeholder="Price"
-                                    placeholderTextColor={theme.colors.textSecondary}
-                                    value={manualPrice}
-                                    onChangeText={setManualPrice}
-                                    keyboardType="decimal-pad"
-                                />
-                            </>
-                        )}
-
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.cancelButton, { backgroundColor: theme.colors.background }]}
-                                onPress={() => setModalVisible(false)}
-                                disabled={adding}
-                            >
-                                <Text style={[styles.cancelButtonText, { color: theme.colors.text }]}>Cancel</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.addButton, { backgroundColor: theme.colors.primary }]}
-                                onPress={handleAddItem}
-                                disabled={adding}
-                            >
-                                {adding ? (
-                                    <ActivityIndicator color={theme.colors.textInverse} size="small" />
-                                ) : (
-                                    <Text style={[styles.addButtonText, { color: theme.colors.textInverse }]}>Add</Text>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
         </View>
     );
 };
