@@ -200,7 +200,7 @@ export const getUserWishlist = async (userEmail) => {
             price: post.price,
             image: post.image,
             link: post.link,
-            content: post.content,
+            content: post.message || post.content || null,
             isPublic: post.is_public,
             isClaimed: post.is_claimed,
             claimedBy: post.claimer ? `${post.claimer.first_name} ${post.claimer.last_name}` : null,
@@ -281,11 +281,12 @@ export const addProduct = async (url, user, message) => {
             post,
         };
 
-        try {
-            await axios.post('https://n8n.srv1023211.hstgr.cloud/webhook/Wish_Me_Not', payload);
-        } catch (webhookError) {
-            console.warn('Product webhook call failed:', webhookError?.message || webhookError);
-        }
+        // Fire-and-forget webhook: do not block the UI on network latency
+        axios
+            .post('https://n8n.srv1023211.hstgr.cloud/webhook/Wish_Me_Not', payload)
+            .catch((webhookError) => {
+                console.warn('Product webhook call failed:', webhookError?.message || webhookError);
+            });
 
         // Return a minimal local post so the UI can show the text immediately
         return {

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, Image, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -25,6 +25,11 @@ const HomeScreen = ({ navigation }) => {
             loadData();
         }, [postsVersion])
     );
+
+    // Also respond to postsVersion changes while already focused
+    useEffect(() => {
+        loadData();
+    }, [postsVersion]);
 
     const loadData = async () => {
         try {

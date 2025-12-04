@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, Share, RefreshControl, Platform, Image, ScrollView, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
@@ -55,6 +55,11 @@ const ProfileScreen = ({ navigation, route }) => {
             loadData();
         }, [postsVersion])
     );
+
+    // Ensure updates while screen is already focused
+    useEffect(() => {
+        loadData();
+    }, [postsVersion]);
 
     const loadData = async () => {
         const userData = await getUser();
