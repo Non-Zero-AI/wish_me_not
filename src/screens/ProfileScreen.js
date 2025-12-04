@@ -10,11 +10,13 @@ import SwipeableRow from '../components/SwipeableRow';
 import ProductCard from '../components/ProductCard';
 import AppHeader from '../components/AppHeader';
 import { useTheme } from '../theme/ThemeContext';
+import { useModal } from '../context/ModalContext';
 import { getItems, addItem, getUser, deleteItem, saveItems, saveUser, getFriends } from '../services/storage';
 import { addProduct, deleteProduct, getUserWishlist, addManualProduct, updateUserProfile, updateUserSettings, getUserSettings } from '../services/api';
 
 const ProfileScreen = ({ navigation, route }) => {
     const { theme } = useTheme();
+    const { postsVersion } = useModal();
     const insets = useSafeAreaInsets();
     const { width } = useWindowDimensions();
     const isDesktop = Platform.OS === 'web' && width > 768;
@@ -51,7 +53,7 @@ const ProfileScreen = ({ navigation, route }) => {
     useFocusEffect(
         useCallback(() => {
             loadData();
-        }, [])
+        }, [postsVersion])
     );
 
     const loadData = async () => {

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, ActivityIndicator, StyleSheet, Platform, Image, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Modal, ActivityIndicator, StyleSheet, Platform, Image, Alert, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../theme/ThemeContext';
+import { useModal } from '../context/ModalContext';
 import { addProduct, addManualProduct } from '../services/api';
 import { addItem } from '../services/storage';
 
@@ -17,6 +18,9 @@ const showAlert = (title, message) => {
 
 const AddWishModal = ({ visible, onClose, user, onAdded }) => {
     const { theme } = useTheme();
+    const { bumpPostsVersion } = useModal();
+    const { width } = useWindowDimensions();
+    const isDesktop = Platform.OS === 'web' && width > 768;
     
     const [url, setUrl] = useState('');
     const [manualName, setManualName] = useState('');
@@ -97,6 +101,7 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
 
             const newItem = await addItem(productData);
             if (onAdded) onAdded(newItem);
+            if (bumpPostsVersion) bumpPostsVersion();
             handleClose();
         } catch (error) {
             console.error('Error adding wish (outer):', error);
@@ -113,7 +118,19 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
             visible={visible}
             onRequestClose={handleClose}
         >
-            <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+            <SafeAreaView
+                style={{
+                    flex: 1,
+                    backgroundColor: isDesktop ? 'rgba(0,0,0,0.6)' : theme.colors.background,
+                    justifyContent: isDesktop ? 'center' : 'flex-start',
+                    alignItems: isDesktop ? 'center' : 'stretch',
+                }}
+            >
+                <View style={[
+                    styles.desktopCard,
+                    !isDesktop && { flex: 1, borderRadius: 0, width: '100%' },
+                    { backgroundColor: theme.colors.background }
+                ]}>
                 <View style={styles.composerHeader}>
                     <TouchableOpacity onPress={handleClose} style={{ padding: 8 }}>
                         <Text style={{ fontSize: 16, color: theme.colors.text }}>Cancel</Text>
@@ -194,6 +211,7 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
                         <Ionicons name="camera-outline" size={24} color={theme.colors.primary} />
                     </TouchableOpacity>
                 </View>
+                </View>
             </SafeAreaView>
         </Modal>
     );
@@ -248,6 +266,12 @@ const styles = StyleSheet.create({
         padding: 16,
         borderTopWidth: 1,
         alignItems: 'center',
+    },
+    desktopCard: {
+        width: '100%',
+        maxWidth: 600,
+        borderRadius: 16,
+        overflow: 'hidden',
     },
 });
 

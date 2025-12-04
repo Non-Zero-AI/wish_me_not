@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import * as Font from 'expo-font';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFonts, Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 
 import { getUser, saveUser, saveItems, saveFriends, clearUser } from './src/services/storage';
@@ -237,6 +238,7 @@ function AppNavigator() {
   const { isAddModalVisible, setAddModalVisible } = useModal();
   const [showSplash, setShowSplash] = useState(false);
   const [splashShown, setSplashShown] = useState(false);
+  const [splashLoadedFromStorage, setSplashLoadedFromStorage] = useState(false);
   const [dataReady, setDataReady] = useState(false);
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width > 768;
@@ -249,6 +251,24 @@ function AppNavigator() {
   });
 
   useEffect(() => {
+    const loadSplashFlag = async () => {
+      try {
+        const value = await AsyncStorage.getItem('@wmn_splash_shown');
+        if (value === 'true') {
+          setSplashShown(true);
+        }
+      } catch (e) {
+        console.warn('Failed to load splash flag', e);
+      } finally {
+        setSplashLoadedFromStorage(true);
+      }
+    };
+
+    loadSplashFlag();
+  }, []);
+
+  useEffect(() => {
+    if (!splashLoadedFromStorage) return;
     if (!isLoading && user && !splashShown) {
         setShowSplash(true); 
         setSplashShown(true);
@@ -287,11 +307,16 @@ function AppNavigator() {
 
             await Promise.all([minDelay, loadData()]);
             setDataReady(true);
+            try {
+              await AsyncStorage.setItem('@wmn_splash_shown', 'true');
+            } catch (e) {
+              console.warn('Failed to persist splash flag', e);
+            }
         };
 
         runSequence();
     }
-  }, [user, isLoading]);
+  }, [user, isLoading, splashShown, splashLoadedFromStorage]);
 
   if (isLoading || !fontsLoaded) {
     return (

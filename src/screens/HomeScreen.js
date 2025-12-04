@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../theme/ThemeContext';
+import { useModal } from '../context/ModalContext';
 import { getUserWishlist, claimGift, stashItem } from '../services/api';
 import { getFriends, getUser } from '../services/storage';
 import SwipeableRow from '../components/SwipeableRow';
@@ -13,6 +14,7 @@ import ProductCard from '../components/ProductCard';
 
 const HomeScreen = ({ navigation }) => {
     const { theme } = useTheme();
+    const { postsVersion } = useModal();
     const [feedItems, setFeedItems] = useState([]);
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
@@ -21,7 +23,7 @@ const HomeScreen = ({ navigation }) => {
     useFocusEffect(
         useCallback(() => {
             loadData();
-        }, [])
+        }, [postsVersion])
     );
 
     const loadData = async () => {

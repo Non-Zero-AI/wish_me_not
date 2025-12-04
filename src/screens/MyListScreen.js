@@ -8,11 +8,13 @@ import { getItems, addItem, getUser, deleteItem, saveItems, saveUser } from '../
 import { addProduct, deleteProduct, getUserWishlist, addManualProduct } from '../services/api';
 import * as Linking from 'expo-linking';
 import { useTheme } from '../theme/ThemeContext';
+import { useModal } from '../context/ModalContext';
 import { Ionicons } from '@expo/vector-icons';
 import AppHeader from '../components/AppHeader';
 
 const HomeScreen = () => {
     const { theme, isDark } = useTheme();
+    const { postsVersion } = useModal();
     const insets = useSafeAreaInsets();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -38,7 +40,7 @@ const HomeScreen = () => {
         if (user) {
             loadItems();
         }
-    }, [user]);
+    }, [user, postsVersion]);
 
     const loadUser = async () => {
         const userData = await getUser();
