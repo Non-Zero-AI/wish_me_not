@@ -100,6 +100,9 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
     const dateObj = item.created_at ? new Date(item.created_at) : new Date();
     const dateString = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
+    // If the product name and the user message are identical, avoid showing duplicate text.
+    const showTitle = !!item.name && item.name !== item.content;
+
     if (item.loading) {
         return (
             <View style={[styles.cardContainer, styles.loadingCard, { backgroundColor: theme.colors.surface }]}>
@@ -168,7 +171,9 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
                     </View>
 
                     <View style={styles.titleRow}>
-                        <Text style={styles.itemTitle} numberOfLines={2}>{item.name || 'Unknown Item'}</Text>
+                        {showTitle && (
+                            <Text style={styles.itemTitle} numberOfLines={2}>{item.name}</Text>
+                        )}
                         <Text style={[styles.itemPrice, { color: currentTheme.primary }]}>{item.price || ''}</Text>
                     </View>
 

@@ -194,6 +194,10 @@ export const getUserWishlist = async (userEmail) => {
 
         if (error) throw error;
 
+        if (data && data.length > 0) {
+            console.log('getUserWishlist sample post:', data[0]);
+        }
+
         return data.map(post => ({
             id: post.id,
             name: post.name,
