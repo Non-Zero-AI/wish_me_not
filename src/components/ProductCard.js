@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Linking, ActivityIndicator, Platform, Share, useWindowDimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Linking, ActivityIndicator, Platform, Share, useWindowDimensions, Alert, ActionSheetIOS } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../theme/ThemeContext';
@@ -11,6 +11,8 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
     
     const [likes, setLikes] = useState(Math.floor(Math.random() * 10)); 
     const [isLiked, setIsLiked] = useState(false);
+    const [bookmarks, setBookmarks] = useState(0);
+    const [isBookmarked, setIsBookmarked] = useState(false);
     
     // Card Theme Colors
     const cardThemes = [
@@ -27,7 +29,10 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
     const handleLike = () => {
         const newLiked = !isLiked;
         setIsLiked(newLiked);
-        setLikes(prev => newLiked ? prev + 1 : prev - 1);
+        setLikes(prev => {
+            const next = newLiked ? prev + 1 : prev - 1;
+            return next < 0 ? 0 : next;
+        });
     };
 
     const handlePress = () => {
@@ -42,6 +47,51 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
             });
         } catch (error) {
             console.log(error);
+        }
+    };
+
+    const handleBookmark = () => {
+        const next = !isBookmarked;
+        setIsBookmarked(next);
+        setBookmarks(prev => {
+            const value = next ? prev + 1 : prev - 1;
+            return value < 0 ? 0 : value;
+        });
+    };
+
+    const handleOverflow = () => {
+        const options = [
+            'Report Post',
+            'Unfollow user',
+            'Invite to Circle',
+            'Cancel',
+        ];
+        const cancelButtonIndex = options.length - 1;
+
+        if (Platform.OS === 'ios') {
+            ActionSheetIOS.showActionSheetWithOptions(
+                {
+                    options,
+                    cancelButtonIndex,
+                },
+                (buttonIndex) => {
+                    if (buttonIndex === 0) {
+                        Alert.alert('Report', 'Thanks for your feedback.');
+                    }
+                }
+            );
+        } else if (Platform.OS === 'web') {
+            window.alert('More actions coming soon: Report, Follow/Unfollow, Invite to Circle.');
+        } else {
+            Alert.alert(
+                'Post options',
+                undefined,
+                [
+                    { text: 'Report Post', onPress: () => Alert.alert('Report', 'Thanks for your feedback.') },
+                    { text: 'Invite to Circle', onPress: () => {} },
+                    { text: 'Cancel', style: 'cancel' },
+                ]
+            );
         }
     };
 
@@ -61,7 +111,7 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
     return (
         <View style={[
             styles.cardContainer,
-            isDesktop && { maxWidth: 400, alignSelf: 'center' }
+            isDesktop && { maxWidth: 520, alignSelf: 'center' }
         ]}>
             {isPopular && (
                 <View style={[
@@ -77,41 +127,46 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
                 style={styles.card}
             >
                 {/* 1. Big Product Image Area (Top 55%) */}
-                <View style={styles.imageArea}>
-                    <TouchableOpacity onPress={handlePress} activeOpacity={0.9} style={{flex:1}}>
-                        {item.image ? (
-                            <Image 
-                                source={{ uri: item.image }} 
-                                style={styles.mainImage} 
-                                resizeMode="cover" 
-                            />
+                <View style={styles.cardHeaderRow}>
+                    <View style={styles.userSectionHeader}>
+                        {avatarUri ? (
+                            <Image source={{ uri: avatarUri }} style={styles.userAvatarHeader} />
                         ) : (
-                            <View style={[styles.mainImage, { backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }]}>
-                                <Ionicons name="image-outline" size={48} color="rgba(255,255,255,0.2)" />
+                            <View style={[styles.userAvatarHeader, { backgroundColor: '#555', justifyContent: 'center', alignItems: 'center' }]}>
+                                <Text style={{color:'#fff', fontSize:14, fontWeight:'bold'}}>{displayName.charAt(0)}</Text>
                             </View>
                         )}
-                        
-                        {/* Header Overlay (Date & Share) */}
-                        <View style={styles.headerOverlay}>
-                            <View style={styles.dateBadge}>
-                                <Text style={styles.dateText}>{dateString}</Text>
-                            </View>
-                            <View style={{ flexDirection: 'row', gap: 8 }}>
-                                {onDelete && (
-                                    <TouchableOpacity onPress={onDelete} style={styles.iconBadge}>
-                                        <Ionicons name="trash-outline" size={18} color="#fff" />
-                                    </TouchableOpacity>
-                                )}
-                                <TouchableOpacity onPress={handleShare} style={styles.iconBadge}>
-                                    <Ionicons name="share-social-outline" size={18} color="#fff" />
-                                </TouchableOpacity>
-                            </View>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.userNameHeader} numberOfLines={1}>{displayName}</Text>
+                            <Text style={styles.metaText}>{dateString}</Text>
                         </View>
+                    </View>
+                    <TouchableOpacity style={styles.overflowBtn} onPress={handleOverflow}>
+                        <Ionicons name="ellipsis-horizontal" size={18} color="#fff" />
                     </TouchableOpacity>
                 </View>
 
-                {/* 2. Content Area (Bottom 45%) */}
                 <View style={styles.contentArea}>
+                    {item.content ? (
+                        <Text style={styles.postText}>{item.content}</Text>
+                    ) : null}
+
+                    <View style={styles.imageArea}>
+                        <TouchableOpacity onPress={handlePress} activeOpacity={0.9} style={{flex:1}}>
+                            {item.image ? (
+                                <Image 
+                                    source={{ uri: item.image }} 
+                                    style={styles.mainImage} 
+                                    resizeMode="cover" 
+                                />
+                            ) : (
+                                <View style={[styles.mainImage, { backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }]}>
+                                    <Ionicons name="image-outline" size={48} color="rgba(255,255,255,0.2)" />
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+
                     <View style={styles.titleRow}>
                         <Text style={styles.itemTitle} numberOfLines={2}>{item.name || 'Unknown Item'}</Text>
                         <Text style={[styles.itemPrice, { color: currentTheme.primary }]}>{item.price || ''}</Text>
@@ -126,35 +181,45 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
 
                     {/* Footer: Avatars & Actions */}
                     <View style={styles.footer}>
-                        <View style={styles.userSection}>
-                            {avatarUri ? (
-                                <Image source={{ uri: avatarUri }} style={styles.userAvatar} />
-                            ) : (
-                                <View style={[styles.userAvatar, { backgroundColor: '#555', justifyContent: 'center', alignItems: 'center' }]}>
-                                    <Text style={{color:'#fff', fontSize:12, fontWeight:'bold'}}>{displayName.charAt(0)}</Text>
-                                </View>
-                            )}
-                            <Text style={styles.userName} numberOfLines={1}>{displayName}</Text>
-                        </View>
-
-                        <View style={styles.actionsRow}>
-                            <TouchableOpacity style={[styles.actionBtn, { backgroundColor: isLiked ? '#ff4757' : 'rgba(255,255,255,0.1)' }]} onPress={handleLike}>
-                                <Ionicons name={isLiked ? "heart" : "heart-outline"} size={20} color="#fff" />
+                        <View style={styles.actionsRowFull}>
+                            <TouchableOpacity style={styles.actionIconWrapper}>
+                                <Ionicons name="chatbubble-outline" size={18} color="rgba(255,255,255,0.9)" />
+                                <Text style={styles.actionCountText}>0</Text>
                             </TouchableOpacity>
-                            
+
                             {onStash && (
-                                <TouchableOpacity style={[styles.actionBtn, { backgroundColor: 'rgba(255,255,255,0.1)' }]} onPress={onStash}>
-                                    <Ionicons name="copy-outline" size={20} color="#fff" />
+                                <TouchableOpacity style={styles.actionIconWrapper} onPress={onStash}>
+                                    <Ionicons name="copy-outline" size={18} color="rgba(255,255,255,0.9)" />
+                                    <Text style={styles.actionCountText}>Stash</Text>
                                 </TouchableOpacity>
                             )}
 
-                            <TouchableOpacity 
-                                style={[styles.mainActionBtn, { backgroundColor: currentTheme.primary }]}
-                                onPress={onWish || handlePress}
-                            >
-                                <Text style={styles.mainActionText}>{item.isClaimed ? 'Claimed' : (onWish ? 'Claim' : 'View')}</Text>
+                            <TouchableOpacity style={styles.actionIconWrapper} onPress={handleLike}>
+                                <Ionicons name={isLiked ? 'heart' : 'heart-outline'} size={18} color={isLiked ? '#ff4757' : 'rgba(255,255,255,0.9)'} />
+                                <Text style={styles.actionCountText}>{likes}</Text>
+                            </TouchableOpacity>
+
+                            <View style={styles.actionIconWrapper}>
+                                <Ionicons name="stats-chart" size={18} color="rgba(255,255,255,0.9)" />
+                                <Text style={styles.actionCountText}>--</Text>
+                            </View>
+
+                            <TouchableOpacity style={styles.actionIconWrapper} onPress={handleBookmark}>
+                                <Ionicons name={isBookmarked ? 'bookmark' : 'bookmark-outline'} size={18} color={isBookmarked ? currentTheme.primary : 'rgba(255,255,255,0.9)'} />
+                                <Text style={styles.actionCountText}>{bookmarks}</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity style={styles.actionIconWrapper} onPress={handleShare}>
+                                <Ionicons name="share-social-outline" size={18} color="rgba(255,255,255,0.9)" />
                             </TouchableOpacity>
                         </View>
+
+                        <TouchableOpacity 
+                            style={[styles.mainActionBtn, { backgroundColor: currentTheme.primary }]}
+                            onPress={onWish || handlePress}
+                        >
+                            <Text style={styles.mainActionText}>{item.isClaimed ? 'Claimed' : (onWish ? 'Claim' : 'View')}</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </LinearGradient>
@@ -164,9 +229,8 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
 
 const styles = StyleSheet.create({
     cardContainer: {
-        width: '90%',
-        maxWidth: 380,
-        height: 420, // Fixed height for consistency
+        width: '100%',
+        maxWidth: 520,
         alignSelf: 'center',
         marginVertical: 16,
         position: 'relative',
@@ -198,9 +262,10 @@ const styles = StyleSheet.create({
     
     // Image Area
     imageArea: {
-        height: '55%',
         width: '100%',
-        position: 'relative',
+        borderRadius: 16,
+        overflow: 'hidden',
+        marginTop: 8,
     },
     mainImage: {
         width: '100%',
@@ -238,7 +303,9 @@ const styles = StyleSheet.create({
     // Content Area
     contentArea: {
         flex: 1,
-        padding: 20,
+        paddingHorizontal: 16,
+        paddingBottom: 16,
+        paddingTop: 8,
         justifyContent: 'space-between',
     },
     titleRow: {
@@ -264,6 +331,7 @@ const styles = StyleSheet.create({
         paddingTop: 12,
         borderTopWidth: 1,
         borderTopColor: 'rgba(255,255,255,0.1)',
+        marginTop: 12,
     },
     fetchingBadge: {
         flexDirection: 'row',
@@ -280,28 +348,58 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '500',
     },
-    userSection: {
+    userSectionHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
     },
-    userAvatar: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+    userAvatarHeader: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         marginRight: 8,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.2)',
     },
-    userName: {
+    userNameHeader: {
         color: '#fff',
-        fontSize: 13,
-        fontWeight: '600',
-        maxWidth: 80,
+        fontSize: 15,
+        fontWeight: '700',
     },
-    actionsRow: {
+    metaText: {
+        color: 'rgba(255,255,255,0.7)',
+        fontSize: 12,
+    },
+    cardHeaderRow: {
         flexDirection: 'row',
-        gap: 8,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingTop: 12,
+    },
+    overflowBtn: {
+        padding: 4,
+    },
+    postText: {
+        color: '#fff',
+        fontSize: 14,
+        marginBottom: 4,
+    },
+    actionsRowFull: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+        justifyContent: 'space-between',
+        marginRight: 8,
+    },
+    actionIconWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    actionCountText: {
+        color: 'rgba(255,255,255,0.8)',
+        fontSize: 12,
     },
     actionBtn: {
         width: 36,

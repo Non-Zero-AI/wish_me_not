@@ -67,9 +67,15 @@ const HomeScreen = ({ navigation }) => {
             const results = await Promise.all(promises);
             results.forEach(items => allItems.push(...items));
             
-            // Sort by newest (assuming higher ID is newer or just random/shuffled for feed)
-            // Let's sort by reverse order of addition if possible, but IDs might not be time-based.
-            allItems.sort((a, b) => b.id - a.id);
+            // Sort by newest using created_at timestamps from wishlist_posts
+            const getTime = (item) => {
+                if (item.created_at) {
+                    const t = new Date(item.created_at).getTime();
+                    return Number.isNaN(t) ? 0 : t;
+                }
+                return 0;
+            };
+            allItems.sort((a, b) => getTime(b) - getTime(a));
 
             setFeedItems(allItems);
         } catch (e) {

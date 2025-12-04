@@ -14,6 +14,7 @@ const SettingsScreen = ({ navigation }) => {
     
     const [revealSurprises, setRevealSurprises] = useState(false);
     const [notifyFriend, setNotifyFriend] = useState(true);
+    const [defaultPublicPosts, setDefaultPublicPosts] = useState(false);
     const [username, setUsername] = useState('');
     const [updatingUsername, setUpdatingUsername] = useState(false);
 
@@ -27,6 +28,9 @@ const SettingsScreen = ({ navigation }) => {
             if (settings) {
                 setRevealSurprises(settings.reveal_surprises);
                 setNotifyFriend(settings.notify_new_friend);
+                if (typeof settings.default_posts_public === 'boolean') {
+                    setDefaultPublicPosts(settings.default_posts_public);
+                }
             }
 
             // Initial username from auth user metadata if available
@@ -43,6 +47,11 @@ const SettingsScreen = ({ navigation }) => {
     const handleToggleNotify = async (value) => {
         setNotifyFriend(value);
         await updateUserSettings(user.id, { notify_new_friend: value });
+    };
+
+    const handleToggleDefaultPublic = async (value) => {
+        setDefaultPublicPosts(value);
+        await updateUserSettings(user.id, { default_posts_public: value });
     };
 
     const handleLogout = () => {
@@ -141,6 +150,13 @@ const SettingsScreen = ({ navigation }) => {
                         label="Reveal Surprises (Who claimed my gifts?)"
                         value={revealSurprises}
                         onValueChange={handleToggleSurprises}
+                    />
+
+                    <SettingItem 
+                        icon="globe-outline"
+                        label="Make my posts public by default"
+                        value={defaultPublicPosts}
+                        onValueChange={handleToggleDefaultPublic}
                     />
 
                      <SettingItem 
