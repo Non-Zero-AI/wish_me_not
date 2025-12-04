@@ -89,7 +89,7 @@ const ProfileScreen = ({ navigation, route }) => {
         // Server sync
         try {
             const serverItems = await getUserWishlist(email);
-            if (Array.isArray(serverItems)) {
+            if (Array.isArray(serverItems) && serverItems.length > 0) {
                 setItems(serverItems);
                 await saveItems(serverItems);
             }
