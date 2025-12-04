@@ -40,6 +40,7 @@ const ProfileScreen = ({ navigation, route }) => {
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState('wishes'); // 'wishes' | 'claimed' | 'likes'
+    const [isPollingUpdates, setIsPollingUpdates] = useState(false);
     
     // Manual Entry / Add Item State
     const [modalVisible, setModalVisible] = useState(false);
@@ -60,6 +61,60 @@ const ProfileScreen = ({ navigation, route }) => {
     useEffect(() => {
         loadData();
     }, [postsVersion]);
+
+    // Automatically refresh any posts that are still waiting on webhook-enriched product data.
+    useEffect(() => {
+        if (!user) return;
+
+        const hasFetchingPosts = items.some(
+            (item) => item.price === 'Fetching details…' && !!item.link
+        );
+
+        if (!hasFetchingPosts || isPollingUpdates) {
+            return;
+        }
+
+        let isCancelled = false;
+        let attempts = 0;
+        setIsPollingUpdates(true);
+
+        const intervalId = setInterval(async () => {
+            if (isCancelled) return;
+            attempts += 1;
+
+            try {
+                const serverItems = await getUserWishlist(user.email);
+                if (Array.isArray(serverItems) && serverItems.length > 0) {
+                    // Overwrite local cache with the freshest data
+                    setItems(serverItems);
+                    await saveItems(serverItems);
+
+                    const stillFetching = serverItems.some(
+                        (item) => item.price === 'Fetching details…' && !!item.link
+                    );
+
+                    if (!stillFetching) {
+                        clearInterval(intervalId);
+                        setIsPollingUpdates(false);
+                    }
+                }
+            } catch (err) {
+                console.error('Polling sync error:', err);
+            }
+
+            // Safety: stop polling after ~1 minute (12 attempts at 5s)
+            if (attempts >= 12) {
+                clearInterval(intervalId);
+                setIsPollingUpdates(false);
+            }
+        }, 5000);
+
+        return () => {
+            isCancelled = true;
+            clearInterval(intervalId);
+            setIsPollingUpdates(false);
+        };
+    }, [items, user, isPollingUpdates]);
 
     const loadData = async () => {
         const userData = await getUser();
