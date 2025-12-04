@@ -347,7 +347,7 @@ export const addManualProduct = async (productData, user) => {
                 price: productData.price,
                 image: productData.image,
                 link: productData.link || '',
-                content: productData.content || null,
+                message: productData.content || null,
                 is_public: isPublic,
             })
             .select()
@@ -425,7 +425,7 @@ export const stashItem = async (originalPost, user) => {
                 price: originalPost.price,
                 image: originalPost.image,
                 link: originalPost.link,
-                content: originalPost.content,
+                message: originalPost.content,
                 is_public: originalPost.is_public || false,
                 is_claimed: false, // Reset claim status
             })

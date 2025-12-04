@@ -483,6 +483,7 @@ const ProfileScreen = ({ navigation, route }) => {
                                 item={item} 
                                 user={user}
                                 shouldShowWished={showLocalSurprises}
+                                onDelete={() => handleDeleteItem(item.id)}
                             />
                         </SwipeableRow>
                     </View>

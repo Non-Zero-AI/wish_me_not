@@ -60,38 +60,63 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
     };
 
     const handleOverflow = () => {
-        const options = [
-            'Report Post',
-            'Unfollow user',
-            'Invite to Circle',
-            'Cancel',
-        ];
-        const cancelButtonIndex = options.length - 1;
+        const hasDelete = typeof onDelete === 'function';
 
         if (Platform.OS === 'ios') {
+            const baseOptions = ['Report Post', 'Unfollow user', 'Invite to Circle', 'Cancel'];
+            const options = hasDelete ? ['Delete Post', ...baseOptions] : baseOptions;
+            const cancelButtonIndex = options.length - 1;
+
             ActionSheetIOS.showActionSheetWithOptions(
                 {
                     options,
                     cancelButtonIndex,
+                    destructiveButtonIndex: hasDelete ? 0 : undefined,
                 },
                 (buttonIndex) => {
-                    if (buttonIndex === 0) {
+                    if (hasDelete && buttonIndex === 0) {
+                        Alert.alert(
+                            'Delete Post',
+                            'Are you sure you want to delete this wish?',
+                            [
+                                { text: 'Cancel', style: 'cancel' },
+                                { text: 'Delete', style: 'destructive', onPress: () => onDelete && onDelete() },
+                            ],
+                        );
+                        return;
+                    }
+
+                    const offset = hasDelete ? 1 : 0;
+                    if (buttonIndex === offset) {
                         Alert.alert('Report', 'Thanks for your feedback.');
                     }
+                    // Other options (Unfollow, Invite to Circle) are placeholders for now
                 }
             );
         } else if (Platform.OS === 'web') {
+            if (hasDelete) {
+                const confirmed = window.confirm('Delete this wish post? This cannot be undone.');
+                if (confirmed && onDelete) onDelete();
+                return;
+            }
+
             window.alert('More actions coming soon: Report, Follow/Unfollow, Invite to Circle.');
         } else {
-            Alert.alert(
-                'Post options',
-                undefined,
-                [
-                    { text: 'Report Post', onPress: () => Alert.alert('Report', 'Thanks for your feedback.') },
-                    { text: 'Invite to Circle', onPress: () => {} },
-                    { text: 'Cancel', style: 'cancel' },
-                ]
-            );
+            const actions = [
+                { text: 'Report Post', onPress: () => Alert.alert('Report', 'Thanks for your feedback.') },
+                { text: 'Invite to Circle', onPress: () => {} },
+                { text: 'Cancel', style: 'cancel' },
+            ];
+
+            if (hasDelete) {
+                actions.unshift({
+                    text: 'Delete Post',
+                    style: 'destructive',
+                    onPress: () => onDelete && onDelete(),
+                });
+            }
+
+            Alert.alert('Post options', undefined, actions);
         }
     };
 
