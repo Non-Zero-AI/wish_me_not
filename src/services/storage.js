@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const USER_KEY = '@user_profile';
 const ITEMS_KEY = '@wishlist_items';
 const FRIENDS_KEY = '@friends_list';
+const LOCAL_SETTINGS_KEY = '@local_settings';
 
 export const saveUser = async (user) => {
   try {
@@ -109,5 +110,32 @@ export const saveItems = async (items) => {
     await AsyncStorage.setItem(ITEMS_KEY, JSON.stringify(items));
   } catch (e) {
     console.error('Failed to save items', e);
+  }
+};
+
+export const getLocalSettings = async () => {
+  try {
+    const jsonValue = await AsyncStorage.getItem(LOCAL_SETTINGS_KEY);
+    return jsonValue != null ? JSON.parse(jsonValue) : {};
+  } catch (e) {
+    console.error('Failed to fetch local settings', e);
+    return {};
+  }
+};
+
+export const saveLocalSettings = async (settings) => {
+  try {
+    await AsyncStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(settings));
+  } catch (e) {
+    console.error('Failed to save local settings', e);
+  }
+};
+
+export const clearLocalCache = async () => {
+  try {
+    await AsyncStorage.removeItem(ITEMS_KEY);
+    await AsyncStorage.removeItem(FRIENDS_KEY);
+  } catch (e) {
+    console.error('Failed to clear local cache', e);
   }
 };

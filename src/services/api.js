@@ -540,3 +540,63 @@ export const updateUsername = async (userId, username) => {
         throw error;
     }
 };
+
+/**
+ * Lightweight user search helpers for Add Friend / Messages flows
+ */
+export const searchUsersByUsernamePrefix = async (prefix, limit = 10) => {
+    if (!prefix) return [];
+
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name, email, username')
+            .ilike('username', `${prefix}%`)
+            .limit(limit);
+
+        if (error) throw error;
+
+        return (data || []).map(user => ({
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            firstName: user.first_name,
+            lastName: user.last_name,
+            displayName: user.first_name || user.last_name
+                ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
+                : user.username || (user.email ? user.email.split('@')[0] : ''),
+        }));
+    } catch (error) {
+        console.error('Error searching users by username prefix:', error);
+        return [];
+    }
+};
+
+export const findUserByEmail = async (email) => {
+    if (!email) return null;
+
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name, email, username')
+            .eq('email', email)
+            .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+            throw error;
+        }
+
+        if (!data) return null;
+
+        return {
+            id: data.id,
+            email: data.email,
+            username: data.username,
+            firstName: data.first_name,
+            lastName: data.last_name,
+        };
+    } catch (error) {
+        console.error('Error finding user by email:', error);
+        return null;
+    }
+};
