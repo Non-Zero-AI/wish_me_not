@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, RefreshControl, Image, Platform } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput, Alert, RefreshControl, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,13 +8,15 @@ import { useTheme } from '../theme/ThemeContext';
 import { getUserWishlist, getUserFriends, deleteFriend } from '../services/api';
 import { getFriends, saveFriends, getUser } from '../services/storage';
 import SwipeableRow from '../components/SwipeableRow';
-import AppHeader from '../components/AppHeader';
+import { useModal } from '../context/ModalContext';
 
 const FriendsScreen = ({ navigation }) => {
     const { theme } = useTheme();
+    const { setAddModalVisible } = useModal();
     const [friends, setFriends] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
     const [user, setUser] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useFocusEffect(
         useCallback(() => {
@@ -133,152 +135,359 @@ const FriendsScreen = ({ navigation }) => {
             )}
         >
             <TouchableOpacity
-                style={[styles.friendCard, { backgroundColor: theme.colors.surface }]}
+                style={styles.friendCard}
                 onPress={() => navigation.navigate('FriendWishlist', { friend: item })}
             >
-                <View style={[styles.avatar, { backgroundColor: theme.colors.secondary, overflow: 'hidden' }]}>
+                <View style={styles.avatar}>
                     {item.image ? (
                         <Image source={{ uri: item.image }} style={styles.avatarImage} />
                     ) : (
-                        <Text style={[styles.avatarText, { color: theme.colors.textInverse }]}>{item.name.charAt(0).toUpperCase()}</Text>
+                        <Text style={styles.avatarText}>
+                            {item.name?.charAt(0)?.toUpperCase() || '?'}
+                        </Text>
                     )}
                 </View>
                 <View style={styles.friendInfo}>
-                    <Text style={[styles.friendName, { color: theme.colors.text }]}>{item.name}</Text>
-                    <Text style={[styles.friendEmail, { color: theme.colors.textSecondary }]}>
-                        {item.email}
-                        {item.itemCount !== undefined && ` • ${item.itemCount} Items`}
+                    <Text style={styles.friendName}>
+                        @{item.name || item.email?.split('@')[0]}
+                    </Text>
+                    <Text style={styles.friendEmail}>
+                        {item.itemCount !== undefined ? `${item.itemCount} wishlists` : item.email}
                     </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
+                <View style={styles.friendMoreButton}>
+                    <Ionicons name="ellipsis-vertical" size={20} color="#AAB2C0" />
+                </View>
             </TouchableOpacity>
         </SwipeableRow>
     );
 
+    const filteredFriends = friends.filter((friend) => {
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.trim().toLowerCase();
+        return (
+            friend.name?.toLowerCase().includes(q) ||
+            friend.email?.toLowerCase().includes(q)
+        );
+    });
+
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <AppHeader 
-                title="Friends" 
-                leftAction={
-                    <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.addButton}>
-                         {user?.image ? (
-                            <Image source={{ uri: user.image }} style={{ width: 32, height: 32, borderRadius: 16 }} />
-                         ) : (
-                            <Ionicons name="menu" size={28} color={theme.colors.primary} />
-                         )}
+        <SafeAreaView style={[styles.container, { backgroundColor: '#1C1E22' }]}>
+            {/* Header */}
+            <View style={styles.headerContainer}>
+                <View style={styles.headerTopRow}>
+                    <Text style={styles.headerTitle}>Friends</Text>
+                    <TouchableOpacity
+                        style={styles.headerAddFriendButton}
+                        onPress={() => navigation.navigate('FriendRequests')}
+                    >
+                        <Ionicons name="person-add" size={20} color="#60A5FA" />
                     </TouchableOpacity>
-                }
-                rightAction={
-                    <View style={{ flexDirection: 'row', gap: 12 }}>
-                        <TouchableOpacity onPress={onRefresh} style={styles.addButton}>
-                            <Ionicons name="refresh" size={24} color={theme.colors.primary} />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={handleAddFriend} style={styles.addButton}>
-                            <Ionicons name="person-add" size={24} color={theme.colors.primary} />
-                        </TouchableOpacity>
+                </View>
+
+                {/* Search bar */}
+                <View style={styles.searchBarWrapper}>
+                    <View style={styles.searchBarInner}>
+                        <Ionicons
+                            name="search"
+                            size={18}
+                            color="#AAB2C0"
+                            style={{ marginRight: 8 }}
+                        />
+                        <TextInput
+                            placeholder="Search friends..."
+                            placeholderTextColor="#6B7280"
+                            style={styles.searchInput}
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                        />
                     </View>
-                }
-            />
-            
+                </View>
+            </View>
+
+            {/* Friends list */}
             <FlatList
                 style={{ flex: 1 }}
-                data={friends}
+                data={filteredFriends}
                 renderItem={renderFriend}
-                keyExtractor={item => item.id}
+                keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.listContent}
                 refreshControl={
-                    <RefreshControl 
-                        refreshing={refreshing} 
-                        onRefresh={onRefresh} 
-                        tintColor={theme.colors.primary}
-                        colors={[theme.colors.primary]}
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor="#6366F1"
+                        colors={["#6366F1"]}
                     />
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Text style={[styles.emptyText, { color: theme.colors.textSecondary, textAlign: 'center', paddingHorizontal: 32 }]}>
-                            Gifting is better with Friends; add Friends to start seeing what they have on their Wishlists
+                        <Text style={styles.emptyText}>
+                            Gifting is better with friends. Add friends to see what they are wishing for.
                         </Text>
-                        <TouchableOpacity onPress={handleAddFriend} style={{marginTop: 20, padding: 10, backgroundColor: theme.colors.surface, borderRadius: 8}}>
-                            <Text style={{color: theme.colors.primary}}>Find Friends</Text>
-                        </TouchableOpacity>
                     </View>
                 }
             />
+
+            {/* Bottom navigation with floating + button */}
+            <View style={styles.bottomNavContainer}>
+                <View style={styles.bottomNavInner}>
+                    <TouchableOpacity
+                        style={styles.bottomNavItem}
+                        onPress={() => navigation.navigate('Home')}
+                    >
+                        <View style={styles.bottomNavIconWrapper}>
+                            <Ionicons name="home" size={20} color="#A8AAB5" />
+                        </View>
+                        <Text style={styles.bottomNavLabel}>Home</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.bottomNavItem}
+                        onPress={() => navigation.navigate('Friends')}
+                    >
+                        <View style={[styles.bottomNavIconWrapper, styles.bottomNavIconActive]}>
+                            <Ionicons name="people" size={20} color="#ffffff" />
+                        </View>
+                        <Text style={styles.bottomNavLabelActive}>Friends</Text>
+                    </TouchableOpacity>
+                    <View style={{ width: 72 }} />
+                    <TouchableOpacity
+                        style={styles.bottomNavItem}
+                        onPress={() => navigation.navigate('Messages')}
+                    >
+                        <View style={styles.bottomNavIconWrapper}>
+                            <Ionicons name="chatbubbles" size={20} color="#A8AAB5" />
+                        </View>
+                        <Text style={styles.bottomNavLabel}>Messages</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.bottomNavItem}
+                        onPress={() => navigation.navigate('Profile')}
+                    >
+                        <View style={styles.bottomNavIconWrapper}>
+                            <Ionicons name="person" size={20} color="#A8AAB5" />
+                        </View>
+                        <Text style={styles.bottomNavLabel}>Profile</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.plusButtonWrapper}>
+                    <TouchableOpacity
+                        style={styles.plusButton}
+                        onPress={() => setAddModalVisible(true)}
+                    >
+                        <Ionicons name="add" size={28} color="#ffffff" />
+                    </TouchableOpacity>
+                </View>
+            </View>
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
-    addButton: { padding: 8 },
-    listContent: { padding: 16, paddingBottom: 120 },
+    listContent: { paddingHorizontal: 16, paddingTop: 0, paddingBottom: 120 },
+
+    headerContainer: {
+        paddingTop: 24,
+        paddingHorizontal: 16,
+        paddingBottom: 16,
+    },
+    headerTopRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 16,
+    },
+    headerTitle: {
+        fontSize: 28,
+        fontWeight: '700',
+        color: '#FFFFFF',
+    },
+    headerAddFriendButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#24272C',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#15171a',
+        shadowOpacity: 0.7,
+        shadowRadius: 6,
+        shadowOffset: { width: 3, height: 3 },
+    },
+    searchBarWrapper: {
+        marginBottom: 4,
+    },
+    searchBarInner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: 999,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        backgroundColor: '#24272C',
+        borderWidth: 1,
+        borderColor: '#2E3238',
+        shadowColor: '#15171a',
+        shadowOpacity: 0.7,
+        shadowRadius: 8,
+        shadowOffset: { width: 4, height: 4 },
+    },
+    searchInput: {
+        flex: 1,
+        color: '#FFFFFF',
+        fontSize: 14,
+    },
+
     friendCard: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
         padding: 16,
-        borderRadius: 12,
+        borderRadius: 18,
         marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        backgroundColor: '#24272C',
+        borderWidth: 1,
+        borderColor: '#2E3238',
+        shadowColor: '#15171a',
+        shadowOpacity: 0.7,
+        shadowRadius: 10,
+        shadowOffset: { width: 4, height: 4 },
     },
     avatar: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#1F2126',
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 16,
+        marginRight: 12,
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOpacity: 0.4,
+        shadowRadius: 6,
+        shadowOffset: { width: 2, height: 2 },
     },
-    avatarImage: { width: '100%', height: '100%', resizeMode: 'cover' },
-    avatarText: { fontSize: 20, fontWeight: 'bold' },
-    friendInfo: { flex: 1 },
-    friendName: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
-    friendEmail: { fontSize: 14 },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
+    avatarText: {
+        fontSize: 20,
+        fontWeight: '600',
+        color: '#E5E7EB',
+    },
+    friendInfo: {
+        flex: 1,
+    },
+    friendName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#FFFFFF',
+        marginBottom: 4,
+    },
+    friendEmail: {
+        fontSize: 13,
+        color: '#AAB2C0',
+    },
+    friendMoreButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#24272C',
+    },
     deleteAction: {
         justifyContent: 'center',
         alignItems: 'center',
         width: 100,
         height: '100%',
-        borderRadius: 12,
+        borderRadius: 18,
         marginBottom: 12,
     },
     actionText: { color: '#fff', fontWeight: '600', padding: 20 },
-    emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 100 },
-    emptyText: { fontSize: 16 },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+    emptyContainer: {
+        alignItems: 'center',
         justifyContent: 'center',
-        padding: 20,
+        paddingTop: 120,
+        paddingHorizontal: 32,
     },
-    modalContent: {
-        borderRadius: 16,
-        padding: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
+    emptyText: {
+        fontSize: 14,
+        textAlign: 'center',
+        color: '#AAB2C0',
     },
-    modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-    input: {
+
+    // Bottom nav + floating plus
+    bottomNavContainer: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
         paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderRadius: 10,
-        marginBottom: 24,
-        fontSize: 16,
-        borderWidth: 1,
+        paddingBottom: 16,
+        paddingTop: 8,
+        backgroundColor: 'rgba(28,30,34,0.98)',
+        shadowColor: '#000',
+        shadowOpacity: 0.6,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: -4 },
     },
-    modalButtons: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
-    modalButton: { flex: 1, paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
-    cancelButton: {},
-    saveButton: {},
-    cancelButtonText: { fontWeight: '600', fontSize: 16 },
-    saveButtonText: { fontWeight: '600', fontSize: 16 },
+    bottomNavInner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        maxWidth: 480,
+        alignSelf: 'center',
+    },
+    bottomNavItem: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    bottomNavIconWrapper: {
+        width: 48,
+        height: 48,
+        borderRadius: 16,
+        backgroundColor: '#24272C',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    bottomNavIconActive: {
+        backgroundColor: '#6366F1',
+    },
+    bottomNavLabel: {
+        fontSize: 10,
+        color: '#6B7280',
+        marginTop: 4,
+    },
+    bottomNavLabelActive: {
+        fontSize: 10,
+        color: '#6366F1',
+        marginTop: 4,
+        fontWeight: '600',
+    },
+    plusButtonWrapper: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 28,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    plusButton: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: '#22C55E',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: 'rgba(34,197,94,0.6)',
+        shadowOpacity: 0.8,
+        shadowRadius: 14,
+        shadowOffset: { width: 0, height: 4 },
+    },
 });
 
 export default FriendsScreen;

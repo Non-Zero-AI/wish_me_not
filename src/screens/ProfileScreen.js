@@ -16,7 +16,7 @@ import { addProduct, deleteProduct, getUserWishlist, addManualProduct, updateUse
 
 const ProfileScreen = ({ navigation, route }) => {
     const { theme } = useTheme();
-    const { postsVersion } = useModal();
+    const { postsVersion, setAddModalVisible } = useModal();
     const insets = useSafeAreaInsets();
     const { width } = useWindowDimensions();
     const isDesktop = Platform.OS === 'web' && width > 768;
@@ -343,95 +343,142 @@ const ProfileScreen = ({ navigation, route }) => {
 
     // --- Rendering ---
 
-    const renderHeader = () => (
-        <View style={styles.profileHeaderContainer}>
-            {/* Banner Image - Placeholder or dynamic if available */}
-            <Image 
-                source={{ uri: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?q=80&w=1000&auto=format&fit=crop' }} 
-                style={styles.bannerImage}
-                resizeMode="cover"
-            />
-            
-            <View style={styles.profileContent}>
-                <View style={styles.headerTopRow}>
-                    {/* Avatar - Overlapping Banner (initials only) */}
-                    <TouchableOpacity onPress={() => navigation.navigate('Themes')} activeOpacity={0.8}> 
-                        <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.secondary, borderColor: theme.colors.background }]}>
-                            <Text style={[styles.avatarText, { color: theme.colors.textInverse }]}>
-                                {user?.firstName?.charAt(0).toUpperCase()}
-                            </Text>
+    const renderHeader = () => {
+        const claimedCount = items.filter((i) => i.isClaimed ?? i.is_claimed).length;
+
+        return (
+            <View style={styles.profileHeaderContainer}>
+                {/* Avatar + Name */}
+                <View style={styles.profileTopSection}>
+                    <View style={styles.avatarWrapper}>
+                        <View style={styles.avatarOuterRing}>
+                            <View style={styles.avatarInnerRing}>
+                                <Text style={styles.avatarInitial}>
+                                    {user?.firstName?.charAt(0)?.toUpperCase() || '?'}
+                                </Text>
+                            </View>
                         </View>
-                    </TouchableOpacity>
-                    
-                    {/* Action Buttons (Right Side) */}
-                    <View style={styles.headerActions}>
-                        <TouchableOpacity 
-                            style={[styles.pillButton, { borderColor: theme.colors.border }]}
-                            onPress={toggleSurprises}
-                        >
-                            <Ionicons name={showLocalSurprises ? "eye-off-outline" : "eye-outline"} size={20} color={theme.colors.text} />
-                        </TouchableOpacity>
-                        
-                        <TouchableOpacity 
-                            style={[styles.pillButton, { borderColor: theme.colors.border }]}
-                            onPress={handleShare}
-                        >
-                            <Ionicons name="share-social-outline" size={20} color={theme.colors.text} />
-                        </TouchableOpacity>
+                        <View style={styles.avatarBadge}>
+                            <View style={styles.avatarBadgeInner}>
+                                <Ionicons name="star" size={14} color="#ffffff" />
+                            </View>
+                        </View>
                     </View>
-                </View>
-                
-                {/* User Info */}
-                <View style={styles.userInfo}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                        <Text style={[styles.name, { color: theme.colors.text }]}>
-                            {user ? `${user.firstName} ${user.lastName || ''}` : 'Loading...'}
-                        </Text>
-                        <Ionicons name="checkmark-circle" size={16} color={theme.colors.primary} />
-                    </View>
-                    <Text style={[styles.handle, { color: theme.colors.textSecondary }]}>
+
+                    <Text style={styles.profileName}>
+                        {user ? `${user.firstName} ${user.lastName || ''}` : 'Loading...'}
+                    </Text>
+                    <Text style={styles.profileHandle}>
                         @{user?.username || user?.firstName?.toLowerCase().replace(/\s/g, '') || 'user'}
                     </Text>
-                    
-                    <Text style={[styles.bio, { color: theme.colors.text }]}>
-                        Wishlist creator. Gift enthusiast. 🎁
-                    </Text>
-                    
-                    {/* Stats */}
-                    <View style={styles.statsRow}>
-                        <Text style={[styles.statText, { color: theme.colors.textSecondary }]}>
-                            <Text style={[styles.statCount, { color: theme.colors.text }]}>{friendsCount}</Text> Friends
-                        </Text>
-                        <Text style={[styles.statText, { color: theme.colors.textSecondary }]}>
-                            <Text style={[styles.statCount, { color: theme.colors.text }]}>{items.length}</Text> Wishes
-                        </Text>
+                    <View style={styles.memberSincePill}>
+                        <Text style={styles.memberSinceText}>Member since 2024</Text>
+                    </View>
+
+                    {/* Header actions */}
+                    <View style={styles.headerActionsRow}>
+                        <TouchableOpacity
+                            style={styles.headerIconButton}
+                            onPress={toggleSurprises}
+                        >
+                            <Ionicons
+                                name={showLocalSurprises ? 'eye-off-outline' : 'eye-outline'}
+                                size={20}
+                                color="#A8AAB5"
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.headerIconButton}
+                            onPress={handleShare}
+                        >
+                            <Ionicons
+                                name="share-social-outline"
+                                size={20}
+                                color="#A8AAB5"
+                            />
+                        </TouchableOpacity>
                     </View>
                 </View>
 
                 {/* Tabs */}
-                <View style={[styles.tabRow, { borderBottomColor: theme.colors.border }]}>
-                    <TouchableOpacity
-                        style={[styles.activeTab, activeTab === 'wishes' && { borderBottomColor: theme.colors.primary }]}
-                        onPress={() => setActiveTab('wishes')}
-                    >
-                        <Text style={[activeTab === 'wishes' ? styles.activeTabText : styles.inactiveTabText, { color: theme.colors.text }]}>Wishes</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.inactiveTab, activeTab === 'claimed' && { borderBottomWidth: 3, borderBottomColor: theme.colors.primary }]}
-                        onPress={() => setActiveTab('claimed')}
-                    >
-                        <Text style={[activeTab === 'claimed' ? styles.activeTabText : styles.inactiveTabText, { color: theme.colors.textSecondary }]}>Claimed</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.inactiveTab, activeTab === 'likes' && { borderBottomWidth: 3, borderBottomColor: theme.colors.primary }]}
-                        onPress={() => setActiveTab('likes')}
-                    >
-                        <Text style={[activeTab === 'likes' ? styles.activeTabText : styles.inactiveTabText, { color: theme.colors.textSecondary }]}>Likes</Text>
-                    </TouchableOpacity>
+                <View style={styles.tabsContainer}>
+                    <View style={styles.tabsInnerRow}>
+                        <TouchableOpacity
+                            style={[styles.tabPill, activeTab === 'wishes' && styles.tabPillActive]}
+                            onPress={() => setActiveTab('wishes')}
+                        >
+                            <Ionicons
+                                name="heart"
+                                size={16}
+                                color={activeTab === 'wishes' ? '#ffffff' : '#8b8d98'}
+                                style={{ marginRight: 6 }}
+                            />
+                            <Text
+                                style={[
+                                    styles.tabPillText,
+                                    activeTab === 'wishes' && styles.tabPillTextActive,
+                                ]}
+                            >
+                                Wishlist
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tabPill, activeTab === 'claimed' && styles.tabPillActive]}
+                            onPress={() => setActiveTab('claimed')}
+                        >
+                            <Ionicons
+                                name="cube"
+                                size={16}
+                                color={activeTab === 'claimed' ? '#ffffff' : '#8b8d98'}
+                                style={{ marginRight: 6 }}
+                            />
+                            <Text
+                                style={[
+                                    styles.tabPillText,
+                                    activeTab === 'claimed' && styles.tabPillTextActive,
+                                ]}
+                            >
+                                Claimed Gifts
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                {/* Stats cards */}
+                <View style={styles.statsCardsRow}>
+                    <View style={styles.statCard}>
+                        <View style={[styles.statIconCircle, { backgroundColor: '#4F46E5' }]}>
+                            <Ionicons name="gift" size={18} color="#ffffff" />
+                        </View>
+                        <Text style={styles.statCardValue}>{items.length}</Text>
+                        <Text style={styles.statCardLabel}>Wishes</Text>
+                    </View>
+                    <View style={styles.statCard}>
+                        <View style={[styles.statIconCircle, { backgroundColor: '#10B981' }]}>
+                            <Ionicons name="checkmark-done" size={18} color="#ffffff" />
+                        </View>
+                        <Text style={styles.statCardValue}>{claimedCount}</Text>
+                        <Text style={styles.statCardLabel}>Claimed</Text>
+                    </View>
+                    <View style={styles.statCard}>
+                        <View style={[styles.statIconCircle, { backgroundColor: '#F59E0B' }]}>
+                            <Ionicons name="trophy" size={18} color="#ffffff" />
+                        </View>
+                        <Text style={styles.statCardValue}>0</Text>
+                        <Text style={styles.statCardLabel}>Achievements</Text>
+                    </View>
+                </View>
+
+                {/* Achievements section (placeholder, static for now) */}
+                <View style={styles.achievementsSection}>
+                    <Text style={styles.achievementsTitle}>Achievements</Text>
+                    <Text style={styles.achievementsSubtitle}>
+                        Unlock badges as you add wishes, claim gifts, and connect with friends.
+                    </Text>
                 </View>
             </View>
-        </View>
-    );
+        );
+    };
 
     const renderRightActions = (progress, dragX, item) => (
         <TouchableOpacity
@@ -453,25 +500,7 @@ const ProfileScreen = ({ navigation, route }) => {
     });
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <AppHeader 
-                title="Profile" 
-                leftAction={
-                    <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.menuButton}>
-                         <Ionicons name="home" size={24} color={theme.colors.primary} />
-                    </TouchableOpacity>
-                }
-                rightAction={
-                    <TouchableOpacity onPress={onRefresh} style={styles.menuButton} disabled={refreshing}>
-                        {refreshing ? (
-                            <ActivityIndicator size="small" color={theme.colors.primary} />
-                        ) : (
-                            <Ionicons name="refresh" size={24} color={theme.colors.primary} />
-                        )}
-                    </TouchableOpacity>
-                }
-            />
-
+        <SafeAreaView style={[styles.container, { backgroundColor: '#12151d' }]}>
             <FlatList
                 style={{ flex: 1 }}
                 data={filteredItems}
@@ -505,107 +534,57 @@ const ProfileScreen = ({ navigation, route }) => {
                     </View>
                 }
             />
-
-            {false && isDesktop && (
-                <>
-                    <TouchableOpacity 
-                        style={[styles.fab, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]} 
-                        onPress={() => setModalVisible(true)}
+            {/* Bottom navigation with floating + button */}
+            <View style={styles.bottomNavContainer}>
+                <View style={styles.bottomNavInner}>
+                    <TouchableOpacity
+                        style={styles.bottomNavItem}
+                        onPress={() => navigation.navigate('Home')}
                     >
-                        <Ionicons name="add" size={32} color={theme.colors.textInverse} />
+                        <View style={styles.bottomNavIconWrapper}>
+                            <Ionicons name="home" size={20} color="#A8AAB5" />
+                        </View>
+                        <Text style={styles.bottomNavLabel}>Home</Text>
                     </TouchableOpacity>
-
-                    <Modal
-                        animationType="slide"
-                        presentationStyle="pageSheet"
-                        visible={modalVisible}
-                        onRequestClose={() => setModalVisible(false)}
+                    <TouchableOpacity
+                        style={styles.bottomNavItem}
+                        onPress={() => navigation.navigate('Friends')}
                     >
-                        <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-                            <View style={styles.composerHeader}>
-                                <TouchableOpacity onPress={() => setModalVisible(false)} style={{ padding: 8 }}>
-                                    <Text style={{ fontSize: 16, color: theme.colors.text }}>Cancel</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity 
-                                    style={[styles.postButton, { backgroundColor: theme.colors.primary, opacity: (!manualName && !url) ? 0.5 : 1 }]}
-                                    onPress={handleAddItem}
-                                    disabled={(!manualName && !url) || adding}
-                                >
-                                     {adding ? (
-                                        <ActivityIndicator size="small" color="#fff" />
-                                     ) : (
-                                        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 14 }}>Wish</Text>
-                                     )}
-                                </TouchableOpacity>
-                            </View>
-                            
-                            <View style={styles.composerContent}>
-                                 <View style={{ marginRight: 12 }}>
-                                    <View style={[styles.composerAvatar, { backgroundColor: theme.colors.secondary, justifyContent: 'center', alignItems: 'center' }]}>
-                                        <Text style={{ color: theme.colors.textInverse, fontWeight: 'bold', fontSize: 16 }}>{user?.firstName?.charAt(0)}</Text>
-                                    </View>
-                                 </View>
-                                 
-                                 <View style={{ flex: 1 }}>
-                                    <TextInput
-                                        placeholder="What are you wishing for?"
-                                        placeholderTextColor={theme.colors.textSecondary}
-                                        multiline
-                                        maxLength={180}
-                                        style={[
-                                            styles.composerInput, 
-                                            { color: theme.colors.text },
-                                            Platform.OS === 'web' && { outlineStyle: 'none' }
-                                        ]}
-                                        value={manualName}
-                                        onChangeText={setManualName}
-                                        autoFocus
-                                    />
-                                    
-                                    {/* Link Input Area */}
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.colors.border }}>
-                                        <Ionicons name="link-outline" size={20} color={theme.colors.primary} />
-                                        <TextInput 
-                                            placeholder="Add a product link (optional)"
-                                            placeholderTextColor={theme.colors.textSecondary}
-                                            value={url}
-                                            onChangeText={setUrl}
-                                            style={[
-                                                { flex: 1, marginLeft: 8, color: theme.colors.primary, fontSize: 16 },
-                                                Platform.OS === 'web' && { outlineStyle: 'none' }
-                                            ]}
-                                            autoCapitalize="none"
-                                        />
-                                    </View>
-                                    
-                                    {/* Image Preview */}
-                                    {manualImage && (
-                                        <View style={{ marginTop: 12, position: 'relative' }}>
-                                            <Image source={{ uri: manualImage }} style={styles.composerImagePreview} />
-                                            <TouchableOpacity 
-                                                style={styles.removeImageButton}
-                                                onPress={() => setManualImage(null)}
-                                            >
-                                                <Ionicons name="close" size={16} color="#fff" />
-                                            </TouchableOpacity>
-                                        </View>
-                                    )}
-                                 </View>
-                            </View>
-                            
-                            {/* Toolbar */}
-                            <View style={[styles.composerToolbar, { borderTopColor: theme.colors.border }]}>
-                                <TouchableOpacity onPress={handlePickImage}>
-                                    <Ionicons name="image-outline" size={24} color={theme.colors.primary} />
-                                </TouchableOpacity>
-                                <TouchableOpacity style={{ marginLeft: 24 }}>
-                                    <Ionicons name="camera-outline" size={24} color={theme.colors.primary} />
-                                </TouchableOpacity>
-                            </View>
-                        </SafeAreaView>
-                    </Modal>
-                </>
-            )}
+                        <View style={styles.bottomNavIconWrapper}>
+                            <Ionicons name="people" size={20} color="#A8AAB5" />
+                        </View>
+                        <Text style={styles.bottomNavLabel}>Friends</Text>
+                    </TouchableOpacity>
+                    <View style={{ width: 72 }} />
+                    <TouchableOpacity
+                        style={styles.bottomNavItem}
+                        onPress={() => navigation.navigate('Messages')}
+                    >
+                        <View style={styles.bottomNavIconWrapper}>
+                            <Ionicons name="chatbubbles" size={20} color="#A8AAB5" />
+                        </View>
+                        <Text style={styles.bottomNavLabel}>Messages</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.bottomNavItem}
+                        onPress={() => navigation.navigate('Profile')}
+                    >
+                        <View style={[styles.bottomNavIconWrapper, styles.bottomNavIconActive]}>
+                            <Ionicons name="person" size={20} color="#ffffff" />
+                        </View>
+                        <Text style={styles.bottomNavLabelActive}>Profile</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.plusButtonWrapper}>
+                    <TouchableOpacity
+                        style={styles.plusButton}
+                        onPress={() => setAddModalVisible(true)}
+                    >
+                        <Ionicons name="add" size={28} color="#ffffff" />
+                    </TouchableOpacity>
+                </View>
+            </View>
         </SafeAreaView>
     );
 };
@@ -618,152 +597,248 @@ const styles = StyleSheet.create({
     
     // Profile Header
     profileHeaderContainer: {
-        marginBottom: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-        paddingBottom: 0
-    },
-    bannerImage: {
-        width: '100%',
-        height: 120,
-    },
-    profileContent: {
         paddingHorizontal: 16,
+        paddingTop: 24,
+        paddingBottom: 16,
     },
-    headerTopRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-end',
-        marginTop: -40,
+    profileTopSection: {
+        alignItems: 'center',
+    },
+    avatarWrapper: {
+        position: 'relative',
         marginBottom: 12,
     },
-    avatar: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        borderWidth: 4,
+    avatarOuterRing: {
+        width: 128,
+        height: 128,
+        borderRadius: 64,
+        backgroundColor: '#1a1d27',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#0e1117',
+        shadowOffset: { width: 8, height: 8 },
+        shadowOpacity: 0.9,
+        shadowRadius: 16,
     },
-    avatarPlaceholder: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        borderWidth: 4,
+    avatarInnerRing: {
+        width: 104,
+        height: 104,
+        borderRadius: 52,
+        backgroundColor: '#252835',
         justifyContent: 'center',
         alignItems: 'center',
     },
-    avatarText: { fontSize: 32, fontWeight: 'bold' },
-    headerActions: {
-        flexDirection: 'row',
-        gap: 8,
-        marginBottom: 0,
+    avatarInitial: {
+        fontSize: 40,
+        fontWeight: '700',
+        color: '#E8EAF0',
     },
-    pillButton: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 20,
-        borderWidth: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    userInfo: {
-        marginBottom: 16,
-    },
-    name: {
-        fontSize: 20,
-        fontWeight: '800',
-        marginBottom: 2,
-    },
-    handle: {
-        fontSize: 15,
-    },
-    bio: {
-        fontSize: 15,
-        marginVertical: 12,
-        lineHeight: 20,
-    },
-    statsRow: {
-        flexDirection: 'row',
-        gap: 16,
-    },
-    statText: {
-        fontSize: 15,
-    },
-    statCount: {
-        fontWeight: 'bold',
-    },
-    tabRow: {
-        flexDirection: 'row',
-        marginTop: 8,
-    },
-    activeTab: {
-        paddingVertical: 12,
-        borderBottomWidth: 3,
-        marginRight: 24,
-    },
-    inactiveTab: {
-        paddingVertical: 12,
-        marginRight: 24,
-    },
-    activeTabText: {
-        fontWeight: 'bold',
-        fontSize: 15,
-    },
-    inactiveTabText: {
-        fontWeight: '600',
-        fontSize: 15,
-    },
-
-    // Composer
-    composerHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee'
-    },
-    postButton: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-    },
-    composerContent: {
-        flex: 1,
-        flexDirection: 'row',
-        padding: 16,
-    },
-    composerAvatar: {
+    avatarBadge: {
+        position: 'absolute',
+        bottom: 4,
+        right: 4,
         width: 40,
         height: 40,
         borderRadius: 20,
-    },
-    composerInput: {
-        fontSize: 18,
-        textAlignVertical: 'top',
-        minHeight: 100,
-    },
-    composerImagePreview: {
-        width: '100%',
-        height: 200,
-        borderRadius: 12,
-        resizeMode: 'cover',
-    },
-    removeImageButton: {
-        position: 'absolute',
-        top: 8,
-        right: 8,
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        padding: 4,
-        borderRadius: 12,
-    },
-    composerToolbar: {
-        flexDirection: 'row',
-        padding: 16,
-        borderTopWidth: 1,
+        backgroundColor: '#252835',
+        justifyContent: 'center',
         alignItems: 'center',
     },
-    
+    avatarBadgeInner: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#6366F1',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: 'rgba(99,102,241,0.5)',
+        shadowOpacity: 0.8,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 2 },
+    },
+    profileName: {
+        fontSize: 26,
+        fontWeight: '700',
+        color: '#E8EAF0',
+        textAlign: 'center',
+        marginTop: 4,
+    },
+    profileHandle: {
+        fontSize: 16,
+        color: '#8B8D98',
+        textAlign: 'center',
+        marginTop: 4,
+    },
+    memberSincePill: {
+        alignSelf: 'center',
+        marginTop: 8,
+        paddingHorizontal: 16,
+        paddingVertical: 6,
+        borderRadius: 999,
+        backgroundColor: '#1f222d',
+    },
+    memberSinceText: {
+        fontSize: 12,
+        color: '#A8AAB5',
+    },
+    headerActionsRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: 16,
+        gap: 12,
+    },
+    headerIconButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#1f222d',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#252835',
+    },
+    tabsContainer: {
+        marginTop: 24,
+    },
+    tabsInnerRow: {
+        flexDirection: 'row',
+        backgroundColor: '#1f222d',
+        borderRadius: 20,
+        padding: 4,
+    },
+    tabPill: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 10,
+        borderRadius: 16,
+    },
+    tabPillActive: {
+        backgroundColor: '#6366F1',
+    },
+    tabPillText: {
+        fontSize: 13,
+        color: '#8b8d98',
+        fontWeight: '600',
+    },
+    tabPillTextActive: {
+        color: '#FFFFFF',
+    },
+    statsCardsRow: {
+        flexDirection: 'row',
+        marginTop: 24,
+        gap: 12,
+    },
+    statCard: {
+        flex: 1,
+        borderRadius: 20,
+        paddingVertical: 16,
+        paddingHorizontal: 8,
+        backgroundColor: '#1a1d27',
+        alignItems: 'center',
+    },
+    statIconCircle: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 6,
+    },
+    statCardValue: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#E8EAF0',
+        marginBottom: 2,
+    },
+    statCardLabel: {
+        fontSize: 12,
+        color: '#8B8D98',
+    },
+    achievementsSection: {
+        marginTop: 28,
+        marginBottom: 12,
+    },
+    achievementsTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#E8EAF0',
+        marginBottom: 4,
+    },
+    achievementsSubtitle: {
+        fontSize: 13,
+        color: '#A8AAB5',
+    },
+
+    // Bottom nav + floating plus
+    bottomNavContainer: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        paddingHorizontal: 16,
+        paddingBottom: 16,
+        paddingTop: 8,
+        backgroundColor: 'rgba(18,21,29,0.98)',
+        shadowColor: '#000',
+        shadowOpacity: 0.6,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: -4 },
+    },
+    bottomNavInner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        maxWidth: 480,
+        alignSelf: 'center',
+    },
+    bottomNavItem: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    bottomNavIconWrapper: {
+        width: 48,
+        height: 48,
+        borderRadius: 16,
+        backgroundColor: '#1f222d',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    bottomNavIconActive: {
+        backgroundColor: '#6366F1',
+    },
+    bottomNavLabel: {
+        fontSize: 10,
+        color: '#6B7280',
+        marginTop: 4,
+    },
+    bottomNavLabelActive: {
+        fontSize: 10,
+        color: '#6366F1',
+        marginTop: 4,
+        fontWeight: '600',
+    },
+    plusButtonWrapper: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 28,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    plusButton: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: '#22C55E',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: 'rgba(34,197,94,0.6)',
+        shadowOpacity: 0.8,
+        shadowRadius: 14,
+        shadowOffset: { width: 0, height: 4 },
+    },
     deleteActionContainer: {
         justifyContent: 'center',
         alignItems: 'center',

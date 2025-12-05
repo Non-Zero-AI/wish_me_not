@@ -13,6 +13,7 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
     const [isLiked, setIsLiked] = useState(false);
     const [bookmarks, setBookmarks] = useState(0);
     const [isBookmarked, setIsBookmarked] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     
     // Card Theme Colors
     const cardThemes = [
@@ -62,6 +63,12 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
     const handleOverflow = () => {
         const hasDelete = typeof onDelete === 'function';
 
+        // Web: show a simple in-card menu instead of immediate confirmation
+        if (Platform.OS === 'web') {
+            setIsMenuOpen(prev => !prev);
+            return;
+        }
+
         if (Platform.OS === 'ios') {
             const baseOptions = ['Report Post', 'Unfollow user', 'Invite to Circle', 'Cancel'];
             const options = hasDelete ? ['Delete Post', ...baseOptions] : baseOptions;
@@ -93,14 +100,6 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
                     // Other options (Unfollow, Invite to Circle) are placeholders for now
                 }
             );
-        } else if (Platform.OS === 'web') {
-            if (hasDelete) {
-                const confirmed = window.confirm('Delete this wish post? This cannot be undone.');
-                if (confirmed && onDelete) onDelete();
-                return;
-            }
-
-            window.alert('More actions coming soon: Report, Follow/Unfollow, Invite to Circle.');
         } else {
             const actions = [
                 { text: 'Report Post', onPress: () => Alert.alert('Report', 'Thanks for your feedback.') },
@@ -169,9 +168,45 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
                             <Text style={styles.metaText}>{dateString}</Text>
                         </View>
                     </View>
-                    <TouchableOpacity style={styles.overflowBtn} onPress={handleOverflow}>
-                        <Ionicons name="ellipsis-horizontal" size={18} color="#fff" />
-                    </TouchableOpacity>
+                    <View style={{ position: 'relative' }}>
+                        <TouchableOpacity style={styles.overflowBtn} onPress={handleOverflow}>
+                            <Ionicons name="ellipsis-horizontal" size={18} color="#fff" />
+                        </TouchableOpacity>
+                        {Platform.OS === 'web' && isMenuOpen && (
+                            <View style={styles.webMenuContainer}>
+                                {typeof onDelete === 'function' && (
+                                    <TouchableOpacity
+                                        style={styles.webMenuItemDanger}
+                                        onPress={() => {
+                                            setIsMenuOpen(false);
+                                            const confirmed = window.confirm('Delete this wish post? This cannot be undone.');
+                                            if (confirmed && onDelete) onDelete();
+                                        }}
+                                    >
+                                        <Text style={styles.webMenuItemDangerText}>Delete Post</Text>
+                                    </TouchableOpacity>
+                                )}
+                                <TouchableOpacity
+                                    style={styles.webMenuItem}
+                                    onPress={() => {
+                                        setIsMenuOpen(false);
+                                        window.alert('Thanks for your feedback. Reporting is coming soon.');
+                                    }}
+                                >
+                                    <Text style={styles.webMenuItemText}>Report Post</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.webMenuItem}
+                                    onPress={() => {
+                                        setIsMenuOpen(false);
+                                        window.alert('Circle invites are coming soon.');
+                                    }}
+                                >
+                                    <Text style={styles.webMenuItemText}>Invite to Circle</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
                 </View>
 
                 <View style={styles.contentArea}>
@@ -449,6 +484,41 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
         fontSize: 13,
+    },
+    webMenuContainer: {
+        position: 'absolute',
+        top: 28,
+        right: 0,
+        backgroundColor: 'rgba(15,15,20,0.98)',
+        paddingVertical: 6,
+        minWidth: 160,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+        shadowColor: '#000',
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+        zIndex: 20,
+    },
+    webMenuItem: {
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+    },
+    webMenuItemText: {
+        color: 'rgba(255,255,255,0.9)',
+        fontSize: 13,
+    },
+    webMenuItemDanger: {
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255,255,255,0.06)',
+    },
+    webMenuItemDangerText: {
+        color: '#ff4d4f',
+        fontSize: 13,
+        fontWeight: '600',
     },
 });
 
