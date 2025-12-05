@@ -439,8 +439,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        maxWidth: 480,
+        maxWidth: 420,
         alignSelf: 'center',
+        columnGap: 16,
     },
     bottomNavItem: {
         alignItems: 'center',

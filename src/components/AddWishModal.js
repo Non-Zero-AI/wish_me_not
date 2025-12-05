@@ -121,7 +121,7 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
             <SafeAreaView
                 style={{
                     flex: 1,
-                    backgroundColor: isDesktop ? 'rgba(0,0,0,0.6)' : theme.colors.background,
+                    backgroundColor: isDesktop ? 'rgba(0,0,0,0.6)' : '#12151d',
                     justifyContent: isDesktop ? 'center' : 'flex-start',
                     alignItems: isDesktop ? 'center' : 'stretch',
                 }}
@@ -129,7 +129,7 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
                 <View style={[
                     styles.desktopCard,
                     !isDesktop && { flex: 1, borderRadius: 0, width: '100%' },
-                    { backgroundColor: theme.colors.background }
+                    { backgroundColor: '#12151d' }
                 ]}>
                 <View style={styles.composerHeader}>
                     <TouchableOpacity onPress={handleClose} style={{ padding: 8 }}>
@@ -172,7 +172,7 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
                         />
                         
                         {/* Link Input Area */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.colors.border }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#262a34' }}>
                             <Ionicons name="link-outline" size={20} color={theme.colors.primary} />
                             <TextInput 
                                 placeholder="Add a product link (optional)"
@@ -203,7 +203,7 @@ const AddWishModal = ({ visible, onClose, user, onAdded }) => {
                 </View>
                 
                 {/* Toolbar */}
-                <View style={[styles.composerToolbar, { borderTopColor: theme.colors.border }]}>
+                <View style={[styles.composerToolbar, { borderTopColor: '#262a34' }]}>
                     <TouchableOpacity onPress={handlePickImage}>
                         <Ionicons name="image-outline" size={24} color={theme.colors.primary} />
                     </TouchableOpacity>
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#eee'
+        borderBottomColor: '#262a34',
     },
     postButton: {
         paddingHorizontal: 16,

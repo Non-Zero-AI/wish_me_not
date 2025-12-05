@@ -278,21 +278,46 @@ export const addProduct = async (url, user, message) => {
 
         const payload = {
             url,
-            user: userProfile,
+            userId,
             listId,
             message: message || null,
-            source: Platform.OS === 'web' ? 'web' : 'native',
-            post,
+            isPublic: post.is_public,
         };
 
-        // Fire-and-forget webhook: do not block the UI on network latency
-        axios
-            .post('https://n8n.srv1023211.hstgr.cloud/webhook/Wish_Me_Not', payload)
-            .catch((webhookError) => {
-                console.warn('Product webhook call failed:', webhookError?.message || webhookError);
-            });
+        try {
+            // Call Supabase Edge Function which fetches HTML, uses Gemini to
+            // shorten the name, inserts into wishlist_posts, and returns the row.
+            const { data: created, error: fnError } = await supabase
+                .functions
+                .invoke('fetch-product', {
+                    body: payload,
+                });
 
-        // Return a minimal local post so the UI can show the text immediately
+            if (fnError) {
+                console.warn('fetch-product function error:', fnError);
+            }
+
+            if (created) {
+                return {
+                    id: created.id ?? Date.now(),
+                    user_id: created.user_id ?? userId,
+                    list_id: created.list_id ?? listId,
+                    name: created.name ?? post.name,
+                    price: created.price ?? post.price,
+                    image: created.image ?? post.image,
+                    link: created.link ?? post.link,
+                    content: created.message ?? created.content ?? post.content,
+                    isPublic: created.is_public ?? post.is_public,
+                    isClaimed: created.is_claimed ?? post.is_claimed,
+                    created_at: created.created_at ?? post.created_at,
+                };
+            }
+        } catch (fnError) {
+            console.warn('fetch-product invocation failed, using local placeholder:', fnError?.message || fnError);
+        }
+
+        // Fallback: if function fails, keep previous behavior so the UI still
+        // shows a local placeholder card while backend work continues.
         return {
             id: Date.now(),
             user_id: userId,
@@ -303,6 +328,7 @@ export const addProduct = async (url, user, message) => {
             link: post.link,
             content: post.content,
             isPublic: post.is_public,
+            isClaimed: post.is_claimed,
             created_at: post.created_at,
         };
     } catch (error) {

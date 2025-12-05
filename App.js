@@ -146,40 +146,59 @@ function MainTabs() {
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width > 768;
   const insets = useSafeAreaInsets();
-  
+
   return (
     <Tab.Navigator
       initialRouteName="ProfileStack"
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
+      screenOptions={({ route }) => {
+        const hideForRoute = route.name === 'FriendsStack' || route.name === 'ProfileStack';
 
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'FriendsStack') {
-            iconName = focused ? 'people' : 'people-outline';
-          } else if (route.name === 'ProfileStack') {
-            iconName = focused ? 'person' : 'person-outline';
-          } else if (route.name === 'DMs') {
-            iconName = focused ? 'mail' : 'mail-outline';
-          }
+        return {
+          headerShown: false,
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
 
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.textSecondary,
-        tabBarStyle: {
-          display: isDesktop ? 'none' : 'flex',
-          backgroundColor: theme.colors.surface,
-          borderTopColor: theme.colors.border,
-          paddingBottom: insets.bottom || 6,
-          paddingTop: 4,
-        },
-      })}
+            if (route.name === 'Home') {
+              iconName = focused ? 'home' : 'home-outline';
+            } else if (route.name === 'FriendsStack') {
+              iconName = focused ? 'people' : 'people-outline';
+            } else if (route.name === 'ProfileStack') {
+              iconName = focused ? 'person' : 'person-outline';
+            } else if (route.name === 'DMs') {
+              iconName = focused ? 'mail' : 'mail-outline';
+            }
+
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: theme.colors.primary,
+          tabBarInactiveTintColor: theme.colors.textSecondary,
+          tabBarStyle: [
+            {
+              display: isDesktop ? 'none' : 'flex',
+              backgroundColor: theme.colors.surface,
+              borderTopColor: theme.colors.border,
+              paddingBottom: insets.bottom || 6,
+              paddingTop: 4,
+            },
+            hideForRoute && { display: 'none' },
+          ],
+            backgroundColor: theme.colors.surface,
+            borderTopColor: theme.colors.border,
+            paddingBottom: insets.bottom || 6,
+            paddingTop: 4,
+          },
+        };
+      }}
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Home' }} />
-      <Tab.Screen name="FriendsStack" component={FriendsStackScreen} options={{ title: 'Friends' }} />
+      <Tab.Screen
+        name="FriendsStack"
+        component={FriendsStackScreen}
+        options={{
+          title: 'Friends',
+          tabBarStyle: { display: 'none' },
+        }}
+      />
       
       {!isDesktop && (
         <Tab.Screen 
@@ -227,7 +246,14 @@ function MainTabs() {
         }} 
       />
 
-      <Tab.Screen name="ProfileStack" component={ProfileStackScreen} options={{ title: 'Profile' }} />
+      <Tab.Screen
+        name="ProfileStack"
+        component={ProfileStackScreen}
+        options={{
+          title: 'Profile',
+          tabBarStyle: { display: 'none' },
+        }}
+      />
     </Tab.Navigator>
   );
 }
