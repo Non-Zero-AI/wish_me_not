@@ -500,6 +500,48 @@ const ProfileScreen = ({ navigation, route }) => {
         return !isClaimed;
     });
 
+    if (isDesktop) {
+        // On desktop/web, scroll the entire profile page (header + cards) together
+        return (
+            <SafeAreaView style={[styles.container, { backgroundColor: '#12151d' }]}>        
+                <ScrollView
+                    contentContainerStyle={{ paddingBottom: 48 }}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl 
+                            refreshing={refreshing} 
+                            onRefresh={onRefresh} 
+                            tintColor={theme.colors.primary}
+                            colors={[theme.colors.primary]}
+                        />
+                    }
+                >
+                    {renderHeader()}
+                    {filteredItems.length === 0 ? (
+                        <View style={styles.emptyContainer}>
+                            <Text style={[styles.emptyText, { color: theme.colors.text }]}>Your wish list is empty.</Text>
+                            <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>Tap + to start adding wishes!</Text>
+                        </View>
+                    ) : (
+                        filteredItems.map((item) => (
+                            <View key={item.id} style={styles.itemContainer}>
+                                <SwipeableRow renderRightActions={(p, d) => renderRightActions(p, d, item)}>
+                                    <ProductCard 
+                                        item={item} 
+                                        user={user}
+                                        shouldShowWished={showLocalSurprises}
+                                        onDelete={() => handleDeleteItem(item.id)}
+                                    />
+                                </SwipeableRow>
+                            </View>
+                        ))
+                    )}
+                </ScrollView>
+            </SafeAreaView>
+        );
+    }
+
+    // Mobile / non-desktop: keep FlatList for better performance
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: '#12151d' }]}>        
             {renderHeader()}
