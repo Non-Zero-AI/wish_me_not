@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput, Alert, RefreshControl, Image } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput, Alert, RefreshControl, Image, Platform, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +12,8 @@ import { useModal } from '../context/ModalContext';
 
 const FriendsScreen = ({ navigation }) => {
     const { theme } = useTheme();
+    const { width } = useWindowDimensions();
+    const isDesktop = Platform.OS === 'web' && width > 768;
     const { setAddModalVisible } = useModal();
     const [friends, setFriends] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
@@ -229,57 +231,59 @@ const FriendsScreen = ({ navigation }) => {
                 }
             />
 
-            {/* Bottom navigation with floating + button */}
-            <View style={styles.bottomNavContainer}>
-                <View style={styles.bottomNavInner}>
-                    <TouchableOpacity
-                        style={styles.bottomNavItem}
-                        onPress={() => navigation.navigate('Home')}
-                    >
-                        <View style={styles.bottomNavIconWrapper}>
-                            <Ionicons name="home" size={20} color="#A8AAB5" />
-                        </View>
-                        <Text style={styles.bottomNavLabel}>Home</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.bottomNavItem}
-                        onPress={() => navigation.navigate('Friends')}
-                    >
-                        <View style={[styles.bottomNavIconWrapper, styles.bottomNavIconActive]}>
-                            <Ionicons name="people" size={20} color="#ffffff" />
-                        </View>
-                        <Text style={styles.bottomNavLabelActive}>Friends</Text>
-                    </TouchableOpacity>
-                    <View style={{ width: 72 }} />
-                    <TouchableOpacity
-                        style={styles.bottomNavItem}
-                        onPress={() => navigation.navigate('Messages')}
-                    >
-                        <View style={styles.bottomNavIconWrapper}>
-                            <Ionicons name="chatbubbles" size={20} color="#A8AAB5" />
-                        </View>
-                        <Text style={styles.bottomNavLabel}>Messages</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.bottomNavItem}
-                        onPress={() => navigation.navigate('Profile')}
-                    >
-                        <View style={styles.bottomNavIconWrapper}>
-                            <Ionicons name="person" size={20} color="#A8AAB5" />
-                        </View>
-                        <Text style={styles.bottomNavLabel}>Profile</Text>
-                    </TouchableOpacity>
-                </View>
+            {/* Bottom navigation with floating + button (mobile only) */}
+            {!isDesktop && (
+                <View style={styles.bottomNavContainer}>
+                    <View style={styles.bottomNavInner}>
+                        <TouchableOpacity
+                            style={styles.bottomNavItem}
+                            onPress={() => navigation.navigate('Home')}
+                        >
+                            <View style={styles.bottomNavIconWrapper}>
+                                <Ionicons name="home" size={20} color="#A8AAB5" />
+                            </View>
+                            <Text style={styles.bottomNavLabel}>Home</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.bottomNavItem}
+                            onPress={() => navigation.navigate('Friends')}
+                        >
+                            <View style={[styles.bottomNavIconWrapper, styles.bottomNavIconActive]}>
+                                <Ionicons name="people" size={20} color="#ffffff" />
+                            </View>
+                            <Text style={styles.bottomNavLabelActive}>Friends</Text>
+                        </TouchableOpacity>
+                        <View style={{ width: 72 }} />
+                        <TouchableOpacity
+                            style={styles.bottomNavItem}
+                            onPress={() => navigation.navigate('Messages')}
+                        >
+                            <View style={styles.bottomNavIconWrapper}>
+                                <Ionicons name="chatbubbles" size={20} color="#A8AAB5" />
+                            </View>
+                            <Text style={styles.bottomNavLabel}>Messages</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.bottomNavItem}
+                            onPress={() => navigation.navigate('Profile')}
+                        >
+                            <View style={styles.bottomNavIconWrapper}>
+                                <Ionicons name="person" size={20} color="#A8AAB5" />
+                            </View>
+                            <Text style={styles.bottomNavLabel}>Profile</Text>
+                        </TouchableOpacity>
+                    </View>
 
-                <View style={styles.plusButtonWrapper}>
-                    <TouchableOpacity
-                        style={styles.plusButton}
-                        onPress={() => setAddModalVisible(true)}
-                    >
-                        <Ionicons name="add" size={28} color="#ffffff" />
-                    </TouchableOpacity>
+                    <View style={styles.plusButtonWrapper}>
+                        <TouchableOpacity
+                            style={styles.plusButton}
+                            onPress={() => setAddModalVisible(true)}
+                        >
+                            <Ionicons name="add" size={28} color="#ffffff" />
+                        </TouchableOpacity>
+                    </View>
                 </View>
-            </View>
+            )}
         </SafeAreaView>
     );
 };

@@ -62,6 +62,8 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
 
     const handleOverflow = () => {
         const hasDelete = typeof onDelete === 'function';
+        const isOwnPost = item.user_id && user?.id ? item.user_id === user.id : true;
+        const canInviteToCircle = !isOwnPost;
 
         // Web: show a simple in-card menu instead of immediate confirmation
         if (Platform.OS === 'web') {
@@ -70,7 +72,9 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
         }
 
         if (Platform.OS === 'ios') {
-            const baseOptions = ['Report Post', 'Unfollow user', 'Invite to Circle', 'Cancel'];
+            const baseOptions = canInviteToCircle
+                ? ['Report Post', 'Unfollow user', 'Invite to Circle', 'Cancel']
+                : ['Report Post', 'Unfollow user', 'Cancel'];
             const options = hasDelete ? ['Delete Post', ...baseOptions] : baseOptions;
             const cancelButtonIndex = options.length - 1;
 
@@ -103,7 +107,7 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
         } else {
             const actions = [
                 { text: 'Report Post', onPress: () => Alert.alert('Report', 'Thanks for your feedback.') },
-                { text: 'Invite to Circle', onPress: () => {} },
+                ...(canInviteToCircle ? [{ text: 'Invite to Circle', onPress: () => {} }] : []),
                 { text: 'Cancel', style: 'cancel' },
             ];
 
@@ -179,8 +183,7 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
                                         style={styles.webMenuItemDanger}
                                         onPress={() => {
                                             setIsMenuOpen(false);
-                                            const confirmed = window.confirm('Delete this wish post? This cannot be undone.');
-                                            if (confirmed && onDelete) onDelete();
+                                            if (onDelete) onDelete();
                                         }}
                                     >
                                         <Text style={styles.webMenuItemDangerText}>Delete Post</Text>

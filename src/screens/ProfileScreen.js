@@ -534,57 +534,59 @@ const ProfileScreen = ({ navigation, route }) => {
                     </View>
                 }
             />
-            {/* Bottom navigation with floating + button */}
-            <View style={styles.bottomNavContainer}>
-                <View style={styles.bottomNavInner}>
-                    <TouchableOpacity
-                        style={styles.bottomNavItem}
-                        onPress={() => navigation.navigate('Home')}
-                    >
-                        <View style={styles.bottomNavIconWrapper}>
-                            <Ionicons name="home" size={20} color="#A8AAB5" />
-                        </View>
-                        <Text style={styles.bottomNavLabel}>Home</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.bottomNavItem}
-                        onPress={() => navigation.navigate('Friends')}
-                    >
-                        <View style={styles.bottomNavIconWrapper}>
-                            <Ionicons name="people" size={20} color="#A8AAB5" />
-                        </View>
-                        <Text style={styles.bottomNavLabel}>Friends</Text>
-                    </TouchableOpacity>
-                    <View style={{ width: 72 }} />
-                    <TouchableOpacity
-                        style={styles.bottomNavItem}
-                        onPress={() => navigation.navigate('Messages')}
-                    >
-                        <View style={styles.bottomNavIconWrapper}>
-                            <Ionicons name="chatbubbles" size={20} color="#A8AAB5" />
-                        </View>
-                        <Text style={styles.bottomNavLabel}>Messages</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.bottomNavItem}
-                        onPress={() => navigation.navigate('Profile')}
-                    >
-                        <View style={[styles.bottomNavIconWrapper, styles.bottomNavIconActive]}>
-                            <Ionicons name="person" size={20} color="#ffffff" />
-                        </View>
-                        <Text style={styles.bottomNavLabelActive}>Profile</Text>
-                    </TouchableOpacity>
-                </View>
+            {/* Bottom navigation with floating + button (mobile only) */}
+            {!isDesktop && (
+                <View style={styles.bottomNavContainer}>
+                    <View style={styles.bottomNavInner}>
+                        <TouchableOpacity
+                            style={styles.bottomNavItem}
+                            onPress={() => navigation.navigate('Home')}
+                        >
+                            <View style={styles.bottomNavIconWrapper}>
+                                <Ionicons name="home" size={20} color="#A8AAB5" />
+                            </View>
+                            <Text style={styles.bottomNavLabel}>Home</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.bottomNavItem}
+                            onPress={() => navigation.navigate('Friends')}
+                        >
+                            <View style={styles.bottomNavIconWrapper}>
+                                <Ionicons name="people" size={20} color="#A8AAB5" />
+                            </View>
+                            <Text style={styles.bottomNavLabel}>Friends</Text>
+                        </TouchableOpacity>
+                        <View style={{ width: 72 }} />
+                        <TouchableOpacity
+                            style={styles.bottomNavItem}
+                            onPress={() => navigation.navigate('Messages')}
+                        >
+                            <View style={styles.bottomNavIconWrapper}>
+                                <Ionicons name="chatbubbles" size={20} color="#A8AAB5" />
+                            </View>
+                            <Text style={styles.bottomNavLabel}>Messages</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.bottomNavItem}
+                            onPress={() => navigation.navigate('Profile')}
+                        >
+                            <View style={[styles.bottomNavIconWrapper, styles.bottomNavIconActive]}>
+                                <Ionicons name="person" size={20} color="#ffffff" />
+                            </View>
+                            <Text style={styles.bottomNavLabelActive}>Profile</Text>
+                        </TouchableOpacity>
+                    </View>
 
-                <View style={styles.plusButtonWrapper}>
-                    <TouchableOpacity
-                        style={styles.plusButton}
-                        onPress={() => setAddModalVisible(true)}
-                    >
-                        <Ionicons name="add" size={28} color="#ffffff" />
-                    </TouchableOpacity>
+                    <View style={styles.plusButtonWrapper}>
+                        <TouchableOpacity
+                            style={styles.plusButton}
+                            onPress={() => setAddModalVisible(true)}
+                        >
+                            <Ionicons name="add" size={28} color="#ffffff" />
+                        </TouchableOpacity>
+                    </View>
                 </View>
-            </View>
+            )}
         </SafeAreaView>
     );
 };
