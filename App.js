@@ -182,11 +182,6 @@ function MainTabs() {
             },
             hideForRoute && { display: 'none' },
           ],
-            backgroundColor: theme.colors.surface,
-            borderTopColor: theme.colors.border,
-            paddingBottom: insets.bottom || 6,
-            paddingTop: 4,
-          },
         };
       }}
     >
