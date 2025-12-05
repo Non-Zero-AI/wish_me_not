@@ -181,14 +181,12 @@ export const getUserWishlist = async (userEmail) => {
         const userId = await getUserIdByEmail(userEmail);
         if (!userId) return [];
 
-        // Fetch all posts for the user, regardless of list
+        // Fetch all posts for the user, regardless of list.
+        // NOTE: We avoid relationship shorthand (claimer:claimed_by, list:list_id)
+        // because the required foreign keys are not yet present in the schema.
         const { data, error } = await supabase
             .from('wishlist_posts')
-            .select(`
-                *,
-                claimer:claimed_by (first_name, last_name, email),
-                list:list_id (title)
-            `)
+            .select('*')
             .eq('user_id', userId)
             .order('created_at', { ascending: false });
 
@@ -207,9 +205,11 @@ export const getUserWishlist = async (userEmail) => {
             content: post.message || post.content || null,
             isPublic: post.is_public,
             isClaimed: post.is_claimed,
-            claimedBy: post.claimer ? `${post.claimer.first_name} ${post.claimer.last_name}` : null,
-            claimedByEmail: post.claimer ? post.claimer.email : null,
-            listTitle: post.list?.title || 'Main',
+            // Claimer and list information can be reintroduced later once
+            // proper foreign keys exist in Supabase.
+            claimedBy: null,
+            claimedByEmail: null,
+            listTitle: 'Main',
             originalData: post 
         }));
     } catch (error) {

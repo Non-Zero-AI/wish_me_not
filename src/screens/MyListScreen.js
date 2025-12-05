@@ -63,6 +63,8 @@ const HomeScreen = () => {
     const loadItems = async () => {
         if (!user) return;
 
+        console.log('MyList user', user?.id, user?.email);
+
         // First load local to ensure quick render
         const storedItems = await getItems();
         setItems(storedItems);
@@ -70,6 +72,8 @@ const HomeScreen = () => {
         // Then sync with server
         try {
             const serverItems = await getUserWishlist(user.email);
+            console.log('Wishlist from Supabase', serverItems?.length, serverItems && serverItems[0]);
+
             if (Array.isArray(serverItems)) {
                 setItems(serverItems);
                 await saveItems(serverItems);
