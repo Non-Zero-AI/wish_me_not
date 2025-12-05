@@ -328,7 +328,8 @@ const ProfileScreen = ({ navigation, route }) => {
 
     const handleDeleteItem = (itemId) => {
         if (Platform.OS === 'web') {
-            if (window.confirm("Are you sure you want to delete this item?")) executeDelete(itemId);
+            // On web, delete immediately when the user chooses Delete Post in the overflow
+            executeDelete(itemId);
         } else {
             Alert.alert(
                 "Delete Item",
@@ -500,11 +501,11 @@ const ProfileScreen = ({ navigation, route }) => {
     });
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: '#12151d' }]}>
+        <SafeAreaView style={[styles.container, { backgroundColor: '#12151d' }]}>        
+            {renderHeader()}
             <FlatList
                 style={{ flex: 1 }}
                 data={filteredItems}
-                ListHeaderComponent={renderHeader}
                 renderItem={({ item }) => (
                     <View style={styles.itemContainer}>
                         <SwipeableRow renderRightActions={(p, d) => renderRightActions(p, d, item)}>
