@@ -47,6 +47,11 @@ _This file tracks the implementation of items from `WIRING_CHECKLIST.md` in a lo
   - [ ] Update `signInWithGoogle` in `AuthContext` to use env-based redirect
   - [ ] Test sign-in flows on web and native
 
+- [ ] **RLS performance hardening (auth_rls_initplan & multiple_permissive_policies)**
+  - [ ] For tables flagged by Supabase advisor (`profiles`, `wishlist_posts`, `friends`, `lists`, `occasions`, `item_reactions`, etc.), update RLS policies to wrap `auth.*` and `current_setting()` calls in `SELECT` (e.g. `(select auth.uid())`).
+  - [ ] Consolidate overlapping permissive policies for the same role/action into a single clear policy per table, keeping any stricter rules as separate *restrictive* policies if needed.
+  - [ ] Re-run Supabase database linter and ensure `auth_rls_initplan` and `multiple_permissive_policies` warnings are cleared.
+
 ---
 
 ## Phase 3 – Friends & Social Graph Integrity (Sections 4, 7, 8, 9)
@@ -101,6 +106,7 @@ _This file tracks the implementation of items from `WIRING_CHECKLIST.md` in a lo
   - [ ] Replace `navigation.openDrawer()` in `HomeScreen` with SideMenu/ModalContext
   - [ ] Remove or realign FriendsScreen bottom nav with `MainTabs`
   - [ ] Revisit and, if desired, re-enable deep linking after route names stabilize
+  - [ ] Ensure Profile screen mobile UX matches web: full-page scroll (header + tabs + stats + cards) and all header/tab buttons remain interactive
 
 ---
 
