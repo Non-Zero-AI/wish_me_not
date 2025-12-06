@@ -166,20 +166,36 @@ function TactileTabBar({ state, descriptors, navigation }) {
               style={{ flex: 1, alignItems: 'center' }}
               activeOpacity={0.8}
             >
-              <View
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 24,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: '#232633',
-                  shadowColor: '#242734',
-                  shadowOpacity: isFocused ? 0.9 : 0.6,
-                  shadowRadius: isFocused ? 20 : 12,
-                  shadowOffset: { width: 0, height: 6 },
-                }}
-              >
+              <View style={{ width: 64, height: 64, justifyContent: 'center', alignItems: 'center' }}>
+                {isFocused && (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      width: 76,
+                      height: 76,
+                      borderRadius: 24,
+                      backgroundColor: 'rgba(255,255,255,0.06)',
+                      shadowColor: '#ffffff',
+                      shadowOpacity: 0.35,
+                      shadowRadius: 24,
+                      shadowOffset: { width: 0, height: 0 },
+                    }}
+                  />
+                )}
+                <View
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 24,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: '#232633',
+                    shadowColor: '#242734',
+                    shadowOpacity: isFocused ? 0.9 : 0.6,
+                    shadowRadius: isFocused ? 20 : 12,
+                    shadowOffset: { width: 0, height: 6 },
+                  }}
+                >
                 <LinearGradient
                   colors={
                     isFocused
@@ -202,6 +218,7 @@ function TactileTabBar({ state, descriptors, navigation }) {
                     color={isFocused ? '#ffffff' : '#8C8D98'}
                   />
                 </LinearGradient>
+                </View>
               </View>
               <Text
                 style={{
@@ -227,7 +244,7 @@ function TactileTabBar({ state, descriptors, navigation }) {
         style={{
           position: 'absolute',
           right: 32,
-          bottom: (insets.bottom || 16) + 96,
+          bottom: (insets.bottom || 20) + 120,
         }}
       >
         <TouchableOpacity

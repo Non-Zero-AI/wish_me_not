@@ -12,7 +12,7 @@ import AppHeader from '../components/AppHeader';
 import { useTheme } from '../theme/ThemeContext';
 import { useModal } from '../context/ModalContext';
 import { getItems, addItem, getUser, deleteItem, saveItems, saveUser, getFriends } from '../services/storage';
-import { addProduct, deleteProduct, getUserWishlist, addManualProduct, updateUserProfile, updateUserSettings, getUserSettings } from '../services/api';
+import { addProduct, deleteProduct, getUserWishlist, addManualProduct, updateUserProfile, updateUserSettings, getUserSettings, fetchUserInfo } from '../services/api';
 
 const ProfileScreen = ({ navigation, route }) => {
     const { theme } = useTheme();
@@ -117,18 +117,35 @@ const ProfileScreen = ({ navigation, route }) => {
     }, [items, user, isPollingUpdates]);
 
     const loadData = async () => {
-        const userData = await getUser();
-        setUser(userData);
-        if (userData) {
+        const cachedUser = await getUser();
+        let hydratedUser = cachedUser;
+
+        if (cachedUser?.email) {
+            const remoteProfile = await fetchUserInfo(cachedUser.email);
+            if (remoteProfile) {
+                hydratedUser = {
+                    ...cachedUser,
+                    id: remoteProfile.id || cachedUser.id,
+                    firstName: remoteProfile.firstName || cachedUser.firstName,
+                    lastName: remoteProfile.lastName || cachedUser.lastName,
+                    email: remoteProfile.email || cachedUser.email,
+                    avatar_url: remoteProfile.avatar_url || cachedUser.avatar_url,
+                };
+                await saveUser(hydratedUser);
+            }
+        }
+
+        setUser(hydratedUser);
+        if (hydratedUser) {
             // Load Settings
-            const settings = await getUserSettings(userData.id);
+            const settings = await getUserSettings(hydratedUser.id);
             if (settings) {
                 setShowLocalSurprises(settings.reveal_surprises);
             } else {
-                setShowLocalSurprises(userData.showSurprises || false);
+                setShowLocalSurprises(hydratedUser.showSurprises || false);
             }
             
-            loadItems(userData.email);
+            loadItems(hydratedUser.email);
             
             // Load friends count
             const friends = await getFriends();

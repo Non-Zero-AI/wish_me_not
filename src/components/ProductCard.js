@@ -123,8 +123,10 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
         }
     };
 
-    const avatarUri = user?.image || item.friendImage;
-    const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}` : (item.friendName || 'Friend');
+    const avatarUri = user?.avatar_url || user?.image || item.friendImage;
+    const displayName = user?.firstName || user?.lastName
+        ? `${user.firstName || ''} ${user.lastName || ''}`.trim()
+        : (item.friendName || 'Friend');
     const dateObj = item.created_at ? new Date(item.created_at) : new Date();
     const dateString = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
