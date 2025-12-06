@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../theme/ThemeContext';
 
-const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, onStash }) => {
+const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, onStash, variant = 'hero' }) => {
     const { theme } = useTheme();
     const { width } = useWindowDimensions();
     const isDesktop = Platform.OS === 'web' && width > 768;
@@ -138,6 +138,61 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
             image: item.image,
             created_at: item.created_at,
         });
+    }
+
+    // Compact list-style card variant
+    if (variant === 'compact') {
+        const claimed = item.isClaimed ?? item.is_claimed;
+        return (
+            <View style={styles.compactCardContainer}>
+                <TouchableOpacity style={styles.compactCard} onPress={handlePress} activeOpacity={0.9}>
+                    {item.image ? (
+                        <Image
+                            source={{ uri: item.image }}
+                            style={styles.compactThumbnail}
+                            resizeMode="cover"
+                        />
+                    ) : (
+                        <View style={[styles.compactThumbnail, { justifyContent: 'center', alignItems: 'center' }]}>
+                            <Ionicons name="image-outline" size={24} color="rgba(255,255,255,0.4)" />
+                        </View>
+                    )}
+
+                    <View style={styles.compactContent}>
+                        <View style={styles.compactHeaderRow}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.compactTitle} numberOfLines={1}>{item.name}</Text>
+                                <Text style={styles.compactMeta} numberOfLines={1}>
+                                    {user?.username ? `@${user.username}` : displayName} • {dateString}
+                                </Text>
+                            </View>
+                            <Text style={[styles.compactPrice, { color: currentTheme.primary }]}>{item.price || ''}</Text>
+                        </View>
+
+                        <View style={styles.compactFooterRow}>
+                            <Text style={[styles.compactStatus, claimed ? styles.compactStatusClaimed : styles.compactStatusUnclaimed]}>
+                                {claimed ? 'Claimed' : 'Unclaimed'}
+                            </Text>
+
+                            <View style={styles.compactActionsRow}>
+                                <TouchableOpacity style={styles.compactActionIcon}>
+                                    <Ionicons name="chatbubble-outline" size={14} color="rgba(255,255,255,0.9)" />
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.compactActionIcon} onPress={handleLike}>
+                                    <Ionicons name={isLiked ? 'heart' : 'heart-outline'} size={14} color={isLiked ? '#ff4757' : 'rgba(255,255,255,0.9)'} />
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.compactActionIcon} onPress={handleBookmark}>
+                                    <Ionicons name={isBookmarked ? 'bookmark' : 'bookmark-outline'} size={14} color={isBookmarked ? currentTheme.primary : 'rgba(255,255,255,0.9)'} />
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.compactActionIcon} onPress={handleShare}>
+                                    <Ionicons name="share-social-outline" size={14} color="rgba(255,255,255,0.9)" />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            </View>
+        );
     }
 
     if (item.loading) {
@@ -309,7 +364,7 @@ const styles = StyleSheet.create({
         width: '100%',
         maxWidth: 520,
         alignSelf: 'center',
-        marginVertical: 16,
+        marginVertical: 12,
         position: 'relative',
     },
     loadingCard: {
@@ -343,7 +398,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         overflow: 'hidden',
         marginTop: 8,
-        height: 220,
+        height: 180,
         backgroundColor: 'rgba(0,0,0,0.25)',
     },
     mainImage: {
@@ -383,8 +438,8 @@ const styles = StyleSheet.create({
     contentArea: {
         flex: 1,
         paddingHorizontal: 16,
-        paddingBottom: 16,
-        paddingTop: 8,
+        paddingBottom: 12,
+        paddingTop: 6,
         justifyContent: 'space-between',
     },
     titleRow: {
@@ -392,7 +447,7 @@ const styles = StyleSheet.create({
     },
     itemTitle: {
         color: '#fff',
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 4,
         textTransform: 'capitalize',
@@ -407,10 +462,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingTop: 12,
+        paddingTop: 8,
         borderTopWidth: 1,
         borderTopColor: 'rgba(255,255,255,0.1)',
-        marginTop: 12,
+        marginTop: 8,
     },
     fetchingBadge: {
         flexDirection: 'row',
@@ -533,6 +588,84 @@ const styles = StyleSheet.create({
         color: '#ff4d4f',
         fontSize: 13,
         fontWeight: '600',
+    },
+
+    // Compact list view
+    compactCardContainer: {
+        width: '100%',
+        maxWidth: 520,
+        alignSelf: 'center',
+        marginVertical: 6,
+    },
+    compactCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderRadius: 18,
+        backgroundColor: '#181b24',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.08)',
+    },
+    compactThumbnail: {
+        width: 56,
+        height: 56,
+        borderRadius: 12,
+        marginRight: 12,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+    },
+    compactContent: {
+        flex: 1,
+    },
+    compactHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    compactTitle: {
+        color: '#ffffff',
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    compactMeta: {
+        color: 'rgba(255,255,255,0.7)',
+        fontSize: 11,
+        marginTop: 2,
+    },
+    compactPrice: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginLeft: 8,
+    },
+    compactFooterRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: 4,
+    },
+    compactStatus: {
+        fontSize: 11,
+        fontWeight: '600',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 999,
+        overflow: 'hidden',
+    },
+    compactStatusClaimed: {
+        backgroundColor: 'rgba(16,185,129,0.12)',
+        color: '#6ee7b7',
+    },
+    compactStatusUnclaimed: {
+        backgroundColor: 'rgba(59,130,246,0.12)',
+        color: '#93c5fd',
+    },
+    compactActionsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    compactActionIcon: {
+        padding: 4,
     },
 });
 

@@ -40,6 +40,7 @@ const ProfileScreen = ({ navigation, route }) => {
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState('wishes'); // 'wishes' | 'claimed' | 'likes'
+    const [viewMode, setViewMode] = useState('hero'); // 'hero' | 'list'
     const [isPollingUpdates, setIsPollingUpdates] = useState(false);
     
     // Manual Entry / Add Item State
@@ -488,6 +489,25 @@ const ProfileScreen = ({ navigation, route }) => {
                     </View>
                 </View>
 
+                {/* View mode toggle */}
+                <View style={styles.viewToggleRow}>
+                    <Text style={styles.viewToggleLabel}>View</Text>
+                    <View style={styles.viewTogglePills}>
+                        <TouchableOpacity
+                            style={[styles.viewTogglePill, viewMode === 'hero' && styles.viewTogglePillActive]}
+                            onPress={() => setViewMode('hero')}
+                        >
+                            <Text style={[styles.viewToggleText, viewMode === 'hero' && styles.viewToggleTextActive]}>Cards</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.viewTogglePill, viewMode === 'list' && styles.viewTogglePillActive]}
+                            onPress={() => setViewMode('list')}
+                        >
+                            <Text style={[styles.viewToggleText, viewMode === 'list' && styles.viewToggleTextActive]}>List</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
                 {/* Achievements section (placeholder, static for now) */}
                 <View style={styles.achievementsSection}>
                     <Text style={styles.achievementsTitle}>Achievements</Text>
@@ -549,6 +569,7 @@ const ProfileScreen = ({ navigation, route }) => {
                                         user={user}
                                         shouldShowWished={showLocalSurprises}
                                         onDelete={() => handleDeleteItem(item.id)}
+                                        variant={viewMode === 'list' ? 'compact' : 'hero'}
                                     />
                                 </SwipeableRow>
                             </View>
