@@ -133,6 +133,13 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
     // If the product name and the user message are identical, avoid showing duplicate text.
     const showTitle = !!item.name && item.name !== item.content;
 
+    if (__DEV__) {
+        console.log('ProductCard item', item.id, item.name, {
+            image: item.image,
+            created_at: item.created_at,
+        });
+    }
+
     if (item.loading) {
         return (
             <View style={[styles.cardContainer, styles.loadingCard, { backgroundColor: theme.colors.surface }]}>

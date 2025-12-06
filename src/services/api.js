@@ -193,8 +193,14 @@ export const getUserWishlist = async (userEmail) => {
 
         if (error) throw error;
 
+        console.log('getUserWishlist count', data?.length || 0);
         if (data && data.length > 0) {
-            console.log('getUserWishlist sample post:', data[0]);
+            console.log('getUserWishlist sample post', {
+                id: data[0].id,
+                name: data[0].name,
+                image: data[0].image,
+                created_at: data[0].created_at,
+            });
         }
 
         return data.map(post => ({
