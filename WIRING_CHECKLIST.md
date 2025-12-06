@@ -40,6 +40,16 @@ _Use this file as a living document to track wiring/config issues and cross-code
   - **Problem**: Web redirect is hardcoded to `https://wishmenot.app`, breaking local/staging flows.  
   - **Planned resolution**: Drive redirect URL from env (e.g. `EXPO_PUBLIC_OAUTH_REDIRECT_URL`) and set appropriate values for dev, GH Pages, and prod.
 
+- [ ] **RLS uses auth.* directly in many policies (auth_rls_initplan)**  
+  - **Tables / Policies**: `public.profiles`, `public.wishlist_posts`, `public.friends`, `public.circles`, `public.circle_members`, `public.posts`, `public.comments`, `public.likes`, `public.push_tokens`, `public.notifications`, `public.lists`, `public.occasions`, `public.messages`, `public.user_settings`, `public.item_reactions`, etc.  
+  - **Problem**: Supabase advisor `auth_rls_initplan` warns that multiple RLS policies call `auth.<function>()` and/or `current_setting()` directly in their `USING` / `WITH CHECK` clauses. This forces PostgreSQL to re-evaluate these functions for every row and can hurt performance at scale.  
+  - **Planned resolution**: For each affected policy, wrap auth calls in a SELECT, e.g. replace `auth.uid()` with `(select auth.uid())` per [Supabase docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select). Re-run the database linter afterward to confirm that `auth_rls_initplan` warnings are cleared.
+
+- [ ] **Multiple permissive RLS policies per role/action (multiple_permissive_policies)**  
+  - **Tables / Policies**: `public.item_reactions` ("Everyone can view reactions", "Users can manage their own reactions"), `public.lists` ("Public lists are viewable by everyone", "Users can manage their own lists"), `public.occasions` ("Friends can view occasions", "Users can manage their own occasions"), `public.wishlist_posts` (various item/post read/insert/update policies).  
+  - **Problem**: Supabase advisor `multiple_permissive_policies` flags tables where multiple permissive policies exist for the same `role` and `action` (e.g. `anon` + `SELECT`). PostgreSQL must evaluate each policy for every relevant query, which is suboptimal for performance and makes behavior harder to reason about.  
+  - **Planned resolution**: Consolidate overlapping permissive policies into a single, clearer policy per role/action where possible (e.g. one combined `SELECT` policy for public vs own data). Keep more specific restrictions as separate *restrictive* policies if needed. Re-run the advisor to ensure these warnings are resolved.
+
 ---
 
 ## 3. Notifications
