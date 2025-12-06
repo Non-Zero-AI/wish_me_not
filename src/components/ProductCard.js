@@ -232,7 +232,7 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
                                 <Image 
                                     source={{ uri: item.image }} 
                                     style={styles.mainImage} 
-                                    resizeMode="cover" 
+                                    resizeMode="contain" 
                                 />
                             ) : (
                                 <View style={[styles.mainImage, { backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }]}>
