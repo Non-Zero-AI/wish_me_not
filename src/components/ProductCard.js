@@ -343,6 +343,8 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         overflow: 'hidden',
         marginTop: 8,
+        height: 220,
+        backgroundColor: 'rgba(0,0,0,0.25)',
     },
     mainImage: {
         width: '100%',
