@@ -130,6 +130,7 @@ const ProfileScreen = ({ navigation, route }) => {
                     lastName: remoteProfile.lastName || cachedUser.lastName,
                     email: remoteProfile.email || cachedUser.email,
                     avatar_url: remoteProfile.avatar_url || cachedUser.avatar_url,
+                    username: remoteProfile.username || cachedUser.username,
                 };
                 await saveUser(hydratedUser);
             }

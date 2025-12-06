@@ -39,6 +39,7 @@ export const fetchUserInfo = async (email) => {
             lastName: data.last_name,
             email: data.email,
             username: data.username,
+            avatar_url: data.avatar_url,
         };
     } catch (error) {
         console.error('Error fetching user info:', error);
@@ -205,6 +206,7 @@ export const getUserWishlist = async (userEmail) => {
             content: post.message || post.content || null,
             isPublic: post.is_public,
             isClaimed: post.is_claimed,
+            created_at: post.created_at,
             // Claimer and list information can be reintroduced later once
             // proper foreign keys exist in Supabase.
             claimedBy: null,
