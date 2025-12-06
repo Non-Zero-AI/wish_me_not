@@ -10,13 +10,14 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 // import { createDrawerNavigator } from '@react-navigation/drawer';
-import { ActivityIndicator, View, Text, StyleSheet, StatusBar, Platform, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, StatusBar, Platform, useWindowDimensions, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import * as Font from 'expo-font';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFonts, Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { getUser, saveUser, saveItems, saveFriends, clearUser } from './src/services/storage';
 import { fetchUserInfo, getUserWishlist, getUserFriends } from './src/services/api';
@@ -76,14 +77,14 @@ const linking = {
             screens: {
               FriendsList: '',
               FriendWishlist: 'wishlist/:userId',
-            }
+            },
           },
           ProfileStack: {
             path: 'profile',
             screens: {
               ProfileScreen: '',
               Themes: 'themes',
-            }
+            },
           },
         },
       },
@@ -92,6 +93,190 @@ const linking = {
     },
   },
 };
+
+function TactileTabBar({ state, descriptors, navigation }) {
+  const { theme } = useTheme();
+  const { setAddModalVisible } = useModal();
+  const insets = useSafeAreaInsets();
+
+  const visibleRouteNames = ['Home', 'FriendsStack', 'DMs', 'ProfileStack'];
+
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        paddingHorizontal: 20,
+        paddingBottom: (insets.bottom || 16) + 8,
+        paddingTop: 8,
+        backgroundColor: '#090b11ee',
+      }}
+    >
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        {state.routes.map((route, index) => {
+          if (!visibleRouteNames.includes(route.name)) return null;
+
+          const { options } = descriptors[route.key];
+          const label =
+            options.tabBarLabel !== undefined
+              ? options.tabBarLabel
+              : options.title !== undefined
+              ? options.title
+              : route.name;
+
+          const isFocused = state.index === index;
+
+          let iconName = 'ellipse';
+          if (route.name === 'Home') {
+            iconName = isFocused ? 'home' : 'home-outline';
+          } else if (route.name === 'FriendsStack') {
+            iconName = isFocused ? 'people' : 'people-outline';
+          } else if (route.name === 'DMs') {
+            iconName = isFocused ? 'chatbubble' : 'chatbubble-outline';
+          } else if (route.name === 'ProfileStack') {
+            iconName = isFocused ? 'person' : 'person-outline';
+          }
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          return (
+            <TouchableOpacity
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+              onPress={onPress}
+              style={{ flex: 1, alignItems: 'center' }}
+              activeOpacity={0.8}
+            >
+              <View
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 24,
+                  overflow: 'hidden',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  shadowColor: isFocused ? '#6366F1' : '#000',
+                  shadowOpacity: isFocused ? 0.7 : 0.35,
+                  shadowRadius: isFocused ? 16 : 10,
+                  shadowOffset: { width: 0, height: 4 },
+                }}
+              >
+                <LinearGradient
+                  colors={
+                    isFocused
+                      ? ['#6366F1', '#8B5CF6']
+                      : ['#111320', '#090b11']
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    flex: 1,
+                    width: '100%',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Ionicons
+                    name={iconName}
+                    size={22}
+                    color={isFocused ? '#ffffff' : '#9ca3af'}
+                  />
+                </LinearGradient>
+              </View>
+              <Text
+                style={{
+                  marginTop: 6,
+                  fontSize: 11,
+                  color: isFocused ? '#a5b4fc' : '#6b7280',
+                  fontWeight: isFocused ? '600' : '500',
+                }}
+              >
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+
+        {/* Spacer so the floating + button has room on the right */}
+        <View style={{ width: 12 }} />
+      </View>
+
+      {/* Floating + pill on the right */}
+      <View
+        pointerEvents="box-none"
+        style={{
+          position: 'absolute',
+          right: 24,
+          bottom: (insets.bottom || 16) + 30,
+        }}
+      >
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => setAddModalVisible(true)}
+        >
+          <View
+            style={{
+              paddingHorizontal: 14,
+              paddingVertical: 8,
+              borderRadius: 999,
+              backgroundColor: '#050711',
+              flexDirection: 'row',
+              alignItems: 'center',
+              shadowColor: '#000',
+              shadowOpacity: 0.6,
+              shadowRadius: 18,
+              shadowOffset: { width: 0, height: 10 },
+            }}
+          >
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                overflow: 'hidden',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <LinearGradient
+                colors={['#6366F1', '#8B5CF6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Ionicons name="add" size={24} color="#ffffff" />
+              </LinearGradient>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
 
 function FriendsStackScreen() {
   const { theme } = useTheme();
@@ -142,48 +327,17 @@ function AuthNavigator() {
 
 function MainTabs() {
   const { theme } = useTheme();
-  const { setAddModalVisible } = useModal();
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width > 768;
-  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
       initialRouteName="ProfileStack"
-      screenOptions={({ route }) => {
-        const hideForRoute = route.name === 'FriendsStack' || route.name === 'ProfileStack';
-
-        return {
-          headerShown: false,
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName;
-
-            if (route.name === 'Home') {
-              iconName = focused ? 'home' : 'home-outline';
-            } else if (route.name === 'FriendsStack') {
-              iconName = focused ? 'people' : 'people-outline';
-            } else if (route.name === 'ProfileStack') {
-              iconName = focused ? 'person' : 'person-outline';
-            } else if (route.name === 'DMs') {
-              iconName = focused ? 'mail' : 'mail-outline';
-            }
-
-            return <Ionicons name={iconName} size={size} color={color} />;
-          },
-          tabBarActiveTintColor: theme.colors.primary,
-          tabBarInactiveTintColor: theme.colors.textSecondary,
-          tabBarStyle: [
-            {
-              display: isDesktop ? 'none' : 'flex',
-              backgroundColor: theme.colors.surface,
-              borderTopColor: theme.colors.border,
-              paddingBottom: insets.bottom || 6,
-              paddingTop: 4,
-            },
-            hideForRoute && { display: 'none' },
-          ],
-        };
+      screenOptions={{
+        headerShown: false,
+        tabBarShowLabel: false,
       }}
+      tabBar={props => (isDesktop ? null : <TactileTabBar {...props} />)}
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Home' }} />
       <Tab.Screen
