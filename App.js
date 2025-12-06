@@ -109,9 +109,9 @@ function TactileTabBar({ state, descriptors, navigation }) {
         right: 0,
         bottom: 0,
         paddingHorizontal: 20,
-        paddingBottom: (insets.bottom || 16) + 8,
-        paddingTop: 8,
-        backgroundColor: '#090b11ee',
+        paddingBottom: (insets.bottom || 16) + 16,
+        paddingTop: 10,
+        backgroundColor: '#212431',
       }}
     >
       <View
@@ -226,7 +226,7 @@ function TactileTabBar({ state, descriptors, navigation }) {
         style={{
           position: 'absolute',
           right: 24,
-          bottom: (insets.bottom || 16) + 30,
+          bottom: (insets.bottom || 16) + 72,
         }}
       >
         <TouchableOpacity

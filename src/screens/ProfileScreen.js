@@ -541,27 +541,13 @@ const ProfileScreen = ({ navigation, route }) => {
         );
     }
 
-    // Mobile / non-desktop: keep FlatList for better performance
+    // Mobile / non-desktop: scroll header + cards together with a full-page ScrollView.
+    // Global navigation and + button are handled by the app-level tactile tab bar.
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: '#12151d' }]}>        
-            {renderHeader()}
-            <FlatList
-                style={{ flex: 1 }}
-                data={filteredItems}
-                renderItem={({ item }) => (
-                    <View style={styles.itemContainer}>
-                        <SwipeableRow renderRightActions={(p, d) => renderRightActions(p, d, item)}>
-                            <ProductCard 
-                                item={item} 
-                                user={user}
-                                shouldShowWished={showLocalSurprises}
-                                onDelete={() => handleDeleteItem(item.id)}
-                            />
-                        </SwipeableRow>
-                    </View>
-                )}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={[styles.listContent, { paddingBottom: 100 }]}
+            <ScrollView
+                contentContainerStyle={{ paddingBottom: 140 }}
+                showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl 
                         refreshing={refreshing} 
@@ -570,66 +556,28 @@ const ProfileScreen = ({ navigation, route }) => {
                         colors={[theme.colors.primary]}
                     />
                 }
-                ListEmptyComponent={
+            >
+                {renderHeader()}
+                {filteredItems.length === 0 ? (
                     <View style={styles.emptyContainer}>
                         <Text style={[styles.emptyText, { color: theme.colors.text }]}>Your wish list is empty.</Text>
                         <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>Tap + to start adding wishes!</Text>
                     </View>
-                }
-            />
-            {/* Bottom navigation with floating + button (mobile only) */}
-            {!isDesktop && (
-                <View style={styles.bottomNavContainer}>
-                    <View style={styles.bottomNavInner}>
-                        <TouchableOpacity
-                            style={styles.bottomNavItem}
-                            onPress={() => navigation.navigate('Home')}
-                        >
-                            <View style={styles.bottomNavIconWrapper}>
-                                <Ionicons name="home" size={20} color="#A8AAB5" />
-                            </View>
-                            <Text style={styles.bottomNavLabel}>Home</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.bottomNavItem}
-                            onPress={() => navigation.navigate('Friends')}
-                        >
-                            <View style={styles.bottomNavIconWrapper}>
-                                <Ionicons name="people" size={20} color="#A8AAB5" />
-                            </View>
-                            <Text style={styles.bottomNavLabel}>Friends</Text>
-                        </TouchableOpacity>
-                        <View style={{ width: 72 }} />
-                        <TouchableOpacity
-                            style={styles.bottomNavItem}
-                            onPress={() => navigation.navigate('Messages')}
-                        >
-                            <View style={styles.bottomNavIconWrapper}>
-                                <Ionicons name="chatbubbles" size={20} color="#A8AAB5" />
-                            </View>
-                            <Text style={styles.bottomNavLabel}>Messages</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.bottomNavItem}
-                            onPress={() => navigation.navigate('Profile')}
-                        >
-                            <View style={[styles.bottomNavIconWrapper, styles.bottomNavIconActive]}>
-                                <Ionicons name="person" size={20} color="#ffffff" />
-                            </View>
-                            <Text style={styles.bottomNavLabelActive}>Profile</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.plusButtonWrapper}>
-                        <TouchableOpacity
-                            style={styles.plusButton}
-                            onPress={() => setAddModalVisible(true)}
-                        >
-                            <Ionicons name="add" size={28} color="#ffffff" />
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            )}
+                ) : (
+                    filteredItems.map((item) => (
+                        <View key={item.id} style={styles.itemContainer}>
+                            <SwipeableRow renderRightActions={(p, d) => renderRightActions(p, d, item)}>
+                                <ProductCard 
+                                    item={item} 
+                                    user={user}
+                                    shouldShowWished={showLocalSurprises}
+                                    onDelete={() => handleDeleteItem(item.id)}
+                                />
+                            </SwipeableRow>
+                        </View>
+                    ))
+                )}
+            </ScrollView>
         </SafeAreaView>
     );
 };
