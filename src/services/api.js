@@ -298,13 +298,21 @@ export const addProduct = async (url, user, message) => {
             }
 
             if (created) {
+                // Be defensive about field names coming back from the Edge Function
+                const createdImage =
+                    created.image ??
+                    created.image_url ??
+                    created.product_image ??
+                    created.product_image_url ??
+                    null;
+
                 return {
                     id: created.id ?? Date.now(),
                     user_id: created.user_id ?? userId,
                     list_id: created.list_id ?? listId,
                     name: created.name ?? post.name,
                     price: created.price ?? post.price,
-                    image: created.image ?? post.image,
+                    image: createdImage ?? post.image,
                     link: created.link ?? post.link,
                     content: created.message ?? created.content ?? post.content,
                     isPublic: created.is_public ?? post.is_public,

@@ -109,9 +109,9 @@ function TactileTabBar({ state, descriptors, navigation }) {
         right: 0,
         bottom: 0,
         paddingHorizontal: 20,
-        paddingBottom: (insets.bottom || 16) + 16,
+        paddingBottom: (insets.bottom || 16) + 12,
         paddingTop: 10,
-        backgroundColor: '#212431',
+        backgroundColor: '#1D212C',
       }}
     >
       <View
@@ -171,26 +171,27 @@ function TactileTabBar({ state, descriptors, navigation }) {
                   width: 64,
                   height: 64,
                   borderRadius: 24,
-                  overflow: 'hidden',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  shadowColor: isFocused ? '#6366F1' : '#000',
-                  shadowOpacity: isFocused ? 0.7 : 0.35,
-                  shadowRadius: isFocused ? 16 : 10,
-                  shadowOffset: { width: 0, height: 4 },
+                  backgroundColor: '#232633',
+                  shadowColor: '#242734',
+                  shadowOpacity: isFocused ? 0.9 : 0.6,
+                  shadowRadius: isFocused ? 20 : 12,
+                  shadowOffset: { width: 0, height: 6 },
                 }}
               >
                 <LinearGradient
                   colors={
                     isFocused
                       ? ['#6366F1', '#8B5CF6']
-                      : ['#111320', '#090b11']
+                      : ['#232633', '#232633']
                   }
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={{
-                    flex: 1,
-                    width: '100%',
+                    width: 56,
+                    height: 56,
+                    borderRadius: 22,
                     justifyContent: 'center',
                     alignItems: 'center',
                   }}
@@ -198,7 +199,7 @@ function TactileTabBar({ state, descriptors, navigation }) {
                   <Ionicons
                     name={iconName}
                     size={22}
-                    color={isFocused ? '#ffffff' : '#9ca3af'}
+                    color={isFocused ? '#ffffff' : '#8C8D98'}
                   />
                 </LinearGradient>
               </View>
@@ -206,7 +207,7 @@ function TactileTabBar({ state, descriptors, navigation }) {
                 style={{
                   marginTop: 6,
                   fontSize: 11,
-                  color: isFocused ? '#a5b4fc' : '#6b7280',
+                  color: isFocused ? '#a5b4fc' : '#8C8D98',
                   fontWeight: isFocused ? '600' : '500',
                 }}
               >
@@ -225,53 +226,32 @@ function TactileTabBar({ state, descriptors, navigation }) {
         pointerEvents="box-none"
         style={{
           position: 'absolute',
-          right: 24,
-          bottom: (insets.bottom || 16) + 72,
+          right: 32,
+          bottom: (insets.bottom || 16) + 96,
         }}
       >
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={() => setAddModalVisible(true)}
         >
-          <View
+          <LinearGradient
+            colors={['#6366F1', '#8B5CF6']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={{
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              borderRadius: 999,
-              backgroundColor: '#050711',
-              flexDirection: 'row',
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              justifyContent: 'center',
               alignItems: 'center',
-              shadowColor: '#000',
-              shadowOpacity: 0.6,
-              shadowRadius: 18,
+              shadowColor: '#242734',
+              shadowOpacity: 0.9,
+              shadowRadius: 20,
               shadowOffset: { width: 0, height: 10 },
             }}
           >
-            <View
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                overflow: 'hidden',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <LinearGradient
-                colors={['#6366F1', '#8B5CF6']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Ionicons name="add" size={24} color="#ffffff" />
-              </LinearGradient>
-            </View>
-          </View>
+            <Ionicons name="add" size={26} color="#ffffff" />
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </View>
