@@ -497,13 +497,21 @@ const ProfileScreen = ({ navigation, route }) => {
                             style={[styles.viewTogglePill, viewMode === 'hero' && styles.viewTogglePillActive]}
                             onPress={() => setViewMode('hero')}
                         >
-                            <Text style={[styles.viewToggleText, viewMode === 'hero' && styles.viewToggleTextActive]}>Cards</Text>
+                            <Ionicons
+                                name="grid-outline"
+                                size={16}
+                                color={viewMode === 'hero' ? '#ffffff' : '#9ca3af'}
+                            />
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.viewTogglePill, viewMode === 'list' && styles.viewTogglePillActive]}
                             onPress={() => setViewMode('list')}
                         >
-                            <Text style={[styles.viewToggleText, viewMode === 'list' && styles.viewToggleTextActive]}>List</Text>
+                            <Ionicons
+                                name="list-outline"
+                                size={18}
+                                color={viewMode === 'list' ? '#ffffff' : '#9ca3af'}
+                            />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -801,6 +809,35 @@ const styles = StyleSheet.create({
     achievementsSubtitle: {
         fontSize: 13,
         color: '#A8AAB5',
+    },
+
+    // View toggle (Cards/List)
+    viewToggleRow: {
+        marginTop: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        columnGap: 8,
+    },
+    viewToggleLabel: {
+        fontSize: 12,
+        color: '#9CA3AF',
+    },
+    viewTogglePills: {
+        flexDirection: 'row',
+        backgroundColor: '#1f222d',
+        borderRadius: 16,
+        padding: 2,
+    },
+    viewTogglePill: {
+        width: 32,
+        height: 24,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    viewTogglePillActive: {
+        backgroundColor: '#6366F1',
     },
 
     // Bottom nav + floating plus

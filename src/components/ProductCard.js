@@ -133,6 +133,12 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
     // If the product name and the user message are identical, avoid showing duplicate text.
     const showTitle = !!item.name && item.name !== item.content;
 
+    // Normalize price display with leading '$' when appropriate.
+    const rawPrice = item.price || '';
+    const priceDisplay = rawPrice
+        ? (rawPrice.toString().trim().startsWith('$') ? rawPrice : `$${rawPrice}`)
+        : '';
+
     if (__DEV__) {
         console.log('ProductCard item', item.id, item.name, {
             image: item.image,
@@ -166,7 +172,7 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
                                     {user?.username ? `@${user.username}` : displayName} • {dateString}
                                 </Text>
                             </View>
-                            <Text style={[styles.compactPrice, { color: currentTheme.primary }]}>{item.price || ''}</Text>
+                            <Text style={[styles.compactPrice, { color: currentTheme.primary }]}>{priceDisplay}</Text>
                         </View>
 
                         <View style={styles.compactFooterRow}>
@@ -281,27 +287,29 @@ const ProductCard = ({ item, user, shouldShowWished = false, onDelete, onWish, o
                         <Text style={styles.postText}>{item.content}</Text>
                     ) : null}
 
-                    <View style={styles.imageArea}>
-                        <TouchableOpacity onPress={handlePress} activeOpacity={0.9} style={{flex:1}}>
-                            {item.image ? (
-                                <Image 
-                                    source={{ uri: item.image }} 
-                                    style={styles.mainImage} 
-                                    resizeMode="contain" 
-                                />
-                            ) : (
-                                <View style={[styles.mainImage, { backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }]}>
-                                    <Ionicons name="image-outline" size={48} color="rgba(255,255,255,0.2)" />
-                                </View>
-                            )}
-                        </TouchableOpacity>
-                    </View>
+                    <View style={styles.heroMainRow}>
+                        <View style={styles.imageArea}>
+                            <TouchableOpacity onPress={handlePress} activeOpacity={0.9} style={{ flex: 1 }}>
+                                {item.image ? (
+                                    <Image
+                                        source={{ uri: item.image }}
+                                        style={styles.mainImage}
+                                        resizeMode="contain"
+                                    />
+                                ) : (
+                                    <View style={[styles.mainImage, { backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }]}>
+                                        <Ionicons name="image-outline" size={48} color="rgba(255,255,255,0.2)" />
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        </View>
 
-                    <View style={styles.titleRow}>
-                        {showTitle && (
-                            <Text style={styles.itemTitle} numberOfLines={2}>{item.name}</Text>
-                        )}
-                        <Text style={[styles.itemPrice, { color: currentTheme.primary }]}>{item.price || ''}</Text>
+                        <View style={styles.heroTextColumn}>
+                            {showTitle && (
+                                <Text style={styles.itemTitle} numberOfLines={2}>{item.name}</Text>
+                            )}
+                            <Text style={[styles.itemPrice, { color: currentTheme.primary }]}>{priceDisplay}</Text>
+                        </View>
                     </View>
 
                     {item.price === 'Fetching details…' && (
@@ -394,11 +402,11 @@ const styles = StyleSheet.create({
     
     // Image Area
     imageArea: {
-        width: '100%',
+        width: 140,
+        height: 140,
         borderRadius: 16,
         overflow: 'hidden',
         marginTop: 8,
-        height: 180,
         backgroundColor: 'rgba(0,0,0,0.25)',
     },
     mainImage: {
@@ -440,10 +448,16 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingBottom: 12,
         paddingTop: 6,
-        justifyContent: 'space-between',
     },
-    titleRow: {
-        marginBottom: 8,
+    heroMainRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 6,
+    },
+    heroTextColumn: {
+        flex: 1,
+        marginLeft: 12,
+        justifyContent: 'center',
     },
     itemTitle: {
         color: '#fff',
